@@ -25,3 +25,36 @@ export interface ApiResponse<T> {
     message: string;
     data: T;
 }
+
+export interface DashboardSummary {
+    date: string;
+    today: {
+        milkLiters: number;
+        eggs: number;
+        salesRevenue: number;
+        cashCollected: number;
+        expenses: number;
+    };
+    thisMonth: {
+        grossSales: number;
+        cashCollected: number;
+        expenses: number;
+        netProfit: number;
+        profitMargin: number;
+    };
+    outstanding: {
+        totalDues: number;
+        customersWithDues: number;
+    };
+    counts: {
+        totalAnimals: number;
+        cows: number;
+        goats: number;
+        sheep: number;
+        chickens: number;
+        ducks: number;
+        buffaloes: number;
+        activeFlocks: number;
+        totalCustomers: number;
+    };
+}
