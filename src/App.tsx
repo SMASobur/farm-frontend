@@ -9,6 +9,9 @@ import { DashboardPage } from '@/pages/DashboardPage';
 import {AnimalsPage} from "@/pages/AnimalsPage.tsx";
 import { NewAnimalPage } from '@/pages/NewAnimalPage';
 import { EditAnimalPage } from '@/pages/EditAnimalPage';
+import { CustomersPage } from '@/pages/CustomersPage';
+import { NewCustomerPage } from '@/pages/NewCustomerPage';
+import { EditCustomerPage } from '@/pages/EditCustomerPage';
 
 
 const queryClient = new QueryClient({
@@ -43,6 +46,9 @@ export default function App() {
                             <Route path="/animals" element={<AnimalsPage />} />
                             <Route path="/animals/new" element={<NewAnimalPage />} />
                             <Route path="/animals/:id" element={<EditAnimalPage />} />
+                            <Route path="/customers" element={<CustomersPage />} />
+                            <Route path="/customers/new" element={<NewCustomerPage />} />
+                            <Route path="/customers/:id" element={<EditCustomerPage />} />
 
                         </Route>
                     </Routes>

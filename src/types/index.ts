@@ -152,3 +152,61 @@ export const SPECIES_EMOJI: Record<Species, string> = {
     BUFFALO: '🐃',
     OTHER: '🐾',
 };
+
+// ============================================================
+// Customer
+// ============================================================
+
+export type CustomerType =
+    | 'HOUSEHOLD'
+    | 'SHOP'
+    | 'TEA_STALL'
+    | 'RESTAURANT'
+    | 'WHOLESALER'
+    | 'OTHER';
+
+export interface Customer {
+    id: number;
+    name: string;
+    phone: string | null;
+    address: string | null;
+    type: CustomerType;
+    notes: string | null;
+    createdAt: string;
+    totalDue?: number | null;
+}
+
+export interface CustomerRequest {
+    name: string;
+    phone?: string;
+    address?: string;
+    type?: CustomerType;
+    notes?: string;
+}
+
+export const CUSTOMER_TYPE_LABELS: Record<CustomerType, string> = {
+    HOUSEHOLD: 'Household',
+    SHOP: 'Shop',
+    TEA_STALL: 'Tea Stall',
+    RESTAURANT: 'Restaurant',
+    WHOLESALER: 'Wholesaler',
+    OTHER: 'Other',
+};
+
+export const CUSTOMER_TYPE_COLORS: Record<CustomerType, string> = {
+    HOUSEHOLD: 'bg-gray-100 text-gray-700',
+    SHOP: 'bg-blue-100 text-blue-700',
+    TEA_STALL: 'bg-amber-100 text-amber-700',
+    RESTAURANT: 'bg-purple-100 text-purple-700',
+    WHOLESALER: 'bg-emerald-100 text-emerald-700',
+    OTHER: 'bg-gray-100 text-gray-700',
+};
+
+export const CUSTOMER_TYPE_EMOJI: Record<CustomerType, string> = {
+    HOUSEHOLD: '🏠',
+    SHOP: '🏪',
+    TEA_STALL: '☕',
+    RESTAURANT: '🍽️',
+    WHOLESALER: '📦',
+    OTHER: '👤',
+};
