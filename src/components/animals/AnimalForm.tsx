@@ -37,7 +37,26 @@ export function AnimalForm({ initial, onSubmit, onDelete, mode }: Props) {
     const [confirmDelete, setConfirmDelete] = useState(false);
 
     const update = (field: keyof AnimalRequest, value: string) => {
-        setForm((prev) => ({ ...prev, [field]: value }));
+        setForm((prev) => {
+            const next = { ...prev, [field]: value };
+
+            // Auto-correct status if gender changed to non-female
+            if (field === 'gender' && value !== 'FEMALE') {
+                if (next.status === 'PREGNANT' || next.status === 'DRY') {
+                    next.status = 'ACTIVE';
+                }
+            }
+
+            // Auto-correct status if species changed to non-milk-producing
+            if (field === 'species' && !['COW', 'GOAT', 'SHEEP', 'BUFFALO'].includes(value)) {
+                if (next.status === 'PREGNANT' || next.status === 'DRY') {
+                    next.status = 'ACTIVE';
+                }
+            }
+
+            return next;
+        });
+
         if (errors[field]) {
             setErrors((prev) => {
                 const next = { ...prev };
@@ -163,15 +182,28 @@ export function AnimalForm({ initial, onSubmit, onDelete, mode }: Props) {
                 </Field>
             </div>
 
+
             <Field label="Status" htmlFor="status">
                 <Select
                     id="status"
                     value={form.status}
                     onChange={(e) => update('status', e.target.value)}
                 >
-                    {STATUS_OPTIONS.map((s) => (
-                        <option key={s} value={s}>{STATUS_LABELS[s]}</option>
-                    ))}
+                    {STATUS_OPTIONS.map((s) => {
+                        // Disable PREGNANT and DRY when gender is not FEMALE
+                        const isFemale = form.gender === 'FEMALE';
+                        const isMilkSpecies = ['COW', 'GOAT', 'SHEEP', 'BUFFALO'].includes(form.species || '');
+                        const disabled =
+                            (s === 'PREGNANT' && (!isFemale || !isMilkSpecies)) ||
+                            (s === 'DRY' && (!isFemale || !isMilkSpecies));
+
+                        return (
+                            <option key={s} value={s} disabled={disabled}>
+                                {STATUS_LABELS[s]}
+                                {disabled ? ' (not applicable)' : ''}
+                            </option>
+                        );
+                    })}
                 </Select>
             </Field>
 
