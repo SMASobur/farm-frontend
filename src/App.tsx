@@ -7,6 +7,9 @@ import { LoginPage } from '@/pages/LoginPage';
 import { RegisterPage } from '@/pages/RegisterPage';
 import { DashboardPage } from '@/pages/DashboardPage';
 import {AnimalsPage} from "@/pages/AnimalsPage.tsx";
+import { NewAnimalPage } from '@/pages/NewAnimalPage';
+import { EditAnimalPage } from '@/pages/EditAnimalPage';
+
 
 const queryClient = new QueryClient({
     defaultOptions: {
@@ -38,8 +41,9 @@ export default function App() {
                             <Route path="/" element={<Navigate to="/dashboard" replace />} />
                             <Route path="*" element={<Navigate to="/dashboard" replace />} />
                             <Route path="/animals" element={<AnimalsPage />} />
-                            <Route path="/animals/new" element={<div className="p-6">Coming next phase...</div>} />
-                            <Route path="/animals/:id" element={<div className="p-6">Coming next phase...</div>} />
+                            <Route path="/animals/new" element={<NewAnimalPage />} />
+                            <Route path="/animals/:id" element={<EditAnimalPage />} />
+
                         </Route>
                     </Routes>
                 </AuthProvider>
