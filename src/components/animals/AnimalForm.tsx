@@ -200,7 +200,6 @@ export function AnimalForm({ initial, onSubmit, onDelete, mode }: Props) {
                         return (
                             <option key={s} value={s} disabled={disabled}>
                                 {STATUS_LABELS[s]}
-                                {disabled ? ' (not applicable)' : ''}
                             </option>
                         );
                     })}
