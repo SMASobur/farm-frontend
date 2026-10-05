@@ -8,6 +8,8 @@ import { useDebounce } from '@/hooks/useDebounce';
 import { AnimalCard } from '@/components/animals/AnimalCard';
 import { AnimalFilters } from '@/components/animals/AnimalFilters';
 import { AnimalsSkeleton } from '@/components/animals/AnimalsSkeleton';
+import { useRef } from 'react';
+import { useKeyPress } from '@/hooks/useKeyPress';
 
 export function AnimalsPage() {
     const [species, setSpecies] = useState<Species | null>(null);
@@ -38,6 +40,18 @@ export function AnimalsPage() {
 
     const hasActiveFilters = species !== null || status !== null || search !== '';
 
+    const searchRef = useRef<HTMLInputElement>(null);
+
+    useKeyPress(
+        '/',
+        (e) => {
+            e.preventDefault();
+            searchRef.current?.focus();
+        },
+        { ignoreInputs: true }
+    );
+
+
     const clearFilters = () => {
         setSpecies(null);
         setStatus(null);
@@ -51,7 +65,11 @@ export function AnimalsPage() {
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">Animals</h1>
                     <p className="text-sm text-gray-500 mt-1">
-                        {isLoading ? 'Loading…' : `${animals.length} total`}
+                        {isLoading
+                            ? 'Loading…'
+                            : hasActiveFilters
+                                ? `${filtered.length} of ${animals.length}`
+                                : `${animals.length} total`}
                     </p>
                 </div>
                 <Link
@@ -71,6 +89,7 @@ export function AnimalsPage() {
                     className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
                 />
                 <input
+                    ref={searchRef}
                     type="text"
                     placeholder="Search by tag number or name…"
                     value={searchInput}
