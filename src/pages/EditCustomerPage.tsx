@@ -22,8 +22,7 @@ export function EditCustomerPage() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['customers'] });
             queryClient.invalidateQueries({ queryKey: ['customer', customerId] });
-            navigate('/customers');
-        },
+            navigate(`/customers/${customerId}`);  },
     });
 
     const deleteMutation = useMutation({
@@ -95,6 +94,7 @@ export function EditCustomerPage() {
                     mode="edit"
                     onSubmit={async (data) => { await updateMutation.mutateAsync(data); }}
                     onDelete={async () => { await deleteMutation.mutateAsync(); }}
+                    cancelTo={`/customers/${customerId}`}
                 />
             </div>
         </div>

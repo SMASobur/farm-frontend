@@ -12,6 +12,9 @@ import { EditAnimalPage } from '@/pages/EditAnimalPage';
 import { CustomersPage } from '@/pages/CustomersPage';
 import { NewCustomerPage } from '@/pages/NewCustomerPage';
 import { EditCustomerPage } from '@/pages/EditCustomerPage';
+import {AnimalDetailPage} from "@/pages/AnimalDetailPage.tsx";
+import {CustomerDetailPage} from "@/pages/CustomerDetailPage.tsx";
+import { ToastProvider } from '@/contexts/ToastContext';
 
 
 const queryClient = new QueryClient({
@@ -28,6 +31,7 @@ export default function App() {
     return (
         <QueryClientProvider client={queryClient}>
             <BrowserRouter>
+                <ToastProvider>
                 <AuthProvider>
                     <Routes>
                         <Route path="/login" element={<LoginPage />} />
@@ -45,14 +49,18 @@ export default function App() {
                             <Route path="*" element={<Navigate to="/dashboard" replace />} />
                             <Route path="/animals" element={<AnimalsPage />} />
                             <Route path="/animals/new" element={<NewAnimalPage />} />
-                            <Route path="/animals/:id" element={<EditAnimalPage />} />
+                            <Route path="/animals/:id" element={<AnimalDetailPage />} />
+                            <Route path="/animals/:id/edit" element={<EditAnimalPage />} />
                             <Route path="/customers" element={<CustomersPage />} />
                             <Route path="/customers/new" element={<NewCustomerPage />} />
-                            <Route path="/customers/:id" element={<EditCustomerPage />} />
+                            <Route path="/customers/:id" element={<CustomerDetailPage />} />
+                            <Route path="/customers/:id/edit" element={<EditCustomerPage />} />
 
                         </Route>
                     </Routes>
                 </AuthProvider>
+                </ToastProvider>
+
             </BrowserRouter>
         </QueryClientProvider>
     );

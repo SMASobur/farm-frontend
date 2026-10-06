@@ -23,7 +23,7 @@ export function EditAnimalPage() {
             queryClient.invalidateQueries({ queryKey: ['animals'] });
             queryClient.invalidateQueries({ queryKey: ['animal', animalId] });
             queryClient.invalidateQueries({ queryKey: ['dashboard-summary'] });
-            navigate('/animals');
+            navigate(`/animals/${animalId}`);
         },
     });
 
@@ -74,10 +74,11 @@ export function EditAnimalPage() {
                         This animal may have been deleted or doesn't exist.
                     </p>
                     <Link
-                        to="/animals"
-                        className="inline-block mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+                        to={`/animals/${animalId}`}
+                        className="inline-flex items-center gap-1.5 text-sm text-gray-600 hover:text-green-600 mb-4 transition"
                     >
-                        Back to Animals
+                        <ArrowLeft size={16} />
+                        Back to Animal
                     </Link>
                 </div>
             </div>
@@ -107,6 +108,7 @@ export function EditAnimalPage() {
                     mode="edit"
                     onSubmit={handleSubmit}
                     onDelete={handleDelete}
+                    cancelTo={`/animals/${animalId}`}
                 />
             </div>
         </div>

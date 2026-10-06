@@ -16,9 +16,10 @@ interface Props {
     onSubmit: (data: AnimalRequest) => Promise<void>;
     onDelete?: () => Promise<void>;
     mode: 'create' | 'edit';
+    cancelTo?: string;
 }
 
-export function AnimalForm({ initial, onSubmit, onDelete, mode }: Props) {
+export function AnimalForm({ initial, onSubmit, onDelete, mode, cancelTo = '/animals' }: Props) {
     const navigate = useNavigate();
 
     const [form, setForm] = useState<AnimalRequest>({
@@ -244,7 +245,7 @@ export function AnimalForm({ initial, onSubmit, onDelete, mode }: Props) {
 
                 <button
                     type="button"
-                    onClick={() => navigate('/animals')}
+                    onClick={() => navigate(cancelTo)}
                     disabled={saving || deleting}
                     className="px-4 py-2.5 rounded-lg font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-50 transition"
                 >
@@ -293,7 +294,7 @@ export function AnimalForm({ initial, onSubmit, onDelete, mode }: Props) {
                                 </button>
                                 <button
                                     type="button"
-                                    onClick={() => setConfirmDelete(false)}
+                                    onClick={() => navigate(cancelTo)}
                                     disabled={deleting}
                                     className="text-sm px-3 py-1.5 rounded-lg text-gray-700 hover:bg-gray-100 disabled:opacity-50"
                                 >
