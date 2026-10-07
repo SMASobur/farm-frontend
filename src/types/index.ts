@@ -210,3 +210,146 @@ export const CUSTOMER_TYPE_EMOJI: Record<CustomerType, string> = {
     WHOLESALER: '📦',
     OTHER: '👤',
 };
+// ============================================================
+// Category
+// ============================================================
+
+export type CategoryType = 'EXPENSE' | 'PRODUCT';
+
+export interface Category {
+    id: number;
+    code: string;
+    name: string;
+    nameBn: string | null;
+    type: CategoryType;
+    active: boolean;
+    systemDefault: boolean;
+    displayOrder: number;
+    createdAt: string;
+    defaultUnitId?: number | null;
+    defaultUnitCode?: string | null;
+    defaultUnitName?: string | null;
+    defaultPrice?: number | null;
+}
+
+export interface CategoryRequest {
+    code: string;
+    name: string;
+    nameBn?: string;
+    type: CategoryType;
+    active?: boolean;
+    displayOrder?: number;
+    defaultUnitId?: number | null;
+    defaultPrice?: number | null;
+}
+
+// ============================================================
+// Sale
+// ============================================================
+
+export type SaleUnit = 'LITER' | 'PIECE' | 'KG' | 'HEAD';
+export type PaymentMethod = 'CASH' | 'BKASH' | 'NAGAD' | 'ROCKET' | 'BANK' | 'OTHER';
+
+export interface Sale {
+    id: number;
+    customerId: number;
+    customerName: string;
+    customerPhone: string | null;
+    date: string;
+    categoryId: number;
+    categoryCode: string;
+    categoryName: string;
+    categoryNameBn: string | null;
+    unitId: number;
+    unitCode: string;
+    unitName: string;
+    unitAbbreviation: string | null;
+    quantity: number;
+    unitPrice: number;
+    totalAmount: number;
+    paidAmount: number;
+    dueAmount: number;
+    notes: string | null;
+    createdAt: string;
+}
+
+export interface SaleRequest {
+    customerId: number;
+    date: string;
+    categoryId: number;
+    unitId: number;
+    quantity: number;
+    unitPrice: number;
+    notes?: string;
+    initialPayment?: number;
+    initialPaymentMethod?: PaymentMethod;
+}
+
+// ============================================================
+// Payment
+// ============================================================
+
+export interface Payment {
+    id: number;
+    saleId: number;
+    amount: number;
+    date: string;
+    method: PaymentMethod;
+    notes: string | null;
+    createdAt: string;
+}
+
+export interface PaymentRequest {
+    saleId: number;
+    amount: number;
+    date: string;
+    method?: PaymentMethod;
+    notes?: string;
+}
+
+// ============================================================
+// Units
+// ============================================================
+
+export interface Unit {
+    id: number;
+    code: string;
+    name: string;
+    nameBn: string | null;
+    abbreviation: string | null;
+    active: boolean;
+    systemDefault: boolean;
+    displayOrder: number;
+    createdAt: string;
+}
+
+// ============================================================
+// Constants
+// ============================================================
+
+export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
+    CASH: 'Cash',
+    BKASH: 'bKash',
+    NAGAD: 'Nagad',
+    ROCKET: 'Rocket',
+    BANK: 'Bank',
+    OTHER: 'Other',
+};
+
+export const PAYMENT_METHOD_COLORS: Record<PaymentMethod, string> = {
+    CASH: 'bg-green-100 text-green-700',
+    BKASH: 'bg-pink-100 text-pink-700',
+    NAGAD: 'bg-orange-100 text-orange-700',
+    ROCKET: 'bg-purple-100 text-purple-700',
+    BANK: 'bg-blue-100 text-blue-700',
+    OTHER: 'bg-gray-100 text-gray-700',
+};
+
+export const PAYMENT_METHOD_EMOJI: Record<PaymentMethod, string> = {
+    CASH: '💵',
+    BKASH: '📱',
+    NAGAD: '📱',
+    ROCKET: '📱',
+    BANK: '🏦',
+    OTHER: '💳',
+};
