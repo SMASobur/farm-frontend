@@ -16,6 +16,11 @@ export async function createPayment(request: PaymentRequest): Promise<ApiRespons
     return response.data;
 }
 
+export async function updatePayment(id: number, request: PaymentRequest): Promise<ApiResponse<Payment>> {
+    const response = await apiClient.put<ApiResponse<Payment>>(`/api/payments/${id}`, request);
+    return response.data;
+}
+
 export async function deletePayment(id: number): Promise<ApiResponse<void>> {
     const response = await apiClient.delete<ApiResponse<void>>(`/api/payments/${id}`);
     return response.data;
