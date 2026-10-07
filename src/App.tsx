@@ -16,6 +16,7 @@ import {AnimalDetailPage} from "@/pages/AnimalDetailPage.tsx";
 import {CustomerDetailPage} from "@/pages/CustomerDetailPage.tsx";
 import { ToastProvider } from '@/contexts/ToastContext';
 import {SalesPage} from "@/pages/SalesPage.tsx";
+import {NewSalePage} from "@/pages/NewSalePage.tsx";
 
 
 const queryClient = new QueryClient({
@@ -55,7 +56,7 @@ export default function App() {
                                 <Route path="/customers/:id" element={<CustomerDetailPage />} />
                                 <Route path="/customers/:id/edit" element={<EditCustomerPage />} />
                                 <Route path="/sales" element={<SalesPage />} />
-                                <Route path="/sales/new" element={<div className="p-6">Coming in 5.6.3</div>} />
+                                <Route path="/sales/new" element={<NewSalePage />} />
                                 <Route path="/sales/:id" element={<div className="p-6">Coming in 5.6.4</div>} />
                                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
                                 <Route path="*" element={<Navigate to="/dashboard" replace />} />
