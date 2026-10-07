@@ -31,3 +31,19 @@ export function formatDateLong(dateStr: string): string {
         day: 'numeric',
     });
 }
+
+/**
+ * Format a date string (yyyy-MM-dd) as "4 Oct" or "4 Oct 2026" (if not current year).
+ */
+export function formatDateShort(dateStr: string): string {
+    const date = new Date(dateStr + 'T00:00:00');
+    const now = new Date();
+    const opts: Intl.DateTimeFormatOptions = {
+        day: 'numeric',
+        month: 'short',
+    };
+    if (date.getFullYear() !== now.getFullYear()) {
+        opts.year = 'numeric';
+    }
+    return date.toLocaleDateString('en-GB', opts);
+}
