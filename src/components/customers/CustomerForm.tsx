@@ -31,7 +31,6 @@ export function CustomerForm({ initial, onSubmit, onDelete, mode, cancelTo = '/c
     });
 
     const [errors, setErrors] = useState<Record<string, string>>({});
-    const [submitError, setSubmitError] = useState('');
     const [saving, setSaving] = useState(false);
     const [deleting, setDeleting] = useState(false);
     const [confirmDelete, setConfirmDelete] = useState(false);
@@ -79,7 +78,6 @@ export function CustomerForm({ initial, onSubmit, onDelete, mode, cancelTo = '/c
         try {
             await onDelete();
         } catch (err: any) {
-            setSubmitError(err.response?.data?.message || 'Failed to delete');
             setDeleting(false);
             setConfirmDelete(false);
         }
@@ -87,11 +85,7 @@ export function CustomerForm({ initial, onSubmit, onDelete, mode, cancelTo = '/c
 
     return (
         <form onSubmit={handleSubmit} className="space-y-5">
-            {submitError && (
-                <div className="bg-red-50 text-red-700 text-sm p-3 rounded-lg border border-red-100">
-                    {submitError}
-                </div>
-            )}
+
 
             <Field label="Name" htmlFor="name" required error={errors.name}>
                 <Input

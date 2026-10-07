@@ -4,19 +4,23 @@ import { ArrowLeft } from 'lucide-react';
 import { createAnimal } from '@/api/animals';
 import type { AnimalRequest } from '@/types';
 import { AnimalForm } from '@/components/animals/AnimalForm';
+import { useToast } from '@/contexts/ToastContext';
 
 export function NewAnimalPage() {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
+    const toast = useToast();
 
     const mutation = useMutation({
         mutationFn: (data: AnimalRequest) => createAnimal(data),
         onSuccess: () => {
-            // Invalidate the animals list so it refetches
             queryClient.invalidateQueries({ queryKey: ['animals'] });
-            // Invalidate dashboard so counts refresh
             queryClient.invalidateQueries({ queryKey: ['dashboard-summary'] });
+            toast.success('Animal created');
             navigate('/animals');
+        },
+        onError: (err: any) => {
+            toast.error(err.response?.data?.message || 'Failed to create animal');
         },
     });
 
@@ -26,7 +30,6 @@ export function NewAnimalPage() {
 
     return (
         <div className="p-4 md:p-6 max-w-2xl mx-auto">
-            {/* Back link */}
             <Link
                 to="/animals"
                 className="inline-flex items-center gap-1.5 text-sm text-gray-600 hover:text-green-600 mb-4 transition"

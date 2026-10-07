@@ -4,12 +4,14 @@ import { ArrowLeft, AlertCircle } from 'lucide-react';
 import { getAnimal, updateAnimal, deleteAnimal } from '@/api/animals';
 import type { AnimalRequest } from '@/types';
 import { AnimalForm } from '@/components/animals/AnimalForm';
+import { useToast } from '@/contexts/ToastContext';
 
 export function EditAnimalPage() {
     const { id } = useParams<{ id: string }>();
     const animalId = Number(id);
     const navigate = useNavigate();
     const queryClient = useQueryClient();
+    const toast = useToast();
 
     const { data, isLoading, isError } = useQuery({
         queryKey: ['animal', animalId],
@@ -23,7 +25,11 @@ export function EditAnimalPage() {
             queryClient.invalidateQueries({ queryKey: ['animals'] });
             queryClient.invalidateQueries({ queryKey: ['animal', animalId] });
             queryClient.invalidateQueries({ queryKey: ['dashboard-summary'] });
+            toast.success('Animal updated');
             navigate(`/animals/${animalId}`);
+        },
+        onError: (err: any) => {
+            toast.error(err.response?.data?.message || 'Failed to update animal');
         },
     });
 
@@ -32,7 +38,11 @@ export function EditAnimalPage() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['animals'] });
             queryClient.invalidateQueries({ queryKey: ['dashboard-summary'] });
+            toast.success('Animal deleted');
             navigate('/animals');
+        },
+        onError: (err: any) => {
+            toast.error(err.response?.data?.message || 'Failed to delete animal');
         },
     });
 
@@ -74,11 +84,10 @@ export function EditAnimalPage() {
                         This animal may have been deleted or doesn't exist.
                     </p>
                     <Link
-                        to={`/animals/${animalId}`}
-                        className="inline-flex items-center gap-1.5 text-sm text-gray-600 hover:text-green-600 mb-4 transition"
+                        to="/animals"
+                        className="inline-block mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
                     >
-                        <ArrowLeft size={16} />
-                        Back to Animal
+                        Back to Animals
                     </Link>
                 </div>
             </div>
@@ -89,11 +98,11 @@ export function EditAnimalPage() {
     return (
         <div className="p-4 md:p-6 max-w-2xl mx-auto">
             <Link
-                to="/animals"
+                to={`/animals/${animalId}`}
                 className="inline-flex items-center gap-1.5 text-sm text-gray-600 hover:text-green-600 mb-4 transition"
             >
                 <ArrowLeft size={16} />
-                Back to Animals
+                Back to Animal
             </Link>
 
             <div className="bg-white border border-gray-100 rounded-2xl p-6">

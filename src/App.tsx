@@ -32,33 +32,33 @@ export default function App() {
         <QueryClientProvider client={queryClient}>
             <BrowserRouter>
                 <ToastProvider>
-                <AuthProvider>
-                    <Routes>
-                        <Route path="/login" element={<LoginPage />} />
-                        <Route path="/register" element={<RegisterPage />} />
+                    <AuthProvider>
+                        <Routes>
+                            <Route path="/login" element={<LoginPage />} />
+                            <Route path="/register" element={<RegisterPage />} />
 
-                        <Route
-                            element={
-                                <ProtectedRoute>
-                                    <AppLayout />
-                                </ProtectedRoute>
-                            }
-                        >
-                            <Route path="/dashboard" element={<DashboardPage />} />
-                            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                            <Route path="*" element={<Navigate to="/dashboard" replace />} />
-                            <Route path="/animals" element={<AnimalsPage />} />
-                            <Route path="/animals/new" element={<NewAnimalPage />} />
-                            <Route path="/animals/:id" element={<AnimalDetailPage />} />
-                            <Route path="/animals/:id/edit" element={<EditAnimalPage />} />
-                            <Route path="/customers" element={<CustomersPage />} />
-                            <Route path="/customers/new" element={<NewCustomerPage />} />
-                            <Route path="/customers/:id" element={<CustomerDetailPage />} />
-                            <Route path="/customers/:id/edit" element={<EditCustomerPage />} />
+                            <Route
+                                element={
+                                    <ProtectedRoute>
+                                        <AppLayout />
+                                    </ProtectedRoute>
+                                }
+                            >
+                                <Route path="/dashboard" element={<DashboardPage />} />
+                                <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                                <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                                <Route path="/animals" element={<AnimalsPage />} />
+                                <Route path="/animals/new" element={<NewAnimalPage />} />
+                                <Route path="/animals/:id" element={<AnimalDetailPage />} />
+                                <Route path="/animals/:id/edit" element={<EditAnimalPage />} />
+                                <Route path="/customers" element={<CustomersPage />} />
+                                <Route path="/customers/new" element={<NewCustomerPage />} />
+                                <Route path="/customers/:id" element={<CustomerDetailPage />} />
+                                <Route path="/customers/:id/edit" element={<EditCustomerPage />} />
 
-                        </Route>
-                    </Routes>
-                </AuthProvider>
+                            </Route>
+                        </Routes>
+                    </AuthProvider>
                 </ToastProvider>
 
             </BrowserRouter>

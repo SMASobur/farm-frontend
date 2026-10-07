@@ -4,17 +4,23 @@ import { ArrowLeft } from 'lucide-react';
 import { createCustomer } from '@/api/customers';
 import type { CustomerRequest } from '@/types';
 import { CustomerForm } from '@/components/customers/CustomerForm';
+import { useToast } from '@/contexts/ToastContext';
 
 export function NewCustomerPage() {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
+    const toast = useToast();
 
     const mutation = useMutation({
         mutationFn: (data: CustomerRequest) => createCustomer(data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['customers'] });
             queryClient.invalidateQueries({ queryKey: ['dashboard-summary'] });
+            toast.success('Customer created');
             navigate('/customers');
+        },
+        onError: (err: any) => {
+            toast.error(err.response?.data?.message || 'Failed to create customer');
         },
     });
 
@@ -36,7 +42,9 @@ export function NewCustomerPage() {
 
                 <CustomerForm
                     mode="create"
-                    onSubmit={async (data) => { await mutation.mutateAsync(data); }}
+                    onSubmit={async (data) => {
+                        await mutation.mutateAsync(data);
+                    }}
                 />
             </div>
         </div>

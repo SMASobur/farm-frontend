@@ -3,13 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { Loader2, Save, Trash2 } from 'lucide-react';
 import type { Animal, AnimalRequest, Species, AnimalStatus, Gender } from '@/types';
 import { SPECIES_LABELS, STATUS_LABELS, GENDER_LABELS } from '@/types';
-import { Field } from '@/components/forms/Field.tsx';
-import { Input } from '@/components/forms/Input.tsx';
-import { Select } from '@/components/forms/Select.tsx';
+import { Field } from '@/components/forms/Field';
+import { Input } from '@/components/forms/Input';
+import { Select } from '@/components/forms/Select';
 
 const SPECIES_OPTIONS: Species[] = ['COW', 'GOAT', 'SHEEP', 'CHICKEN', 'DUCK', 'BUFFALO', 'OTHER'];
 const STATUS_OPTIONS: AnimalStatus[] = ['ACTIVE', 'PREGNANT', 'DRY', 'SICK', 'SOLD', 'DEAD'];
 const GENDER_OPTIONS: Gender[] = ['FEMALE', 'MALE', 'UNKNOWN'];
+const MILK_SPECIES: Species[] = ['COW', 'GOAT', 'SHEEP', 'BUFFALO'];
 
 interface Props {
     initial?: Animal;
@@ -41,15 +42,13 @@ export function AnimalForm({ initial, onSubmit, onDelete, mode, cancelTo = '/ani
         setForm((prev) => {
             const next = { ...prev, [field]: value };
 
-            // Auto-correct status if gender changed to non-female
             if (field === 'gender' && value !== 'FEMALE') {
                 if (next.status === 'PREGNANT' || next.status === 'DRY') {
                     next.status = 'ACTIVE';
                 }
             }
 
-            // Auto-correct status if species changed to non-milk-producing
-            if (field === 'species' && !['COW', 'GOAT', 'SHEEP', 'BUFFALO'].includes(value)) {
+            if (field === 'species' && !MILK_SPECIES.includes(value as Species)) {
                 if (next.status === 'PREGNANT' || next.status === 'DRY') {
                     next.status = 'ACTIVE';
                 }
@@ -69,17 +68,11 @@ export function AnimalForm({ initial, onSubmit, onDelete, mode, cancelTo = '/ani
 
     const validate = (): boolean => {
         const next: Record<string, string> = {};
-        if (!form.tagNumber.trim()) {
-            next.tagNumber = 'Tag number is required';
-        }
-        if (!form.species) {
-            next.species = 'Species is required';
-        }
+        if (!form.tagNumber.trim()) next.tagNumber = 'Tag number is required';
+        if (!form.species) next.species = 'Species is required';
         if (form.dateOfBirth) {
             const dob = new Date(form.dateOfBirth);
-            if (dob > new Date()) {
-                next.dateOfBirth = 'Date cannot be in the future';
-            }
+            if (dob > new Date()) next.dateOfBirth = 'Date cannot be in the future';
         }
         setErrors(next);
         return Object.keys(next).length === 0;
@@ -88,12 +81,10 @@ export function AnimalForm({ initial, onSubmit, onDelete, mode, cancelTo = '/ani
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
         setSubmitError('');
-
         if (!validate()) return;
 
         setSaving(true);
         try {
-            // Clean empty strings to undefined
             const payload: AnimalRequest = {
                 tagNumber: form.tagNumber.trim(),
                 name: form.name?.trim() || undefined,
@@ -107,6 +98,7 @@ export function AnimalForm({ initial, onSubmit, onDelete, mode, cancelTo = '/ani
             setSubmitError(
                 err.response?.data?.message || 'Something went wrong. Please try again.'
             );
+            throw err;
         } finally {
             setSaving(false);
         }
@@ -123,6 +115,7 @@ export function AnimalForm({ initial, onSubmit, onDelete, mode, cancelTo = '/ani
             );
             setDeleting(false);
             setConfirmDelete(false);
+            throw err;
         }
     };
 
@@ -183,7 +176,6 @@ export function AnimalForm({ initial, onSubmit, onDelete, mode, cancelTo = '/ani
                 </Field>
             </div>
 
-
             <Field label="Status" htmlFor="status">
                 <Select
                     id="status"
@@ -191,9 +183,8 @@ export function AnimalForm({ initial, onSubmit, onDelete, mode, cancelTo = '/ani
                     onChange={(e) => update('status', e.target.value)}
                 >
                     {STATUS_OPTIONS.map((s) => {
-                        // Disable PREGNANT and DRY when gender is not FEMALE
                         const isFemale = form.gender === 'FEMALE';
-                        const isMilkSpecies = ['COW', 'GOAT', 'SHEEP', 'BUFFALO'].includes(form.species || '');
+                        const isMilkSpecies = MILK_SPECIES.includes(form.species as Species);
                         const disabled =
                             (s === 'PREGNANT' && (!isFemale || !isMilkSpecies)) ||
                             (s === 'DRY' && (!isFemale || !isMilkSpecies));
@@ -223,7 +214,6 @@ export function AnimalForm({ initial, onSubmit, onDelete, mode, cancelTo = '/ani
                 />
             </Field>
 
-            {/* Actions */}
             <div className="flex items-center gap-3 pt-2">
                 <button
                     type="submit"
@@ -253,7 +243,6 @@ export function AnimalForm({ initial, onSubmit, onDelete, mode, cancelTo = '/ani
                 </button>
             </div>
 
-            {/* Delete section (edit mode only) */}
             {mode === 'edit' && onDelete && (
                 <div className="border-t pt-5 mt-5">
                     {!confirmDelete ? (
@@ -267,9 +256,7 @@ export function AnimalForm({ initial, onSubmit, onDelete, mode, cancelTo = '/ani
                         </button>
                     ) : (
                         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                            <p className="text-sm text-red-800 font-medium">
-                                Delete this animal?
-                            </p>
+                            <p className="text-sm text-red-800 font-medium">Delete this animal?</p>
                             <p className="text-xs text-red-600 mt-1">
                                 This cannot be undone. Milk and egg production records linked to this animal will remain.
                             </p>
