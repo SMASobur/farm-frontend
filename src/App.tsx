@@ -19,7 +19,9 @@ import {SalesPage} from "@/pages/SalesPage.tsx";
 import {NewSalePage} from "@/pages/NewSalePage.tsx";
 import {SaleDetailPage} from "@/pages/SaleDetailPage.tsx";
 import {EditSalePage} from "@/pages/EditSalePage.tsx";
-
+import { ExpensesPage } from '@/pages/ExpensesPage';
+import { NewExpensePage } from '@/pages/NewExpensePage';
+import { EditExpensePage } from '@/pages/EditExpensePage';
 
 const queryClient = new QueryClient({
     defaultOptions: {
@@ -61,8 +63,12 @@ export default function App() {
                                 <Route path="/sales/new" element={<NewSalePage />} />
                                 <Route path="/sales/:id" element={<SaleDetailPage />} />
                                 <Route path="/sales/:id/edit" element={<EditSalePage />} />
+                                <Route path="/expenses" element={<ExpensesPage />} />
+                                <Route path="/expenses/new" element={<NewExpensePage />} />
+                                <Route path="/expenses/:id/edit" element={<EditExpensePage />} />
                                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
                                 <Route path="*" element={<Navigate to="/dashboard" replace />} />
+
                             </Route>
                         </Routes>
                     </AuthProvider>

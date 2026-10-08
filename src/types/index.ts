@@ -358,3 +358,28 @@ export const PAYMENT_METHOD_EMOJI: Record<PaymentMethod, string> = {
     BANK: '🏦',
     OTHER: '💳',
 };
+
+// ============================================================
+// Expense
+// ============================================================
+
+export interface Expense {
+    id: number;
+    date: string;
+    categoryId: number;
+    categoryCode: string;
+    categoryName: string;
+    categoryNameBn: string | null;
+    description: string;
+    amount: number;
+    notes: string | null;
+    createdAt: string;
+}
+
+export interface ExpenseRequest {
+    date: string;
+    categoryId: number;
+    description: string;
+    amount: number;
+    notes?: string;
+}
