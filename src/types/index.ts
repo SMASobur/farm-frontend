@@ -383,3 +383,30 @@ export interface ExpenseRequest {
     amount: number;
     notes?: string;
 }
+
+// ============================================================
+// Reports
+// ============================================================
+
+export interface MonthlyReport {
+    from: string;
+    to: string;
+    revenue: {
+        grossSales: number;
+        cashCollected: number;
+        outstandingDues: number;
+        byProduct: Record<string, number>;   // category code -> revenue
+    };
+    expenses: {
+        total: number;
+        byCategory: Record<string, number>;  // category code -> total
+    };
+    production: {
+        milkLiters: number;
+        eggs: number;
+    };
+    profit: {
+        netProfit: number;
+        profitMargin: number;
+    };
+}

@@ -23,6 +23,8 @@ import { ExpensesPage } from '@/pages/ExpensesPage';
 import { NewExpensePage } from '@/pages/NewExpensePage';
 import { EditExpensePage } from '@/pages/EditExpensePage';
 import { ExpenseDetailPage } from '@/pages/ExpenseDetailPage.tsx';
+import { ReportsPage } from '@/pages/ReportsPage';
+
 
 const queryClient = new QueryClient({
     defaultOptions: {
@@ -68,6 +70,7 @@ export default function App() {
                                 <Route path="/expenses/new" element={<NewExpensePage />} />
                                 <Route path="/expenses/:id" element={<ExpenseDetailPage />} />
                                 <Route path="/expenses/:id/edit" element={<EditExpensePage />} />
+                                <Route path="/reports" element={<ReportsPage />} />
                                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
                                 <Route path="*" element={<Navigate to="/dashboard" replace />} />
 
