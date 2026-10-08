@@ -278,13 +278,17 @@ export interface SaleRequest {
     customerId: number;
     date: string;
     categoryId: number;
-    unitId: number;
+    unitId?: number;
+    customUnitName?: string;
+    saveCustomUnitToUnits?: boolean;
     quantity: number;
     unitPrice: number;
     customProductName?: string;
+    saveCustomProductAsCategory?: boolean;
     notes?: string;
     initialPayment?: number;
-    initialPaymentMethod?: PaymentMethod;}
+    initialPaymentMethod?: PaymentMethod;
+}
 
 // ============================================================
 // Payment

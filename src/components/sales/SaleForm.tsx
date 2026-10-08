@@ -12,6 +12,8 @@ import { Field } from '@/components/forms/Field';
 import { Input } from '@/components/forms/Input';
 import { Select } from '@/components/forms/Select';
 import { CustomerCombobox } from '@/components/forms/CustomerCombobox';
+import { CategorySelect } from '@/components/forms/CategorySelect';
+import { UnitSelect } from '@/components/forms/UnitSelect';
 
 const PAYMENT_METHODS: PaymentMethod[] = ['CASH', 'BKASH', 'NAGAD', 'ROCKET', 'BANK', 'OTHER'];
 
@@ -33,10 +35,16 @@ export function SaleForm({ initial, onSubmit, mode, cancelTo }: Props) {
     const [customerId, setCustomerId] = useState<number | null>(initial?.customerId ?? null);
     const [date, setDate] = useState(initial?.date ?? todayISO());
     const [categoryId, setCategoryId] = useState<number | null>(initial?.categoryId ?? null);
+    const [customProductName, setCustomProductName] = useState(initial?.customProductName ?? '');
+    const [saveCustomCategory, setSaveCustomCategory] = useState(false);
+
     const [unitId, setUnitId] = useState<number | null>(initial?.unitId ?? null);
+    const [isCustomUnit, setIsCustomUnit] = useState(false);          // "Other…" mode
+    const [customUnitName, setCustomUnitName] = useState('');
+    const [saveCustomUnit, setSaveCustomUnit] = useState(false);
+
     const [quantity, setQuantity] = useState(initial?.quantity ? String(initial.quantity) : '');
     const [unitPrice, setUnitPrice] = useState(initial?.unitPrice ? String(initial.unitPrice) : '');
-    const [customProductName, setCustomProductName] = useState(initial?.customProductName ?? '');
     const [notes, setNotes] = useState(initial?.notes ?? '');
     const [initialPayment, setInitialPayment] = useState('');
     const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('CASH');
@@ -86,26 +94,20 @@ export function SaleForm({ initial, onSubmit, mode, cancelTo }: Props) {
         });
     };
 
-    const handleCategoryChange = (newCategoryId: number) => {
-        setCategoryId(newCategoryId);
-        const cat = categories.find((c) => c.id === newCategoryId);
-        if (cat) {
-            if (cat.defaultUnitId) setUnitId(cat.defaultUnitId);
-            if (cat.defaultPrice && !unitPrice) setUnitPrice(String(cat.defaultPrice));
-        }
-        // Clear custom product name if switching away from OTHER
-        if (cat?.code !== 'OTHER') {
-            setCustomProductName('');
-        }
-        clearError('categoryId');
-    };
-
     // ============ Validation ============
     const validate = (): boolean => {
         const next: Record<string, string> = {};
         if (customerId === null) next.customerId = 'Customer is required';
         if (categoryId === null) next.categoryId = 'Category is required';
-        if (unitId === null) next.unitId = 'Unit is required';
+
+        // Unit validation — either a selected unit OR a custom name
+        if (!isCustomUnit && unitId === null) {
+            next.unitId = 'Unit is required';
+        }
+        if (isCustomUnit && !customUnitName.trim()) {
+            next.unitId = 'Unit name is required';
+        }
+
         if (!qty || qty <= 0) next.quantity = 'Quantity must be positive';
         if (!price || price <= 0) next.unitPrice = 'Unit price must be positive';
 
@@ -137,10 +139,17 @@ export function SaleForm({ initial, onSubmit, mode, cancelTo }: Props) {
                 customerId: customerId!,
                 date,
                 categoryId: categoryId!,
-                unitId: unitId!,
+                unitId: isCustomUnit ? undefined : (unitId ?? undefined),
+                customUnitName: isCustomUnit ? customUnitName.trim() || undefined : undefined,
+                saveCustomUnitToUnits: isCustomUnit && customUnitName.trim()
+                    ? saveCustomUnit
+                    : undefined,
                 quantity: qty,
                 unitPrice: price,
                 customProductName: isOtherCategory ? customProductName.trim() : undefined,
+                saveCustomProductAsCategory: isOtherCategory && customProductName.trim()
+                    ? saveCustomCategory
+                    : undefined,
                 notes: notes.trim() || undefined,
                 initialPayment: canAddInitialPayment && paid > 0 ? paid : undefined,
                 initialPaymentMethod: canAddInitialPayment && paid > 0 ? paymentMethod : undefined,
@@ -210,72 +219,52 @@ export function SaleForm({ initial, onSubmit, mode, cancelTo }: Props) {
             </div>
 
             {/* Category */}
-            <Field
-                label="Category"
-                htmlFor="categoryId"
+            <CategorySelect
+                categories={categories}
+                value={categoryId}
+                customProductName={customProductName}
+                saveCustom={saveCustomCategory}
+                onChange={(id, customName, save) => {
+                    setCategoryId(id);
+                    setCustomProductName(customName);
+                    setSaveCustomCategory(save);
+                    clearError('categoryId');
+                    clearError('customProductName');
+
+                    // Auto-fill unit + price from category defaults
+                    const cat = categories.find((c) => c.id === id);
+                    if (cat) {
+                        if (cat.defaultUnitId) {
+                            setUnitId(cat.defaultUnitId);
+                            setIsCustomUnit(false);
+                            setCustomUnitName('');
+                        }
+                        if (cat.defaultPrice && !unitPrice) {
+                            setUnitPrice(String(cat.defaultPrice));
+                        }
+                    }
+                }}
                 required
                 error={errors.categoryId}
-                help="What product is being sold?"
-            >
-                <Select
-                    id="categoryId"
-                    value={categoryId ?? ''}
-                    onChange={(e) => handleCategoryChange(Number(e.target.value))}
-                    hasError={!!errors.categoryId}
-                >
-                    <option value="">Select category…</option>
-                    {categories.map((c) => (
-                        <option key={c.id} value={c.id}>
-                            {c.name}
-                            {c.nameBn ? ` · ${c.nameBn}` : ''}
-                        </option>
-                    ))}
-                </Select>
-            </Field>
-
-            {/* Custom product name (only when category is OTHER) */}
-            {isOtherCategory && (
-                <Field
-                    label="What are you selling?"
-                    htmlFor="customProductName"
-                    required
-                    error={errors.customProductName}
-                    help="Specify the exact product since category is 'Other'"
-                >
-                    <Input
-                        id="customProductName"
-                        value={customProductName}
-                        onChange={(e) => {
-                            setCustomProductName(e.target.value);
-                            clearError('customProductName');
-                        }}
-                        placeholder="e.g., Honey, Grass, Dung, Milk Powder"
-                        hasError={!!errors.customProductName}
-                        autoComplete="off"
-                    />
-                </Field>
-            )}
+                hasError={!!errors.categoryId}
+            />
 
             {/* Unit + Quantity + Price */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <Field label="Unit" htmlFor="unitId" required error={errors.unitId}>
-                    <Select
-                        id="unitId"
-                        value={unitId ?? ''}
-                        onChange={(e) => {
-                            setUnitId(e.target.value ? Number(e.target.value) : null);
-                            clearError('unitId');
-                        }}
-                        hasError={!!errors.unitId}
-                    >
-                        <option value="">Unit…</option>
-                        {units.map((u) => (
-                            <option key={u.id} value={u.id}>
-                                {u.name}
-                            </option>
-                        ))}
-                    </Select>
-                </Field>
+                <UnitSelect
+                    units={units}
+                    value={unitId}
+                    isOther={isCustomUnit}
+                    onChange={(id, isOther) => {
+                        setUnitId(id);
+                        setIsCustomUnit(isOther);
+                        if (!isOther) setCustomUnitName('');   // clear when leaving Other mode
+                        clearError('unitId');
+                    }}
+                    required
+                    error={errors.unitId}
+                    hasError={!!errors.unitId}
+                />
 
                 <Field label="Quantity" htmlFor="quantity" required error={errors.quantity}>
                     <Input
@@ -303,6 +292,44 @@ export function SaleForm({ initial, onSubmit, mode, cancelTo }: Props) {
                     />
                 </Field>
             </div>
+
+            {/* Custom unit name — full-width, appears only when Unit = Other */}
+            {isCustomUnit && (
+                <Field
+                    label="Unit name"
+                    htmlFor="customUnitName"
+                    required
+                    help="Give a short name for this unit"
+                >
+                    <Input
+                        id="customUnitName"
+                        value={customUnitName}
+                        onChange={(e) => { setCustomUnitName(e.target.value); clearError('unitId'); }}
+                        placeholder="e.g., Cup, Bag, Truck"
+                        hasError={!!errors.unitId && !customUnitName.trim()}
+                        autoComplete="off"
+                    />
+
+                    <label className="flex items-start gap-2 mt-3 cursor-pointer">
+                        <input
+                            type="checkbox"
+                            checked={saveCustomUnit}
+                            onChange={(e) => setSaveCustomUnit(e.target.checked)}
+                            className="mt-0.5 w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                        />
+                        <span className="text-sm text-gray-700">
+                            <span className="font-medium">
+                                {customUnitName.trim()
+                                    ? `Save "${customUnitName.trim()}" to my units`
+                                    : 'Save to my units'}
+                            </span>
+                            <span className="block text-xs text-gray-500 mt-0.5">
+                                Reuse it in future sales
+                            </span>
+                        </span>
+                    </label>
+                </Field>
+            )}
 
             {/* Total Display */}
             {total > 0 && (
