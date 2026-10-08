@@ -5,13 +5,13 @@ import { Calendar } from 'lucide-react';
 
 export function SaleCard({ sale }: { sale: Sale }) {
     const hasDue = sale.dueAmount > 0;
+    const displayName = sale.customProductName || sale.categoryName;
 
     return (
         <Link
             to={`/sales/${sale.id}`}
             className="block bg-white border border-gray-100 rounded-2xl p-4 hover:border-green-300 hover:shadow-sm transition"
         >
-            {/* Top row: date + amount */}
             <div className="flex items-start justify-between gap-3 mb-3">
                 <div className="min-w-0 flex-1">
                     <div className="font-semibold text-gray-900 truncate">
@@ -29,10 +29,9 @@ export function SaleCard({ sale }: { sale: Sale }) {
                 </div>
             </div>
 
-            {/* Middle: category + quantity */}
             <div className="flex items-center gap-2 text-sm text-gray-600 mb-3">
                 <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
-                    {sale.categoryName}
+                    {displayName}
                 </span>
                 <span className="text-gray-300">·</span>
                 <span>
@@ -42,7 +41,6 @@ export function SaleCard({ sale }: { sale: Sale }) {
                 <span>{formatCurrency(sale.unitPrice)}</span>
             </div>
 
-            {/* Bottom: paid + due */}
             <div className="flex items-center gap-4 text-xs pt-3 border-t border-gray-100">
                 <div>
                     <span className="text-gray-500">Paid</span>{' '}

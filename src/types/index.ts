@@ -269,6 +269,7 @@ export interface Sale {
     totalAmount: number;
     paidAmount: number;
     dueAmount: number;
+    customProductName: string | null;
     notes: string | null;
     createdAt: string;
 }
@@ -280,10 +281,10 @@ export interface SaleRequest {
     unitId: number;
     quantity: number;
     unitPrice: number;
+    customProductName?: string;
     notes?: string;
     initialPayment?: number;
-    initialPaymentMethod?: PaymentMethod;
-}
+    initialPaymentMethod?: PaymentMethod;}
 
 // ============================================================
 // Payment

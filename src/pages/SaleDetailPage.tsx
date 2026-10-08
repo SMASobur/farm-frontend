@@ -123,10 +123,17 @@ export function SaleDetailPage() {
                 {/* Product block */}
                 <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
                     <div className="flex items-center justify-between mb-2">
+                        <div>
                         <span className="text-xs font-semibold text-blue-700 uppercase tracking-wider">
                             {sale.categoryName}
                             {sale.categoryNameBn && ` · ${sale.categoryNameBn}`}
                         </span>
+                            {sale.customProductName && (
+                                <div className="text-sm text-blue-900 mt-0.5">
+                                    {sale.customProductName}
+                                </div>
+                            )}
+                        </div>
                     </div>
                     <div className="flex items-baseline justify-between">
                         <span className="text-sm text-blue-900">

@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, Save, Lock } from 'lucide-react';
+import { Loader2, Save } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { listCustomers } from '@/api/customers';
 import { listCategories } from '@/api/categories';
@@ -11,6 +11,7 @@ import { PAYMENT_METHOD_LABELS } from '@/types';
 import { Field } from '@/components/forms/Field';
 import { Input } from '@/components/forms/Input';
 import { Select } from '@/components/forms/Select';
+import { CustomerCombobox } from '@/components/forms/CustomerCombobox';
 
 const PAYMENT_METHODS: PaymentMethod[] = ['CASH', 'BKASH', 'NAGAD', 'ROCKET', 'BANK', 'OTHER'];
 
@@ -35,6 +36,7 @@ export function SaleForm({ initial, onSubmit, mode, cancelTo }: Props) {
     const [unitId, setUnitId] = useState<number | null>(initial?.unitId ?? null);
     const [quantity, setQuantity] = useState(initial?.quantity ? String(initial.quantity) : '');
     const [unitPrice, setUnitPrice] = useState(initial?.unitPrice ? String(initial.unitPrice) : '');
+    const [customProductName, setCustomProductName] = useState(initial?.customProductName ?? '');
     const [notes, setNotes] = useState(initial?.notes ?? '');
     const [initialPayment, setInitialPayment] = useState('');
     const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('CASH');
@@ -45,7 +47,7 @@ export function SaleForm({ initial, onSubmit, mode, cancelTo }: Props) {
 
     const isEdit = mode === 'edit';
     const alreadyPaid = initial?.paidAmount ?? 0;
-    const canAddInitialPayment = !isEdit; // only on create
+    const canAddInitialPayment = !isEdit;
 
     // ============ Lookups ============
     const customersQuery = useQuery({
@@ -65,12 +67,15 @@ export function SaleForm({ initial, onSubmit, mode, cancelTo }: Props) {
     const categories = categoriesQuery.data?.data ?? [];
     const units = unitsQuery.data?.data ?? [];
 
-    // ============ Live Calculations ============
+    // ============ Derived ============
     const qty = parseFloat(quantity) || 0;
     const price = parseFloat(unitPrice) || 0;
     const total = qty * price;
     const paid = parseFloat(initialPayment) || 0;
     const due = Math.max(0, total - paid);
+
+    const selectedCategory = categories.find((c) => c.id === categoryId);
+    const isOtherCategory = selectedCategory?.code === 'OTHER';
 
     // ============ Helpers ============
     const clearError = (field: string) => {
@@ -88,9 +93,14 @@ export function SaleForm({ initial, onSubmit, mode, cancelTo }: Props) {
             if (cat.defaultUnitId) setUnitId(cat.defaultUnitId);
             if (cat.defaultPrice && !unitPrice) setUnitPrice(String(cat.defaultPrice));
         }
+        // Clear custom product name if switching away from OTHER
+        if (cat?.code !== 'OTHER') {
+            setCustomProductName('');
+        }
         clearError('categoryId');
     };
 
+    // ============ Validation ============
     const validate = (): boolean => {
         const next: Record<string, string> = {};
         if (customerId === null) next.customerId = 'Customer is required';
@@ -99,12 +109,15 @@ export function SaleForm({ initial, onSubmit, mode, cancelTo }: Props) {
         if (!qty || qty <= 0) next.quantity = 'Quantity must be positive';
         if (!price || price <= 0) next.unitPrice = 'Unit price must be positive';
 
+        if (isOtherCategory && !customProductName.trim()) {
+            next.customProductName = 'Please specify what you are selling';
+        }
+
         if (canAddInitialPayment) {
             if (paid < 0) next.initialPayment = 'Payment cannot be negative';
             if (paid > total) next.initialPayment = 'Payment cannot exceed total';
         }
 
-        // Edit mode: cannot reduce total below already-paid amount
         if (isEdit && total < alreadyPaid) {
             next.unitPrice = `Total cannot be less than already-paid (${formatCurrency(alreadyPaid)})`;
         }
@@ -127,12 +140,11 @@ export function SaleForm({ initial, onSubmit, mode, cancelTo }: Props) {
                 unitId: unitId!,
                 quantity: qty,
                 unitPrice: price,
+                customProductName: isOtherCategory ? customProductName.trim() : undefined,
                 notes: notes.trim() || undefined,
-                // Only send initial payment on create
                 initialPayment: canAddInitialPayment && paid > 0 ? paid : undefined,
                 initialPaymentMethod: canAddInitialPayment && paid > 0 ? paymentMethod : undefined,
             };
-
             await onSubmit(payload);
         } catch (err: any) {
             setSubmitError(err.response?.data?.message || 'Something went wrong');
@@ -174,33 +186,16 @@ export function SaleForm({ initial, onSubmit, mode, cancelTo }: Props) {
                     error={errors.customerId}
                     help={isEdit ? 'Cannot be changed on existing sales' : undefined}
                 >
-                    <div className="relative">
-                        <Select
-                            id="customerId"
-                            value={customerId ?? ''}
-                            onChange={(e) => {
-                                setCustomerId(e.target.value ? Number(e.target.value) : null);
-                                clearError('customerId');
-                            }}
-                            disabled={isEdit}
-                            hasError={!!errors.customerId}
-                            className={isEdit ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''}
-                        >
-                            <option value="">Select customer…</option>
-                            {customers.map((c) => (
-                                <option key={c.id} value={c.id}>
-                                    {c.name}
-                                    {c.phone ? ` (${c.phone})` : ''}
-                                </option>
-                            ))}
-                        </Select>
-                        {isEdit && (
-                            <Lock
-                                size={14}
-                                className="absolute right-9 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
-                            />
-                        )}
-                    </div>
+                    <CustomerCombobox
+                        customers={customers}
+                        value={customerId}
+                        onChange={(id) => {
+                            setCustomerId(id);
+                            clearError('customerId');
+                        }}
+                        disabled={isEdit}
+                        hasError={!!errors.customerId}
+                    />
                 </Field>
 
                 <Field label="Date" htmlFor="date" required>
@@ -237,6 +232,29 @@ export function SaleForm({ initial, onSubmit, mode, cancelTo }: Props) {
                     ))}
                 </Select>
             </Field>
+
+            {/* Custom product name (only when category is OTHER) */}
+            {isOtherCategory && (
+                <Field
+                    label="What are you selling?"
+                    htmlFor="customProductName"
+                    required
+                    error={errors.customProductName}
+                    help="Specify the exact product since category is 'Other'"
+                >
+                    <Input
+                        id="customProductName"
+                        value={customProductName}
+                        onChange={(e) => {
+                            setCustomProductName(e.target.value);
+                            clearError('customProductName');
+                        }}
+                        placeholder="e.g., Honey, Grass, Dung, Milk Powder"
+                        hasError={!!errors.customProductName}
+                        autoComplete="off"
+                    />
+                </Field>
+            )}
 
             {/* Unit + Quantity + Price */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -296,7 +314,7 @@ export function SaleForm({ initial, onSubmit, mode, cancelTo }: Props) {
                 </div>
             )}
 
-            {/* Edit mode: show already-paid info */}
+            {/* Edit mode: already-paid info */}
             {isEdit && alreadyPaid > 0 && (
                 <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 text-sm text-amber-900">
                     <strong>{formatCurrency(alreadyPaid)}</strong> already paid.
