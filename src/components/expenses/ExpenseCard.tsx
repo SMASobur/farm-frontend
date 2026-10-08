@@ -6,7 +6,7 @@ import { formatCurrency, formatDateShort } from '@/lib/format';
 export function ExpenseCard({ expense }: { expense: Expense }) {
     return (
         <Link
-            to={`/expenses/${expense.id}/edit`}
+            to={`/expenses/${expense.id}`}
             className="block bg-white border border-gray-100 rounded-2xl p-4 hover:border-red-300 hover:shadow-sm transition"
         >
             <div className="flex items-start gap-3">

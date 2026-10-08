@@ -26,8 +26,8 @@ export function EditExpensePage() {
             queryClient.invalidateQueries({ queryKey: ['expense', expenseId] });
             queryClient.invalidateQueries({ queryKey: ['dashboard-summary'] });
             toast.success('Expense updated');
-            navigate('/expenses');
-        },
+            navigate(`/expenses/${expenseId}`);
+            },
         onError: (err: any) => {
             toast.error(err.response?.data?.message || 'Failed to update expense');
         },
@@ -86,11 +86,11 @@ export function EditExpensePage() {
     return (
         <div className="p-4 md:p-6 max-w-2xl mx-auto">
             <Link
-                to="/expenses"
+                to={`/expenses/${expenseId}`}
                 className="inline-flex items-center gap-1.5 text-sm text-gray-600 hover:text-green-600 mb-4 transition"
             >
                 <ArrowLeft size={16} />
-                Back to Expenses
+                Back to Expense
             </Link>
 
             <div className="bg-white border border-gray-100 rounded-2xl p-6">
@@ -102,8 +102,7 @@ export function EditExpensePage() {
                     mode="edit"
                     onSubmit={async (payload) => { await updateMutation.mutateAsync(payload); }}
                     onDelete={async () => { await deleteMutation.mutateAsync(); }}
-                    cancelTo="/expenses"
-                />
+                    cancelTo={`/expenses/${expenseId}`}                />
             </div>
         </div>
     );
