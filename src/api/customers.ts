@@ -1,15 +1,15 @@
 import { apiClient } from './client';
-import type { ApiResponse, Customer, CustomerRequest, CustomerType } from '@/types';
+import type { ApiResponse, Customer, CustomerRequest } from '@/types';
 
 export interface CustomerFilters {
-    type?: CustomerType;
+    customerTypeId?: number;
     search?: string;
 }
 
 export async function listCustomers(filters?: CustomerFilters): Promise<ApiResponse<Customer[]>> {
     const params = new URLSearchParams();
     if (filters?.search) params.set('name', filters.search);
-    if (filters?.type) params.set('type', filters.type);
+    if (filters?.customerTypeId) params.set('customerTypeId', String(filters.customerTypeId));
 
     const qs = params.toString();
     const url = qs ? `/api/customers?${qs}` : '/api/customers';

@@ -6,9 +6,7 @@ import {
     Receipt,
 } from 'lucide-react';
 import { getCustomer, deleteCustomer } from '@/api/customers';
-import {
-    CUSTOMER_TYPE_LABELS, CUSTOMER_TYPE_COLORS, CUSTOMER_TYPE_EMOJI,
-} from '@/types';
+import { getCustomerTypeColor, getCustomerTypeEmoji } from '@/types';
 
 export function CustomerDetailPage() {
     const { id } = useParams<{ id: string }>();
@@ -76,16 +74,19 @@ export function CustomerDetailPage() {
             <div className="bg-white border border-gray-100 rounded-2xl p-6">
                 <div className="flex items-start gap-4">
                     <div className="w-16 h-16 rounded-full bg-green-50 flex items-center justify-center text-3xl shrink-0">
-                        {CUSTOMER_TYPE_EMOJI[customer.type]}
+                        {getCustomerTypeEmoji(customer.customerTypeCode)}
                     </div>
                     <div className="min-w-0 flex-1">
                         <h1 className="text-2xl font-bold text-gray-900 truncate">
                             {customer.name}
                         </h1>
                         <div className="flex flex-wrap items-center gap-3 mt-2">
-              <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${CUSTOMER_TYPE_COLORS[customer.type]}`}>
-                {CUSTOMER_TYPE_LABELS[customer.type]}
-              </span>
+                            {customer.customerTypeCode && customer.customerTypeName && (
+                                <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${getCustomerTypeColor(customer.customerTypeCode)}`}>
+                                    {customer.customerTypeName}
+                                    {customer.customerTypeNameBn && ` · ${customer.customerTypeNameBn}`}
+                                </span>
+                            )}
                             {hasDue && (
                                 <span className="text-xs px-2.5 py-1 rounded-full bg-amber-100 text-amber-700 font-semibold inline-flex items-center gap-1">
                   <Receipt size={12} />

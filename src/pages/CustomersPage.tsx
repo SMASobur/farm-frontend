@@ -3,15 +3,14 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { Plus, Search, AlertCircle, RefreshCw, Users } from 'lucide-react';
 import { listCustomers } from '@/api/customers';
-import type { CustomerType, Customer } from '@/types';
+import { listCustomerTypes } from '@/api/customerTypes';
+import type { Customer, CustomerType } from '@/types';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useKeyPress } from '@/hooks/useKeyPress';
 import { CustomerCard } from '@/components/customers/CustomerCard';
-import { CustomerFilters } from '@/components/customers/CustomerFilters';
-import { CustomersSkeleton } from '@/components/customers/CustomersSkeleton';
 
 export function CustomersPage() {
-    const [type, setType] = useState<CustomerType | null>(null);
+    const [customerTypeId, setCustomerTypeId] = useState<number | null>(null);
     const [searchInput, setSearchInput] = useState('');
     const search = useDebounce(searchInput, 300);
     const searchRef = useRef<HTMLInputElement>(null);
@@ -22,19 +21,26 @@ export function CustomersPage() {
         { ignoreInputs: true }
     );
 
-    const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
-        queryKey: ['customers', type, search],
+    const customerTypesQuery = useQuery({
+        queryKey: ['customer-types'],
+        queryFn: () => listCustomerTypes(true),
+        staleTime: 60_000,
+    });
+    const customerTypes: CustomerType[] = customerTypesQuery.data?.data ?? [];
+
+    const { data, isLoading, isError, refetch, isFetching } = useQuery({
+        queryKey: ['customers', customerTypeId, search],
         queryFn: () => listCustomers({
-            type: type || undefined,
+            customerTypeId: customerTypeId || undefined,
             search: search || undefined,
         }),
     });
 
     const customers: Customer[] = data?.data ?? [];
-    const hasActiveFilters = type !== null || search !== '';
+    const hasActiveFilters = customerTypeId !== null || search !== '';
 
     const clearFilters = () => {
-        setType(null);
+        setCustomerTypeId(null);
         setSearchInput('');
     };
 
@@ -49,7 +55,7 @@ export function CustomersPage() {
                 </div>
                 <Link
                     to="/customers/new"
-                    className="inline-flex items-center gap-1.5 bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 active:bg-green-800 transition"
+                    className="inline-flex items-center gap-1.5 bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition"
                 >
                     <Plus size={18} />
                     <span className="hidden sm:inline">Add Customer</span>
@@ -65,11 +71,27 @@ export function CustomersPage() {
                     placeholder="Search by name…"
                     value={searchInput}
                     onChange={(e) => setSearchInput(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-base"
+                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-base"
                 />
             </div>
 
-            <CustomerFilters selectedType={type} onTypeChange={setType} />
+            {/* Customer Type filter chips (dynamic) */}
+            <div>
+                <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                    Type
+                </div>
+                <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4">
+                    <FilterChip label="All" active={customerTypeId === null} onClick={() => setCustomerTypeId(null)} />
+                    {customerTypes.filter((t) => t.code !== 'OTHER').map((t) => (
+                        <FilterChip
+                            key={t.id}
+                            label={t.name}
+                            active={customerTypeId === t.id}
+                            onClick={() => setCustomerTypeId(customerTypeId === t.id ? null : t.id)}
+                        />
+                    ))}
+                </div>
+            </div>
 
             {isFetching && !isLoading && (
                 <div className="bg-blue-50 border border-blue-100 rounded-xl px-3 py-2 flex items-center gap-2 text-xs text-blue-800">
@@ -79,21 +101,21 @@ export function CustomersPage() {
             )}
 
             {isLoading ? (
-                <CustomersSkeleton />
-            ) : isError ? (
-                <div className="bg-red-50 border border-red-100 rounded-2xl p-6 text-center">
-                    <AlertCircle className="mx-auto text-red-500 mb-3" size={40} />
-                    <p className="text-red-800 font-semibold">Couldn't load customers</p>
-                    <p className="text-sm text-red-600 mt-2">
-                        {(error as any)?.response?.data?.message || 'Something went wrong'}
-                    </p>
-                    <button
-                        onClick={() => refetch()}
-                        className="mt-4 px-5 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition inline-flex items-center gap-2"
-                    >
-                        <RefreshCw size={16} /> Try again
-                    </button>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {[1, 2, 3, 4].map((i) => (
+                        <div key={i} className="bg-white border border-gray-100 rounded-2xl p-4">
+                            <div className="flex items-start gap-3">
+                                <div className="w-10 h-10 rounded-full shimmer shrink-0"></div>
+                                <div className="flex-1 space-y-2">
+                                    <div className="h-4 shimmer rounded w-32"></div>
+                                    <div className="h-3 shimmer rounded w-24"></div>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
                 </div>
+            ) : isError ? (
+                <ErrorState onRetry={() => refetch()} />
             ) : customers.length === 0 ? (
                 <EmptyState hasFilters={hasActiveFilters} onClear={clearFilters} />
             ) : (
@@ -107,34 +129,52 @@ export function CustomersPage() {
     );
 }
 
+function FilterChip({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+    return (
+        <button
+            type="button"
+            onClick={onClick}
+            className={`shrink-0 px-3 py-1.5 rounded-full text-sm font-medium transition ${
+                active ? 'bg-green-600 text-white' : 'bg-white border border-gray-200 text-gray-700 hover:border-gray-300'
+            }`}
+        >
+            {label}
+        </button>
+    );
+}
+
 function EmptyState({ hasFilters, onClear }: { hasFilters: boolean; onClear: () => void }) {
     if (hasFilters) {
         return (
             <div className="bg-white border border-gray-100 rounded-2xl p-8 text-center">
                 <Search className="mx-auto text-gray-300 mb-3" size={40} />
                 <p className="text-gray-700 font-medium">No matching customers</p>
-                <p className="text-sm text-gray-500 mt-1">Try adjusting your filters</p>
-                <button onClick={onClear} className="mt-4 text-sm text-green-600 hover:underline font-medium">
+                <button onClick={onClear} className="mt-4 text-sm text-green-600 hover:underline">
                     Clear all filters
                 </button>
             </div>
         );
     }
-
     return (
         <div className="bg-white border border-gray-100 rounded-2xl p-8 text-center">
             <Users className="mx-auto text-gray-300 mb-3" size={48} />
             <p className="text-gray-700 font-medium text-lg">No customers yet</p>
-            <p className="text-sm text-gray-500 mt-2 max-w-xs mx-auto">
-                Add your first customer to start recording sales and tracking dues.
-            </p>
-            <Link
-                to="/customers/new"
-                className="inline-flex items-center gap-1.5 mt-5 bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition"
-            >
+            <Link to="/customers/new" className="inline-flex items-center gap-1.5 mt-5 bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition">
                 <Plus size={18} />
                 Add Your First Customer
             </Link>
+        </div>
+    );
+}
+
+function ErrorState({ onRetry }: { onRetry: () => void }) {
+    return (
+        <div className="bg-red-50 border border-red-100 rounded-2xl p-6 text-center">
+            <AlertCircle className="mx-auto text-red-500 mb-3" size={40} />
+            <p className="text-red-800 font-semibold">Couldn't load customers</p>
+            <button onClick={onRetry} className="mt-4 px-5 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 inline-flex items-center gap-2">
+                <RefreshCw size={16} /> Try again
+            </button>
         </div>
     );
 }
