@@ -8,6 +8,7 @@ import { getAnimal, deleteAnimal } from '@/api/animals';
 import {
     STATUS_LABELS, STATUS_COLORS, GENDER_LABELS, getSpeciesEmoji,
 } from '@/types';
+import {AnimalProductionHistory} from "@/components/animals/AnimalProductionHistory.tsx";
 
 export function AnimalDetailPage() {
     const { id } = useParams<{ id: string }>();
@@ -136,6 +137,9 @@ export function AnimalDetailPage() {
                         </div>
                     </div>
                 )}
+                {/* Animal history */}
+                <AnimalProductionHistory animal={animal} />
+
             </div>
         </div>
     );

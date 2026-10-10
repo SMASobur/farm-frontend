@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { getCustomer, deleteCustomer } from '@/api/customers';
 import { getCustomerTypeColor, getCustomerTypeEmoji } from '@/types';
+import { CustomerSalesHistory } from '@/components/customers/CustomerSalesHistory';
 
 export function CustomerDetailPage() {
     const { id } = useParams<{ id: string }>();
@@ -137,7 +138,7 @@ export function CustomerDetailPage() {
                     <button
                         type="button"
                         onClick={() => setConfirmDelete(true)}
-                        className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg font-medium text-red-600 hover:bg-red-50 transition"
+                        className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg font-medium text-red-600 hover:bg-red-50 transition ml-auto"
                     >
                         <Trash2 size={16} />
                         Delete
@@ -176,15 +177,8 @@ export function CustomerDetailPage() {
                 </div>
             )}
 
-            {/* Sales history placeholder */}
-            <div className="bg-white border border-gray-100 rounded-2xl p-6">
-                <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">
-                    Sales History
-                </h2>
-                <p className="text-sm text-gray-500">
-                    Sale records for this customer will appear here in Phase 5.6.
-                </p>
-            </div>
+            {/* Sales history */}
+            <CustomerSalesHistory customerId={customerId} />
         </div>
     );
 }

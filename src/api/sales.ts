@@ -27,6 +27,11 @@ export async function getSale(id: number): Promise<ApiResponse<Sale>> {
     return response.data;
 }
 
+export async function listSalesByCustomer(customerId: number): Promise<ApiResponse<Sale[]>> {
+    const response = await apiClient.get<ApiResponse<Sale[]>>(`/api/sales/customer/${customerId}`);
+    return response.data;
+}
+
 export async function createSale(request: SaleRequest): Promise<ApiResponse<Sale>> {
     const response = await apiClient.post<ApiResponse<Sale>>('/api/sales', request);
     return response.data;

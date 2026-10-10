@@ -277,7 +277,6 @@ export interface CategoryRequest {
 // Sale
 // ============================================================
 
-export type SaleUnit = 'LITER' | 'PIECE' | 'KG' | 'HEAD';
 export type PaymentMethod = 'CASH' | 'BKASH' | 'NAGAD' | 'ROCKET' | 'BANK' | 'OTHER';
 
 export interface Sale {
@@ -439,4 +438,51 @@ export interface MonthlyReport {
         netProfit: number;
         profitMargin: number;
     };
+}
+// ============================================================
+// Production
+// ============================================================
+
+export interface MilkProduction {
+    id: number;
+    animalId: number;
+    animalTagNumber: string;
+    animalName: string | null;
+    date: string;
+    morningLiters: number;
+    noonLiters: number;
+    nightLiters: number;
+    totalLiters: number;
+}
+
+export interface EggProduction {
+    id: number;
+    animalId: number | null;
+    flockId: number | null;
+    sourceType: 'ANIMAL' | 'FLOCK';
+    sourceDisplayName: string;
+    date: string;
+    goodEggs: number;
+    crackedEggs: number;
+    totalEggs: number;
+}
+
+// ============================================================
+// Invites
+// ============================================================
+
+export interface Invite {
+    id: number;
+    code: string;
+    invitedName: string | null;
+    invitedEmail: string | null;
+    role: 'ADMIN' | 'MANAGER' | 'WORKER';
+    status: 'PENDING' | 'ACCEPTED' | 'REVOKED' | 'EXPIRED';
+    createdByName: string;
+    expiresAt: string;
+    acceptedAt: string | null;
+    acceptedByName: string | null;
+    createdAt: string;
+    expired: boolean;
+    shareableMessage: string;
 }
