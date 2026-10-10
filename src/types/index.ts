@@ -157,7 +157,7 @@ export const SPECIES_CODE_EMOJI: Record<string, string> = {
 };
 
 export function getSpeciesEmoji(code: string): string {
-    return SPECIES_CODE_EMOJI[code] || '🐾';
+    return SPECIES_CODE_EMOJI[code] || '🐥';
 }
 
 // Milk-producing species codes (for filtering)
@@ -220,12 +220,12 @@ export const CUSTOMER_TYPE_CODE_EMOJI: Record<string, string> = {
     BAKERY: '🥐',
     GROCERY: '🥬',
     HOTEL: '🏨',
-    OTHER: '👤',
+    OTHER: '🧔🏻',
 };
 
 export function getCustomerTypeEmoji(code: string | null): string {
     if (!code) return '👤';
-    return CUSTOMER_TYPE_CODE_EMOJI[code] || '👤';
+    return CUSTOMER_TYPE_CODE_EMOJI[code] || '🧔🏻';
 }
 
 // Fallback color for unknown codes

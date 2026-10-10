@@ -137,10 +137,11 @@ export function AnimalDetailPage() {
                         </div>
                     </div>
                 )}
-                {/* Animal history */}
-                <AnimalProductionHistory animal={animal} />
+
 
             </div>
+            {/* Animal history */}
+            <AnimalProductionHistory animal={animal} />
         </div>
     );
 }
