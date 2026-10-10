@@ -1,80 +1,75 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { Plus, Search, AlertCircle, RefreshCw, Beef } from 'lucide-react';
 import { listAnimals } from '@/api/animals';
+import { listSpecies } from '@/api/species';
 import type { Species, AnimalStatus, Animal } from '@/types';
 import { useDebounce } from '@/hooks/useDebounce';
-import { AnimalCard } from '@/components/animals/AnimalCard';
-import { AnimalFilters } from '@/components/animals/AnimalFilters';
-import { AnimalsSkeleton } from '@/components/animals/AnimalsSkeleton';
-import { useRef } from 'react';
 import { useKeyPress } from '@/hooks/useKeyPress';
+import { AnimalCard } from '@/components/animals/AnimalCard';
+import { AnimalsSkeleton } from '@/components/animals/AnimalsSkeleton';
+
+const STATUS_OPTIONS: AnimalStatus[] = ['ACTIVE', 'PREGNANT', 'DRY', 'SICK', 'SOLD', 'DEAD'];
 
 export function AnimalsPage() {
-    const [species, setSpecies] = useState<Species | null>(null);
+    const [speciesId, setSpeciesId] = useState<number | null>(null);
     const [status, setStatus] = useState<AnimalStatus | null>(null);
     const [searchInput, setSearchInput] = useState('');
-
     const search = useDebounce(searchInput, 300);
-
-    const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
-        queryKey: ['animals', species, status],
-        queryFn: () => listAnimals({
-            species: species || undefined,
-            status: status || undefined,
-        }),
-    });
-
-    // Client-side search filter (over the fetched list)
-    const animals: Animal[] = data?.data ?? [];
-    const filtered = search
-        ? animals.filter((a) => {
-            const s = search.toLowerCase();
-            return (
-                a.tagNumber.toLowerCase().includes(s) ||
-                (a.name ?? '').toLowerCase().includes(s)
-            );
-        })
-        : animals;
-
-    const hasActiveFilters = species !== null || status !== null || search !== '';
-
     const searchRef = useRef<HTMLInputElement>(null);
 
     useKeyPress(
         '/',
-        (e) => {
-            e.preventDefault();
-            searchRef.current?.focus();
-        },
+        (e) => { e.preventDefault(); searchRef.current?.focus(); },
         { ignoreInputs: true }
     );
 
+    // Lookups
+    const speciesQuery = useQuery({
+        queryKey: ['species'],
+        queryFn: () => listSpecies(true),
+        staleTime: 60_000,
+    });
+    const speciesList: Species[] = speciesQuery.data?.data ?? [];
+
+    // Animals list
+    const { data, isLoading, isError, refetch, isFetching } = useQuery({        queryKey: ['animals', speciesId, status],
+        queryFn: () => listAnimals({
+            speciesId: speciesId || undefined,
+            status: status || undefined,
+        }),
+    });
+
+    const animals: Animal[] = data?.data ?? [];
+    const filtered = search
+        ? animals.filter((a) => {
+            const s = search.toLowerCase();
+            return a.tagNumber.toLowerCase().includes(s) ||
+                (a.name ?? '').toLowerCase().includes(s);
+        })
+        : animals;
+
+    const hasActiveFilters = speciesId !== null || status !== null || search !== '';
 
     const clearFilters = () => {
-        setSpecies(null);
+        setSpeciesId(null);
         setStatus(null);
         setSearchInput('');
     };
 
     return (
         <div className="p-4 md:p-6 space-y-6">
-            {/* Header */}
             <div className="flex items-start justify-between gap-3">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">Animals</h1>
                     <p className="text-sm text-gray-500 mt-1">
-                        {isLoading
-                            ? 'Loading…'
-                            : hasActiveFilters
-                                ? `${filtered.length} of ${animals.length}`
-                                : `${animals.length} total`}
+                        {isLoading ? 'Loading…' : `${animals.length} total`}
                     </p>
                 </div>
                 <Link
                     to="/animals/new"
-                    className="inline-flex items-center gap-1.5 bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 active:bg-green-800 transition"
+                    className="inline-flex items-center gap-1.5 bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition"
                 >
                     <Plus size={18} />
                     <span className="hidden sm:inline">Add Animal</span>
@@ -82,31 +77,54 @@ export function AnimalsPage() {
                 </Link>
             </div>
 
-            {/* Search */}
             <div className="relative">
-                <Search
-                    size={18}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                />
+                <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input
                     ref={searchRef}
                     type="text"
                     placeholder="Search by tag number or name…"
                     value={searchInput}
                     onChange={(e) => setSearchInput(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-base"
+                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-base"
                 />
             </div>
 
-            {/* Filters */}
-            <AnimalFilters
-                selectedSpecies={species}
-                selectedStatus={status}
-                onSpeciesChange={setSpecies}
-                onStatusChange={setStatus}
-            />
+            {/* Species filter (dynamic chips) */}
+            <div>
+                <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                    Species
+                </div>
+                <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4">
+                    <FilterChip label="All" active={speciesId === null} onClick={() => setSpeciesId(null)} />
+                    {speciesList.filter((s) => s.code !== 'OTHER').map((s) => (
+                        <FilterChip
+                            key={s.id}
+                            label={s.name}
+                            active={speciesId === s.id}
+                            onClick={() => setSpeciesId(speciesId === s.id ? null : s.id)}
+                        />
+                    ))}
+                </div>
+            </div>
 
-            {/* Refreshing indicator */}
+            {/* Status filter */}
+            <div>
+                <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                    Status
+                </div>
+                <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4">
+                    <FilterChip label="All" active={status === null} onClick={() => setStatus(null)} />
+                    {STATUS_OPTIONS.map((s) => (
+                        <FilterChip
+                            key={s}
+                            label={s.charAt(0) + s.slice(1).toLowerCase()}
+                            active={status === s}
+                            onClick={() => setStatus(status === s ? null : s)}
+                        />
+                    ))}
+                </div>
+            </div>
+
             {isFetching && !isLoading && (
                 <div className="bg-blue-50 border border-blue-100 rounded-xl px-3 py-2 flex items-center gap-2 text-xs text-blue-800">
                     <RefreshCw size={12} className="animate-spin shrink-0" />
@@ -114,11 +132,10 @@ export function AnimalsPage() {
                 </div>
             )}
 
-            {/* Content */}
             {isLoading ? (
                 <AnimalsSkeleton />
             ) : isError ? (
-                <ErrorState error={error} onRetry={() => refetch()} />
+                <ErrorState onRetry={() => refetch()} />
             ) : filtered.length === 0 ? (
                 <EmptyState hasFilters={hasActiveFilters} onClear={clearFilters} />
             ) : (
@@ -132,45 +149,37 @@ export function AnimalsPage() {
     );
 }
 
-// ============================================================
-// Empty State
-// ============================================================
-function EmptyState({
-                        hasFilters,
-                        onClear,
-                    }: {
-    hasFilters: boolean;
-    onClear: () => void;
-}) {
+function FilterChip({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+    return (
+        <button
+            type="button"
+            onClick={onClick}
+            className={`shrink-0 px-3 py-1.5 rounded-full text-sm font-medium transition ${
+                active ? 'bg-green-600 text-white' : 'bg-white border border-gray-200 text-gray-700 hover:border-gray-300'
+            }`}
+        >
+            {label}
+        </button>
+    );
+}
+
+function EmptyState({ hasFilters, onClear }: { hasFilters: boolean; onClear: () => void }) {
     if (hasFilters) {
         return (
             <div className="bg-white border border-gray-100 rounded-2xl p-8 text-center">
                 <Search className="mx-auto text-gray-300 mb-3" size={40} />
                 <p className="text-gray-700 font-medium">No matching animals</p>
-                <p className="text-sm text-gray-500 mt-1">
-                    Try adjusting your search or filters
-                </p>
-                <button
-                    onClick={onClear}
-                    className="mt-4 text-sm text-green-600 hover:underline font-medium"
-                >
+                <button onClick={onClear} className="mt-4 text-sm text-green-600 hover:underline">
                     Clear all filters
                 </button>
             </div>
         );
     }
-
     return (
         <div className="bg-white border border-gray-100 rounded-2xl p-8 text-center">
             <Beef className="mx-auto text-gray-300 mb-3" size={48} />
             <p className="text-gray-700 font-medium text-lg">No animals yet</p>
-            <p className="text-sm text-gray-500 mt-2 max-w-xs mx-auto">
-                Start by adding your first cow, goat, chicken, or other livestock.
-            </p>
-            <Link
-                to="/animals/new"
-                className="inline-flex items-center gap-1.5 mt-5 bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition"
-            >
+            <Link to="/animals/new" className="inline-flex items-center gap-1.5 mt-5 bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition">
                 <Plus size={18} />
                 Add Your First Animal
             </Link>
@@ -178,29 +187,13 @@ function EmptyState({
     );
 }
 
-// ============================================================
-// Error State
-// ============================================================
-function ErrorState({
-                        error,
-                        onRetry,
-                    }: {
-    error: any;
-    onRetry: () => void;
-}) {
+function ErrorState({ onRetry }: { onRetry: () => void }) {
     return (
         <div className="bg-red-50 border border-red-100 rounded-2xl p-6 text-center">
             <AlertCircle className="mx-auto text-red-500 mb-3" size={40} />
             <p className="text-red-800 font-semibold">Couldn't load animals</p>
-            <p className="text-sm text-red-600 mt-2">
-                {error?.response?.data?.message || error?.message || 'Something went wrong'}
-            </p>
-            <button
-                onClick={onRetry}
-                className="mt-4 px-5 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition inline-flex items-center gap-2"
-            >
-                <RefreshCw size={16} />
-                Try again
+            <button onClick={onRetry} className="mt-4 px-5 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 inline-flex items-center gap-2">
+                <RefreshCw size={16} /> Try again
             </button>
         </div>
     );

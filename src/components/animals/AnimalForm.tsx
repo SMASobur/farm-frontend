@@ -1,16 +1,18 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { Loader2, Save, Trash2 } from 'lucide-react';
-import type { Animal, AnimalRequest, Species, AnimalStatus, Gender } from '@/types';
-import { SPECIES_LABELS, STATUS_LABELS, GENDER_LABELS } from '@/types';
+import { listSpecies } from '@/api/species';
+import type { Animal, AnimalRequest, AnimalStatus, Gender } from '@/types';
+import { STATUS_LABELS, GENDER_LABELS } from '@/types';
 import { Field } from '@/components/forms/Field';
 import { Input } from '@/components/forms/Input';
 import { Select } from '@/components/forms/Select';
+import { SpeciesSelect } from '@/components/forms/SpeciesSelect';
 
-const SPECIES_OPTIONS: Species[] = ['COW', 'GOAT', 'SHEEP', 'CHICKEN', 'DUCK', 'BUFFALO', 'OTHER'];
 const STATUS_OPTIONS: AnimalStatus[] = ['ACTIVE', 'PREGNANT', 'DRY', 'SICK', 'SOLD', 'DEAD'];
 const GENDER_OPTIONS: Gender[] = ['FEMALE', 'MALE', 'UNKNOWN'];
-const MILK_SPECIES: Species[] = ['COW', 'GOAT', 'SHEEP', 'BUFFALO'];
+const MILK_SPECIES_CODES = ['COW', 'GOAT', 'SHEEP', 'BUFFALO'];
 
 interface Props {
     initial?: Animal;
@@ -23,14 +25,15 @@ interface Props {
 export function AnimalForm({ initial, onSubmit, onDelete, mode, cancelTo = '/animals' }: Props) {
     const navigate = useNavigate();
 
-    const [form, setForm] = useState<AnimalRequest>({
-        tagNumber: initial?.tagNumber ?? '',
-        name: initial?.name ?? '',
-        species: initial?.species ?? 'COW',
-        status: initial?.status ?? 'ACTIVE',
-        gender: initial?.gender ?? 'FEMALE',
-        dateOfBirth: initial?.dateOfBirth ?? '',
-    });
+    // Form state
+    const [tagNumber, setTagNumber] = useState(initial?.tagNumber ?? '');
+    const [name, setName] = useState(initial?.name ?? '');
+    const [speciesId, setSpeciesId] = useState<number | null>(initial?.speciesId ?? null);
+    const [customSpeciesName, setCustomSpeciesName] = useState('');
+    const [saveCustomSpecies, setSaveCustomSpecies] = useState(false);
+    const [status, setStatus] = useState<AnimalStatus>(initial?.status ?? 'ACTIVE');
+    const [gender, setGender] = useState<Gender>(initial?.gender ?? 'FEMALE');
+    const [dateOfBirth, setDateOfBirth] = useState(initial?.dateOfBirth ?? '');
 
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [submitError, setSubmitError] = useState('');
@@ -38,41 +41,29 @@ export function AnimalForm({ initial, onSubmit, onDelete, mode, cancelTo = '/ani
     const [deleting, setDeleting] = useState(false);
     const [confirmDelete, setConfirmDelete] = useState(false);
 
-    const update = (field: keyof AnimalRequest, value: string) => {
-        setForm((prev) => {
-            const next = { ...prev, [field]: value };
+    // Lookup: species list
+    const speciesQuery = useQuery({
+        queryKey: ['species'],
+        queryFn: () => listSpecies(true),
+    });
+    const speciesList = speciesQuery.data?.data ?? [];
 
-            if (field === 'gender' && value !== 'FEMALE') {
-                if (next.status === 'PREGNANT' || next.status === 'DRY') {
-                    next.status = 'ACTIVE';
-                }
-            }
-
-            if (field === 'species' && !MILK_SPECIES.includes(value as Species)) {
-                if (next.status === 'PREGNANT' || next.status === 'DRY') {
-                    next.status = 'ACTIVE';
-                }
-            }
-
+    const clearError = (field: string) => {
+        setErrors((prev) => {
+            const next = { ...prev };
+            delete next[field];
             return next;
         });
-
-        if (errors[field]) {
-            setErrors((prev) => {
-                const next = { ...prev };
-                delete next[field];
-                return next;
-            });
-        }
     };
 
     const validate = (): boolean => {
         const next: Record<string, string> = {};
-        if (!form.tagNumber.trim()) next.tagNumber = 'Tag number is required';
-        if (!form.species) next.species = 'Species is required';
-        if (form.dateOfBirth) {
-            const dob = new Date(form.dateOfBirth);
-            if (dob > new Date()) next.dateOfBirth = 'Date cannot be in the future';
+        if (!tagNumber.trim()) next.tagNumber = 'Tag number is required';
+        if (speciesId === null && !customSpeciesName.trim()) {
+            next.speciesId = 'Species is required';
+        }
+        if (dateOfBirth && new Date(dateOfBirth) > new Date()) {
+            next.dateOfBirth = 'Date cannot be in the future';
         }
         setErrors(next);
         return Object.keys(next).length === 0;
@@ -85,19 +76,24 @@ export function AnimalForm({ initial, onSubmit, onDelete, mode, cancelTo = '/ani
 
         setSaving(true);
         try {
+            const selectedSpecies = speciesList.find((s) => s.id === speciesId);
+            const isOtherSpecies = selectedSpecies?.code === 'OTHER';
+
             const payload: AnimalRequest = {
-                tagNumber: form.tagNumber.trim(),
-                name: form.name?.trim() || undefined,
-                species: form.species!,
-                status: form.status,
-                gender: form.gender,
-                dateOfBirth: form.dateOfBirth || undefined,
+                tagNumber: tagNumber.trim(),
+                name: name.trim() || undefined,
+                // Only send speciesId when NOT using Other
+                speciesId: isOtherSpecies ? undefined : (speciesId ?? undefined),
+                // Only send customSpeciesName when using Other
+                customSpeciesName: isOtherSpecies ? customSpeciesName.trim() || undefined : undefined,
+                saveCustomSpecies: isOtherSpecies && customSpeciesName.trim() ? saveCustomSpecies : undefined,
+                status,
+                gender,
+                dateOfBirth: dateOfBirth || undefined,
             };
             await onSubmit(payload);
         } catch (err: any) {
-            setSubmitError(
-                err.response?.data?.message || 'Something went wrong. Please try again.'
-            );
+            setSubmitError(err.response?.data?.message || 'Something went wrong');
             throw err;
         } finally {
             setSaving(false);
@@ -110,14 +106,31 @@ export function AnimalForm({ initial, onSubmit, onDelete, mode, cancelTo = '/ani
         try {
             await onDelete();
         } catch (err: any) {
-            setSubmitError(
-                err.response?.data?.message || 'Failed to delete. Please try again.'
-            );
+            setSubmitError(err.response?.data?.message || 'Failed to delete');
             setDeleting(false);
             setConfirmDelete(false);
             throw err;
         }
     };
+
+    if (speciesQuery.isLoading) {
+        return (
+            <div className="space-y-5">
+                {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className="space-y-2">
+                        <div className="h-4 shimmer rounded w-24"></div>
+                        <div className="h-11 shimmer rounded"></div>
+                    </div>
+                ))}
+            </div>
+        );
+    }
+
+    const selectedSpecies = speciesList.find((s) => s.id === speciesId);
+    const isMilkSpecies = selectedSpecies
+        ? MILK_SPECIES_CODES.includes(selectedSpecies.code)
+        : false;
+    const isFemale = gender === 'FEMALE';
 
     return (
         <form onSubmit={handleSubmit} className="space-y-5">
@@ -130,85 +143,80 @@ export function AnimalForm({ initial, onSubmit, onDelete, mode, cancelTo = '/ani
             <Field label="Tag Number" htmlFor="tagNumber" required error={errors.tagNumber}>
                 <Input
                     id="tagNumber"
-                    value={form.tagNumber}
-                    onChange={(e) => update('tagNumber', e.target.value)}
-                    placeholder="e.g., Cow-01, Goat-03"
+                    value={tagNumber}
+                    onChange={(e) => { setTagNumber(e.target.value); clearError('tagNumber'); }}
+                    placeholder="e.g., Goat-03"
                     hasError={!!errors.tagNumber}
                     autoFocus={mode === 'create'}
                     autoComplete="off"
                 />
             </Field>
 
-            <Field label="Name" htmlFor="name" help="Optional — a nickname for this animal">
+            <Field label="Name" htmlFor="name" help="Optional — a nickname">
                 <Input
                     id="name"
-                    value={form.name ?? ''}
-                    onChange={(e) => update('name', e.target.value)}
-                    placeholder="e.g., Lakshmi"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="e.g., laki"
                     autoComplete="off"
                 />
             </Field>
 
-            <div className="grid grid-cols-2 gap-4">
-                <Field label="Species" htmlFor="species" required error={errors.species}>
-                    <Select
-                        id="species"
-                        value={form.species}
-                        onChange={(e) => update('species', e.target.value)}
-                        hasError={!!errors.species}
-                    >
-                        {SPECIES_OPTIONS.map((s) => (
-                            <option key={s} value={s}>{SPECIES_LABELS[s]}</option>
-                        ))}
-                    </Select>
-                </Field>
+            <SpeciesSelect
+                species={speciesList}
+                value={speciesId}
+                customSpeciesName={customSpeciesName}
+                saveCustom={saveCustomSpecies}
+                onChange={(id, customName, save) => {
+                    setSpeciesId(id);
+                    setCustomSpeciesName(customName);
+                    setSaveCustomSpecies(save);
+                    clearError('speciesId');
+                }}
+                required
+                error={errors.speciesId}
+                hasError={!!errors.speciesId}
+            />
 
+            <div className="grid grid-cols-2 gap-4">
                 <Field label="Gender" htmlFor="gender">
                     <Select
                         id="gender"
-                        value={form.gender}
-                        onChange={(e) => update('gender', e.target.value)}
+                        value={gender}
+                        onChange={(e) => setGender(e.target.value as Gender)}
                     >
                         {GENDER_OPTIONS.map((g) => (
                             <option key={g} value={g}>{GENDER_LABELS[g]}</option>
                         ))}
                     </Select>
                 </Field>
+
+                <Field label="Status" htmlFor="status">
+                    <Select
+                        id="status"
+                        value={status}
+                        onChange={(e) => setStatus(e.target.value as AnimalStatus)}
+                    >
+                        {STATUS_OPTIONS.map((s) => {
+                            const disabled =
+                                (s === 'PREGNANT' && (!isFemale || !isMilkSpecies)) ||
+                                (s === 'DRY' && (!isFemale || !isMilkSpecies));
+                            return (
+                                <option key={s} value={s} disabled={disabled}>
+                                    {STATUS_LABELS[s]}
+                                </option>
+                            );
+                        })}
+                    </Select>
+                </Field>
             </div>
 
-            <Field label="Status" htmlFor="status">
-                <Select
-                    id="status"
-                    value={form.status}
-                    onChange={(e) => update('status', e.target.value)}
-                >
-                    {STATUS_OPTIONS.map((s) => {
-                        const isFemale = form.gender === 'FEMALE';
-                        const isMilkSpecies = MILK_SPECIES.includes(form.species as Species);
-                        const disabled =
-                            (s === 'PREGNANT' && (!isFemale || !isMilkSpecies)) ||
-                            (s === 'DRY' && (!isFemale || !isMilkSpecies));
-
-                        return (
-                            <option key={s} value={s} disabled={disabled}>
-                                {STATUS_LABELS[s]}
-                            </option>
-                        );
-                    })}
-                </Select>
-            </Field>
-
-            <Field
-                label="Date of Birth"
-                htmlFor="dateOfBirth"
-                error={errors.dateOfBirth}
-                help="Optional"
-            >
+            <Field label="Date of Birth" htmlFor="dateOfBirth" error={errors.dateOfBirth} help="Optional">
                 <Input
                     id="dateOfBirth"
                     type="date"
-                    value={form.dateOfBirth ?? ''}
-                    onChange={(e) => update('dateOfBirth', e.target.value)}
+                    value={dateOfBirth}
+                    onChange={(e) => { setDateOfBirth(e.target.value); clearError('dateOfBirth'); }}
                     hasError={!!errors.dateOfBirth}
                     max={new Date().toISOString().split('T')[0]}
                 />
@@ -218,26 +226,19 @@ export function AnimalForm({ initial, onSubmit, onDelete, mode, cancelTo = '/ani
                 <button
                     type="submit"
                     disabled={saving || deleting}
-                    className="flex-1 bg-green-600 text-white py-2.5 rounded-lg font-medium hover:bg-green-700 active:bg-green-800 disabled:opacity-50 disabled:cursor-not-allowed transition inline-flex items-center justify-center gap-2"
+                    className="flex-1 bg-green-600 text-white py-2.5 rounded-lg font-medium hover:bg-green-700 disabled:opacity-50 inline-flex items-center justify-center gap-2"
                 >
                     {saving ? (
-                        <>
-                            <Loader2 size={18} className="animate-spin" />
-                            {mode === 'create' ? 'Creating…' : 'Saving…'}
-                        </>
+                        <><Loader2 size={18} className="animate-spin" />{mode === 'create' ? 'Creating…' : 'Saving…'}</>
                     ) : (
-                        <>
-                            <Save size={18} />
-                            {mode === 'create' ? 'Create Animal' : 'Save Changes'}
-                        </>
+                        <><Save size={18} />{mode === 'create' ? 'Create Animal' : 'Save Changes'}</>
                     )}
                 </button>
-
                 <button
                     type="button"
                     onClick={() => navigate(cancelTo)}
                     disabled={saving || deleting}
-                    className="px-4 py-2.5 rounded-lg font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-50 transition"
+                    className="px-4 py-2.5 rounded-lg font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-50"
                 >
                     Cancel
                 </button>
@@ -258,7 +259,7 @@ export function AnimalForm({ initial, onSubmit, onDelete, mode, cancelTo = '/ani
                         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                             <p className="text-sm text-red-800 font-medium">Delete this animal?</p>
                             <p className="text-xs text-red-600 mt-1">
-                                This cannot be undone. Milk and egg production records linked to this animal will remain.
+                                Milk and egg production records linked to this animal will remain.
                             </p>
                             <div className="flex items-center gap-2 mt-3">
                                 <button
@@ -268,22 +269,16 @@ export function AnimalForm({ initial, onSubmit, onDelete, mode, cancelTo = '/ani
                                     className="bg-red-600 text-white text-sm px-3 py-1.5 rounded-lg hover:bg-red-700 disabled:opacity-50 inline-flex items-center gap-1.5"
                                 >
                                     {deleting ? (
-                                        <>
-                                            <Loader2 size={14} className="animate-spin" />
-                                            Deleting…
-                                        </>
+                                        <><Loader2 size={14} className="animate-spin" />Deleting…</>
                                     ) : (
-                                        <>
-                                            <Trash2 size={14} />
-                                            Yes, delete
-                                        </>
+                                        <><Trash2 size={14} />Yes, delete</>
                                     )}
                                 </button>
                                 <button
                                     type="button"
-                                    onClick={() => navigate(cancelTo)}
+                                    onClick={() => setConfirmDelete(false)}
                                     disabled={deleting}
-                                    className="text-sm px-3 py-1.5 rounded-lg text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+                                    className="text-sm px-3 py-1.5 rounded-lg text-gray-700 hover:bg-gray-100"
                                 >
                                     Cancel
                                 </button>

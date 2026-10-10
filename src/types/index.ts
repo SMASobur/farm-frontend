@@ -60,17 +60,25 @@ export interface DashboardSummary {
 }
 
 // ============================================================
-// Animal
+// Species (was enum, now entity)
 // ============================================================
 
-export type Species =
-    | 'COW'
-    | 'GOAT'
-    | 'SHEEP'
-    | 'CHICKEN'
-    | 'DUCK'
-    | 'BUFFALO'
-    | 'OTHER';
+export interface Species {
+    id: number;
+    code: string;
+    name: string;
+    nameBn: string | null;
+    milkProducer: boolean;
+    active: boolean;
+    systemDefault: boolean;
+    displayOrder: number;
+    createdAt: string;
+}
+
+
+// ============================================================
+// Animal
+// ============================================================
 
 export type AnimalStatus =
     | 'ACTIVE'
@@ -86,7 +94,10 @@ export interface Animal {
     id: number;
     tagNumber: string;
     name: string | null;
-    species: Species;
+    speciesId: number;
+    speciesCode: string;
+    speciesName: string;
+    speciesNameBn: string | null;
     status: AnimalStatus;
     gender: Gender | null;
     dateOfBirth: string | null;
@@ -97,7 +108,9 @@ export interface Animal {
 export interface AnimalRequest {
     tagNumber: string;
     name?: string;
-    species: Species;
+    speciesId?: number;
+    customSpeciesName?: string;
+    saveCustomSpecies?: boolean;
     status?: AnimalStatus;
     gender?: Gender;
     dateOfBirth?: string;
@@ -106,16 +119,6 @@ export interface AnimalRequest {
 // ============================================================
 // Constants (used by UI dropdowns)
 // ============================================================
-
-export const SPECIES_LABELS: Record<Species, string> = {
-    COW: 'Cow',
-    GOAT: 'Goat',
-    SHEEP: 'Sheep',
-    CHICKEN: 'Chicken',
-    DUCK: 'Duck',
-    BUFFALO: 'Buffalo',
-    OTHER: 'Other',
-};
 
 export const STATUS_LABELS: Record<AnimalStatus, string> = {
     ACTIVE: 'Active',
@@ -132,7 +135,6 @@ export const GENDER_LABELS: Record<Gender, string> = {
     UNKNOWN: 'Unknown',
 };
 
-// Status → color (for badges)
 export const STATUS_COLORS: Record<AnimalStatus, string> = {
     ACTIVE: 'bg-green-100 text-green-700',
     PREGNANT: 'bg-pink-100 text-pink-700',
@@ -142,16 +144,25 @@ export const STATUS_COLORS: Record<AnimalStatus, string> = {
     DEAD: 'bg-red-100 text-red-700',
 };
 
-// Species → emoji
-export const SPECIES_EMOJI: Record<Species, string> = {
+// Emoji map — keyed by species CODE (since species is now dynamic)
+export const SPECIES_CODE_EMOJI: Record<string, string> = {
     COW: '🐄',
     GOAT: '🐐',
     SHEEP: '🐑',
     CHICKEN: '🐔',
     DUCK: '🦆',
     BUFFALO: '🐃',
+    GOOSE: '🦢',
     OTHER: '🐾',
 };
+
+export function getSpeciesEmoji(code: string): string {
+    return SPECIES_CODE_EMOJI[code] || '🐾';
+}
+
+// Milk-producing species codes (for filtering)
+export const MILK_SPECIES_CODES = ['COW', 'GOAT', 'SHEEP', 'BUFFALO'];
+
 
 // ============================================================
 // Customer

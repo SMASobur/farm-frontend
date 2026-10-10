@@ -1,14 +1,14 @@
 import { apiClient } from './client';
-import type { ApiResponse, Animal, AnimalRequest, Species, AnimalStatus } from '@/types';
+import type { ApiResponse, Animal, AnimalRequest, AnimalStatus } from '@/types';
 
 export interface AnimalFilters {
-    species?: Species;
+    speciesId?: number;
     status?: AnimalStatus;
 }
 
 export async function listAnimals(filters?: AnimalFilters): Promise<ApiResponse<Animal[]>> {
     const params = new URLSearchParams();
-    if (filters?.species) params.set('species', filters.species);
+    if (filters?.speciesId) params.set('speciesId', String(filters.speciesId));
     if (filters?.status) params.set('status', filters.status);
 
     const qs = params.toString();

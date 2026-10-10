@@ -92,7 +92,7 @@ export function CustomerForm({ initial, onSubmit, onDelete, mode, cancelTo = '/c
                     id="name"
                     value={form.name}
                     onChange={(e) => update('name', e.target.value)}
-                    placeholder="e.g., Rahim Uddin"
+                    placeholder="e.g., Abdur Rahim"
                     hasError={!!errors.name}
                     autoFocus={mode === 'create'}
                     autoComplete="off"
