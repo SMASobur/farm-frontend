@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Receipt } from 'lucide-react';
+import {UserCog, Receipt} from 'lucide-react';
 import type { Expense } from '@/types';
 import { formatCurrency, formatDateShort } from '@/lib/format';
 
@@ -20,6 +20,15 @@ export function ExpenseCard({ expense }: { expense: Expense }) {
                             <div className="font-semibold text-gray-900 truncate">
                                 {expense.description}
                             </div>
+                            {expense.workerName && (
+                                <>
+                                    <span className="text-gray-300">·</span>
+                                    <span className="inline-flex items-center gap-1 text-xs text-indigo-600">
+                                        <UserCog size={11} />
+                                        {expense.workerName}
+                                    </span>
+                                </>
+                            )}
                             <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
                                 <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
                                     {expense.categoryName}

@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Loader2, Save, Trash2 } from 'lucide-react';
 import { listCategories } from '@/api/categories';
-import type { Expense, ExpenseRequest } from '@/types';
+import { listWorkers } from '@/api/workers';
+import type { Expense, ExpenseRequest, Worker } from '@/types';
 import { Field } from '@/components/forms/Field';
 import { Input } from '@/components/forms/Input';
 import { Select } from '@/components/forms/Select';
@@ -25,6 +26,7 @@ export function ExpenseForm({ initial, onSubmit, onDelete, mode, cancelTo }: Pro
 
     const [date, setDate] = useState(initial?.date ?? todayISO());
     const [categoryId, setCategoryId] = useState<number | null>(initial?.categoryId ?? null);
+    const [workerId, setWorkerId] = useState<number | null>(initial?.workerId ?? null);
     const [description, setDescription] = useState(initial?.description ?? '');
     const [amount, setAmount] = useState(initial?.amount ? String(initial.amount) : '');
     const [notes, setNotes] = useState(initial?.notes ?? '');
@@ -35,12 +37,23 @@ export function ExpenseForm({ initial, onSubmit, onDelete, mode, cancelTo }: Pro
     const [deleting, setDeleting] = useState(false);
     const [confirmDelete, setConfirmDelete] = useState(false);
 
+    // Lookups
     const categoriesQuery = useQuery({
         queryKey: ['categories', 'EXPENSE'],
         queryFn: () => listCategories('EXPENSE', true),
     });
 
+    const workersQuery = useQuery({
+        queryKey: ['workers', 'ACTIVE'],
+        queryFn: () => listWorkers({ status: 'ACTIVE' }),
+    });
+
     const categories = categoriesQuery.data?.data ?? [];
+    const workers: Worker[] = workersQuery.data?.data ?? [];
+
+    // Is the selected category SALARY?
+    const selectedCategory = categories.find((c) => c.id === categoryId);
+    const isSalaryCategory = selectedCategory?.code === 'SALARY';
 
     const clearError = (field: string) => {
         setErrors((prev) => {
@@ -73,6 +86,8 @@ export function ExpenseForm({ initial, onSubmit, onDelete, mode, cancelTo }: Pro
                 description: description.trim(),
                 amount: parseFloat(amount),
                 notes: notes.trim() || undefined,
+                // Only send workerId for SALARY category
+                workerId: isSalaryCategory && workerId ? workerId : undefined,
             };
             await onSubmit(payload);
         } catch (err: any) {
@@ -96,7 +111,9 @@ export function ExpenseForm({ initial, onSubmit, onDelete, mode, cancelTo }: Pro
         }
     };
 
-    if (categoriesQuery.isLoading) {
+    const isLoading = categoriesQuery.isLoading || workersQuery.isLoading;
+
+    if (isLoading) {
         return (
             <div className="space-y-5">
                 {[1, 2, 3, 4].map((i) => (
@@ -148,6 +165,29 @@ export function ExpenseForm({ initial, onSubmit, onDelete, mode, cancelTo }: Pro
                     </Select>
                 </Field>
             </div>
+
+            {/* Worker link — only shown for SALARY category */}
+            {isSalaryCategory && (
+                <Field
+                    label="Worker"
+                    htmlFor="workerId"
+                    help="Optional — link this salary to a specific worker"
+                >
+                    <Select
+                        id="workerId"
+                        value={workerId ?? ''}
+                        onChange={(e) => setWorkerId(e.target.value ? Number(e.target.value) : null)}
+                    >
+                        <option value="">— Not linked —</option>
+                        {workers.map((w) => (
+                            <option key={w.id} value={w.id}>
+                                {w.name}
+                                {w.role ? ` · ${w.role}` : ''}
+                            </option>
+                        ))}
+                    </Select>
+                </Field>
+            )}
 
             <Field label="Description" htmlFor="description" required error={errors.description}>
                 <Input

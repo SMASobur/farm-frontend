@@ -9,12 +9,14 @@ import {
   BarChart3,
   Settings,
   LogOut,
+  UserCog,
 } from 'lucide-react';
 
 const navItems = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/animals',   label: 'Animals',   icon: Beef },
   { to: '/customers', label: 'Customers', icon: Users },
+  { to: '/workers', label: 'Workers', icon: UserCog },
   { to: '/sales',     label: 'Sales',     icon: ShoppingCart },
   { to: '/expenses',  label: 'Expenses',  icon: Receipt },
   { to: '/reports',   label: 'Reports',   icon: BarChart3 },

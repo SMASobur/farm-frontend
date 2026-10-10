@@ -24,6 +24,10 @@ import { NewExpensePage } from '@/pages/NewExpensePage';
 import { EditExpensePage } from '@/pages/EditExpensePage';
 import { ExpenseDetailPage } from '@/pages/ExpenseDetailPage.tsx';
 import { ReportsPage } from '@/pages/ReportsPage';
+import { WorkersPage } from '@/pages/WorkersPage';
+import { NewWorkerPage } from '@/pages/NewWorkerPage';
+import { EditWorkerPage } from '@/pages/EditWorkerPage';
+import { WorkerDetailPage } from '@/pages/WorkerDetailPage';
 
 
 const queryClient = new QueryClient({
@@ -71,6 +75,10 @@ export default function App() {
                                 <Route path="/expenses/:id" element={<ExpenseDetailPage />} />
                                 <Route path="/expenses/:id/edit" element={<EditExpensePage />} />
                                 <Route path="/reports" element={<ReportsPage />} />
+                                <Route path="/workers" element={<WorkersPage />} />
+                                <Route path="/workers/new" element={<NewWorkerPage />} />
+                                <Route path="/workers/:id" element={<WorkerDetailPage />} />
+                                <Route path="/workers/:id/edit" element={<EditWorkerPage />} />
                                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
                                 <Route path="*" element={<Navigate to="/dashboard" replace />} />
 

@@ -403,6 +403,8 @@ export interface Expense {
     amount: number;
     notes: string | null;
     createdAt: string;
+    workerId?: number | null;
+    workerName?: string | null;
 }
 
 export interface ExpenseRequest {
@@ -411,6 +413,8 @@ export interface ExpenseRequest {
     description: string;
     amount: number;
     notes?: string;
+    workerId?: number;
+
 }
 
 // ============================================================
@@ -486,3 +490,49 @@ export interface Invite {
     expired: boolean;
     shareableMessage: string;
 }
+
+// ============================================================
+// Worker
+// ============================================================
+
+export type WorkerStatus = 'ACTIVE' | 'ON_LEAVE' | 'INACTIVE' | 'TERMINATED';
+
+export interface Worker {
+    id: number;
+    name: string;
+    phone: string | null;
+    address: string | null;
+    role: string | null;
+    monthlySalary: number | null;
+    dailyWage: number | null;
+    hireDate: string | null;
+    status: WorkerStatus;
+    notes: string | null;
+    createdAt: string;
+}
+
+export interface WorkerRequest {
+    name: string;
+    phone?: string;
+    address?: string;
+    role?: string;
+    monthlySalary?: number;
+    dailyWage?: number;
+    hireDate?: string;
+    status?: WorkerStatus;
+    notes?: string;
+}
+
+export const WORKER_STATUS_LABELS: Record<WorkerStatus, string> = {
+    ACTIVE: 'Active',
+    ON_LEAVE: 'On Leave',
+    INACTIVE: 'Inactive',
+    TERMINATED: 'Terminated',
+};
+
+export const WORKER_STATUS_COLORS: Record<WorkerStatus, string> = {
+    ACTIVE: 'bg-green-100 text-green-700',
+    ON_LEAVE: 'bg-amber-100 text-amber-700',
+    INACTIVE: 'bg-gray-100 text-gray-700',
+    TERMINATED: 'bg-red-100 text-red-700',
+};
