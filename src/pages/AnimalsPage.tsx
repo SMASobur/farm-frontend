@@ -34,7 +34,8 @@ export function AnimalsPage() {
     const speciesList: Species[] = speciesQuery.data?.data ?? [];
 
     // Animals list
-    const { data, isLoading, isError, refetch, isFetching } = useQuery({        queryKey: ['animals', speciesId, status],
+    const { data, isLoading, isError, refetch, isFetching } = useQuery({
+        queryKey: ['animals', speciesId, status],
         queryFn: () => listAnimals({
             speciesId: speciesId || undefined,
             status: status || undefined,
