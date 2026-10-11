@@ -480,16 +480,19 @@ export interface EggProduction {
 }
 
 // ============================================================
-// Invites
+// Invite
 // ============================================================
+
+export type InviteStatus = 'PENDING' | 'ACCEPTED' | 'REVOKED' | 'EXPIRED';
+export type InvitableRole = 'ADMIN' | 'MANAGER' | 'WORKER';
 
 export interface Invite {
     id: number;
     code: string;
     invitedName: string | null;
     invitedEmail: string | null;
-    role: 'ADMIN' | 'MANAGER' | 'WORKER';
-    status: 'PENDING' | 'ACCEPTED' | 'REVOKED' | 'EXPIRED';
+    role: InvitableRole;
+    status: InviteStatus;
     createdByName: string;
     expiresAt: string;
     acceptedAt: string | null;
@@ -498,6 +501,41 @@ export interface Invite {
     expired: boolean;
     shareableMessage: string;
 }
+
+export interface CreateInviteRequest {
+    invitedName?: string;
+    invitedEmail?: string;
+    role: InvitableRole;
+    expiryDays?: number;
+}
+
+export const INVITE_STATUS_LABELS: Record<InviteStatus, string> = {
+    PENDING: 'Pending',
+    ACCEPTED: 'Accepted',
+    REVOKED: 'Revoked',
+    EXPIRED: 'Expired',
+};
+
+export const INVITE_STATUS_COLORS: Record<InviteStatus, string> = {
+    PENDING: 'bg-amber-100 text-amber-700',
+    ACCEPTED: 'bg-green-100 text-green-700',
+    REVOKED: 'bg-gray-100 text-gray-700',
+    EXPIRED: 'bg-red-100 text-red-700',
+};
+
+export const ROLE_LABELS: Record<'OWNER' | 'ADMIN' | 'MANAGER' | 'WORKER', string> = {
+    OWNER: 'Owner',
+    ADMIN: 'Admin',
+    MANAGER: 'Manager',
+    WORKER: 'Worker',
+};
+
+export const ROLE_COLORS: Record<'OWNER' | 'ADMIN' | 'MANAGER' | 'WORKER', string> = {
+    OWNER: 'bg-purple-100 text-purple-700',
+    ADMIN: 'bg-blue-100 text-blue-700',
+    MANAGER: 'bg-emerald-100 text-emerald-700',
+    WORKER: 'bg-gray-100 text-gray-700',
+};
 
 // ============================================================
 // Worker

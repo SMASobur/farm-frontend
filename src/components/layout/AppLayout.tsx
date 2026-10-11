@@ -10,19 +10,20 @@ import {
   Settings,
   LogOut,
   UserCog,
+  UserPlus,
 } from 'lucide-react';
 
 const navItems = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/animals',   label: 'Animals',   icon: Beef },
   { to: '/customers', label: 'Customers', icon: Users },
-  { to: '/workers', label: 'Workers', icon: UserCog },
+  { to: '/workers',   label: 'Workers',   icon: UserCog },
   { to: '/sales',     label: 'Sales',     icon: ShoppingCart },
   { to: '/expenses',  label: 'Expenses',  icon: Receipt },
   { to: '/reports',   label: 'Reports',   icon: BarChart3 },
+  { to: '/team',      label: 'Team',      icon: UserPlus },
   { to: '/settings',  label: 'Settings',  icon: Settings },
 ];
-
 export function AppLayout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();

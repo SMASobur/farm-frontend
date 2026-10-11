@@ -6,29 +6,30 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { LoginPage } from '@/pages/LoginPage';
 import { RegisterPage } from '@/pages/RegisterPage';
 import { DashboardPage } from '@/pages/DashboardPage';
-import {AnimalsPage} from "@/pages/AnimalsPage.tsx";
+import { AnimalsPage } from '@/pages/AnimalsPage';
 import { NewAnimalPage } from '@/pages/NewAnimalPage';
 import { EditAnimalPage } from '@/pages/EditAnimalPage';
 import { CustomersPage } from '@/pages/CustomersPage';
 import { NewCustomerPage } from '@/pages/NewCustomerPage';
 import { EditCustomerPage } from '@/pages/EditCustomerPage';
-import {AnimalDetailPage} from "@/pages/AnimalDetailPage.tsx";
-import {CustomerDetailPage} from "@/pages/CustomerDetailPage.tsx";
+import { AnimalDetailPage } from '@/pages/AnimalDetailPage';
+import { CustomerDetailPage } from '@/pages/CustomerDetailPage';
 import { ToastProvider } from '@/contexts/ToastContext';
-import {SalesPage} from "@/pages/SalesPage.tsx";
-import {NewSalePage} from "@/pages/NewSalePage.tsx";
-import {SaleDetailPage} from "@/pages/SaleDetailPage.tsx";
-import {EditSalePage} from "@/pages/EditSalePage.tsx";
+import { SalesPage } from '@/pages/SalesPage';
+import { NewSalePage } from '@/pages/NewSalePage';
+import { SaleDetailPage } from '@/pages/SaleDetailPage';
+import { EditSalePage } from '@/pages/EditSalePage';
 import { ExpensesPage } from '@/pages/ExpensesPage';
 import { NewExpensePage } from '@/pages/NewExpensePage';
 import { EditExpensePage } from '@/pages/EditExpensePage';
-import { ExpenseDetailPage } from '@/pages/ExpenseDetailPage.tsx';
+import { ExpenseDetailPage } from '@/pages/ExpenseDetailPage';
 import { ReportsPage } from '@/pages/ReportsPage';
 import { WorkersPage } from '@/pages/WorkersPage';
 import { NewWorkerPage } from '@/pages/NewWorkerPage';
 import { EditWorkerPage } from '@/pages/EditWorkerPage';
 import { WorkerDetailPage } from '@/pages/WorkerDetailPage';
-
+import { TeamPage } from '@/pages/TeamPage';
+import { JoinFarmPage } from '@/pages/JoinFarmPage';
 
 const queryClient = new QueryClient({
     defaultOptions: {
@@ -47,9 +48,12 @@ export default function App() {
                 <ToastProvider>
                     <AuthProvider>
                         <Routes>
+                            {/* Public routes */}
                             <Route path="/login" element={<LoginPage />} />
                             <Route path="/register" element={<RegisterPage />} />
+                            <Route path="/join" element={<JoinFarmPage />} />
 
+                            {/* Protected routes — all inside the AppLayout */}
                             <Route
                                 element={
                                     <ProtectedRoute>
@@ -58,35 +62,42 @@ export default function App() {
                                 }
                             >
                                 <Route path="/dashboard" element={<DashboardPage />} />
+
                                 <Route path="/animals" element={<AnimalsPage />} />
                                 <Route path="/animals/new" element={<NewAnimalPage />} />
                                 <Route path="/animals/:id" element={<AnimalDetailPage />} />
                                 <Route path="/animals/:id/edit" element={<EditAnimalPage />} />
+
                                 <Route path="/customers" element={<CustomersPage />} />
                                 <Route path="/customers/new" element={<NewCustomerPage />} />
                                 <Route path="/customers/:id" element={<CustomerDetailPage />} />
                                 <Route path="/customers/:id/edit" element={<EditCustomerPage />} />
+
                                 <Route path="/sales" element={<SalesPage />} />
                                 <Route path="/sales/new" element={<NewSalePage />} />
                                 <Route path="/sales/:id" element={<SaleDetailPage />} />
                                 <Route path="/sales/:id/edit" element={<EditSalePage />} />
+
                                 <Route path="/expenses" element={<ExpensesPage />} />
                                 <Route path="/expenses/new" element={<NewExpensePage />} />
                                 <Route path="/expenses/:id" element={<ExpenseDetailPage />} />
                                 <Route path="/expenses/:id/edit" element={<EditExpensePage />} />
+
                                 <Route path="/reports" element={<ReportsPage />} />
+
                                 <Route path="/workers" element={<WorkersPage />} />
                                 <Route path="/workers/new" element={<NewWorkerPage />} />
                                 <Route path="/workers/:id" element={<WorkerDetailPage />} />
                                 <Route path="/workers/:id/edit" element={<EditWorkerPage />} />
+
+                                <Route path="/team" element={<TeamPage />} />     {/* ← MOVED HERE */}
+
                                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
                                 <Route path="*" element={<Navigate to="/dashboard" replace />} />
-
                             </Route>
                         </Routes>
                     </AuthProvider>
                 </ToastProvider>
-
             </BrowserRouter>
         </QueryClientProvider>
     );

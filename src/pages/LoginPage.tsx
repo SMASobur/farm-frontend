@@ -100,6 +100,12 @@ export function LoginPage() {
           <Link to="/register" className="text-green-600 font-medium hover:underline">
             Create an account
           </Link>
+          <p className="text-center text-xs text-gray-500 mt-3">
+            Have an invite code?{' '}
+            <Link to="/join" className="text-green-600 font-medium hover:underline">
+              Join a farm
+            </Link>
+          </p>
         </p>
       </div>
     </div>
