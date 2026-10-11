@@ -9,6 +9,7 @@ import { getWorker, deleteWorker } from '@/api/workers';
 import { WORKER_STATUS_LABELS, WORKER_STATUS_COLORS } from '@/types';
 import { useToast } from '@/contexts/ToastContext';
 import { formatCurrency, formatDateLong } from '@/lib/format';
+import { WorkerPaymentHistory } from '@/components/workers/WorkerPaymentHistory';
 
 export function WorkerDetailPage() {
     const { id } = useParams<{ id: string }>();
@@ -172,9 +173,17 @@ export function WorkerDetailPage() {
                                 Cancel
                             </button>
                         </div>
+
                     </div>
+
                 )}
             </div>
+            {/* Payments history */}
+            <WorkerPaymentHistory
+                workerId={worker.id}
+                workerName={worker.name}
+                monthlySalary={worker.monthlySalary}
+            />
         </div>
     );
 }

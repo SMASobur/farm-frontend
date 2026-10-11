@@ -39,3 +39,10 @@ export async function deleteExpense(id: number): Promise<ApiResponse<void>> {
     const response = await apiClient.delete<ApiResponse<void>>(`/api/expenses/${id}`);
     return response.data;
 }
+
+export async function listExpensesByWorker(workerId: number): Promise<ApiResponse<Expense[]>> {
+    const response = await apiClient.get<ApiResponse<Expense[]>>(
+        `/api/expenses/worker/${workerId}`
+    );
+    return response.data;
+}

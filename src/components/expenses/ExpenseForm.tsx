@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useState, useMemo, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Loader2, Save, Trash2 } from 'lucide-react';
@@ -19,14 +19,34 @@ interface Props {
     onDelete?: () => Promise<void>;
     mode: 'create' | 'edit';
     cancelTo: string;
+    prefilledWorkerId?: number | null;
 }
 
-export function ExpenseForm({ initial, onSubmit, onDelete, mode, cancelTo }: Props) {
+export function ExpenseForm({
+                                initial,
+                                onSubmit,
+                                onDelete,
+                                mode,
+                                cancelTo,
+                                prefilledWorkerId,
+                            }: Props) {
     const navigate = useNavigate();
 
     const [date, setDate] = useState(initial?.date ?? todayISO());
-    const [categoryId, setCategoryId] = useState<number | null>(initial?.categoryId ?? null);
-    const [workerId, setWorkerId] = useState<number | null>(initial?.workerId ?? null);
+
+    /**
+     * Category selection state:
+     *   undefined → user has not interacted yet (may auto-fill from prefill)
+     *   null      → user explicitly cleared the selection
+     *   number    → user chose a specific category
+     */
+    const [userCategoryId, setUserCategoryId] = useState<number | null | undefined>(
+        initial?.categoryId ?? undefined
+    );
+
+    const [workerId, setWorkerId] = useState<number | null>(
+        initial?.workerId ?? prefilledWorkerId ?? null
+    );
     const [description, setDescription] = useState(initial?.description ?? '');
     const [amount, setAmount] = useState(initial?.amount ? String(initial.amount) : '');
     const [notes, setNotes] = useState(initial?.notes ?? '');
@@ -51,8 +71,20 @@ export function ExpenseForm({ initial, onSubmit, onDelete, mode, cancelTo }: Pro
     const categories = categoriesQuery.data?.data ?? [];
     const workers: Worker[] = workersQuery.data?.data ?? [];
 
-    // Is the selected category SALARY?
-    const selectedCategory = categories.find((c) => c.id === categoryId);
+    /**
+     * Effective category = user's explicit choice, OR
+     * an auto-prefilled SALARY when arriving from a worker's "Add Payment".
+     */
+    const effectiveCategoryId = useMemo<number | null>(() => {
+        if (userCategoryId !== undefined) return userCategoryId;
+        if (mode === 'create' && prefilledWorkerId && categories.length > 0) {
+            const salary = categories.find((c) => c.code === 'SALARY');
+            return salary?.id ?? null;
+        }
+        return null;
+    }, [userCategoryId, mode, prefilledWorkerId, categories]);
+
+    const selectedCategory = categories.find((c) => c.id === effectiveCategoryId);
     const isSalaryCategory = selectedCategory?.code === 'SALARY';
 
     const clearError = (field: string) => {
@@ -65,7 +97,7 @@ export function ExpenseForm({ initial, onSubmit, onDelete, mode, cancelTo }: Pro
 
     const validate = (): boolean => {
         const next: Record<string, string> = {};
-        if (categoryId === null) next.categoryId = 'Category is required';
+        if (effectiveCategoryId === null) next.categoryId = 'Category is required';
         if (!description.trim()) next.description = 'Description is required';
         const amt = parseFloat(amount);
         if (!amt || amt <= 0) next.amount = 'Amount must be positive';
@@ -82,11 +114,10 @@ export function ExpenseForm({ initial, onSubmit, onDelete, mode, cancelTo }: Pro
         try {
             const payload: ExpenseRequest = {
                 date,
-                categoryId: categoryId!,
+                categoryId: effectiveCategoryId!,
                 description: description.trim(),
                 amount: parseFloat(amount),
                 notes: notes.trim() || undefined,
-                // Only send workerId for SALARY category
                 workerId: isSalaryCategory && workerId ? workerId : undefined,
             };
             await onSubmit(payload);
@@ -148,9 +179,9 @@ export function ExpenseForm({ initial, onSubmit, onDelete, mode, cancelTo }: Pro
                 <Field label="Category" htmlFor="categoryId" required error={errors.categoryId}>
                     <Select
                         id="categoryId"
-                        value={categoryId ?? ''}
+                        value={effectiveCategoryId ?? ''}
                         onChange={(e) => {
-                            setCategoryId(e.target.value ? Number(e.target.value) : null);
+                            setUserCategoryId(e.target.value ? Number(e.target.value) : null);
                             clearError('categoryId');
                         }}
                         hasError={!!errors.categoryId}

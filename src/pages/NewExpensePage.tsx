@@ -1,4 +1,4 @@
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft } from 'lucide-react';
 import { createExpense } from '@/api/expenses';
@@ -10,6 +10,7 @@ export function NewExpensePage() {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     const toast = useToast();
+
 
     const mutation = useMutation({
         mutationFn: (data: ExpenseRequest) => createExpense(data),
@@ -23,6 +24,11 @@ export function NewExpensePage() {
             toast.error(err.response?.data?.message || 'Failed to record expense');
         },
     });
+
+    const [searchParams] = useSearchParams();
+    const prefilledWorkerId = searchParams.get('workerId')
+        ? Number(searchParams.get('workerId'))
+        : null;
 
     return (
         <div className="p-4 md:p-6 max-w-2xl mx-auto">
@@ -44,6 +50,7 @@ export function NewExpensePage() {
                     mode="create"
                     onSubmit={async (data) => { await mutation.mutateAsync(data); }}
                     cancelTo="/expenses"
+                    prefilledWorkerId={prefilledWorkerId}
                 />
             </div>
         </div>
