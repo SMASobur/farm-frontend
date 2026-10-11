@@ -12,6 +12,8 @@ import { formatCurrency, formatDateLong } from '@/lib/format';
 import { RecordPaymentModal } from '@/components/payments/RecordPaymentModal';
 import { PaymentRow } from '@/components/payments/PaymentRow';
 import { SaleStatusBadge } from '@/components/sales/SaleStatusBadge';
+import { EnteredByLine } from '@/components/common/EnteredByLine';
+
 
 export function SaleDetailPage() {
     const { id } = useParams<{ id: string }>();
@@ -165,6 +167,8 @@ export function SaleDetailPage() {
                         </div>
                     </div>
                 </div>
+
+                <EnteredByLine enteredByName={sale.enteredByName} createdAt={sale.createdAt} />
 
                 {/* Notes */}
                 {sale.notes && (

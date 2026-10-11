@@ -60,7 +60,7 @@ export interface DashboardSummary {
 }
 
 // ============================================================
-// Species (was enum, now entity)
+// Species
 // ============================================================
 
 export interface Species {
@@ -165,7 +165,7 @@ export const MILK_SPECIES_CODES = ['COW', 'GOAT', 'SHEEP', 'BUFFALO'];
 
 
 // ============================================================
-// CustomerType (was enum, now entity)
+// CustomerType
 // ============================================================
 
 export interface CustomerType {
@@ -301,6 +301,8 @@ export interface Sale {
     customProductName: string | null;
     notes: string | null;
     createdAt: string;
+    enteredByUserId?: number | null;
+    enteredByName?: string | null;
 }
 
 export interface SaleRequest {
@@ -405,6 +407,8 @@ export interface Expense {
     createdAt: string;
     workerId?: number | null;
     workerName?: string | null;
+    enteredByUserId?: number | null;
+    enteredByName?: string | null;
 }
 
 export interface ExpenseRequest {
@@ -457,6 +461,8 @@ export interface MilkProduction {
     noonLiters: number;
     nightLiters: number;
     totalLiters: number;
+    enteredByUserId?: number | null;
+    enteredByName?: string | null;
 }
 
 export interface EggProduction {
@@ -469,6 +475,8 @@ export interface EggProduction {
     goodEggs: number;
     crackedEggs: number;
     totalEggs: number;
+    enteredByUserId?: number | null;
+    enteredByName?: string | null;
 }
 
 // ============================================================

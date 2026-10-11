@@ -154,6 +154,12 @@ function PaymentRow({ payment }: { payment: Expense }) {
                             {payment.categoryName}
                         </span>
                         <span>{formatDateShort(payment.date)}</span>
+                        {payment.enteredByName && (
+                            <>
+                                <span className="text-gray-300">·</span>
+                                <span className="text-gray-400">{payment.enteredByName}</span>
+                            </>
+                        )}
                     </div>
                 </div>
                 <div className="text-right shrink-0">

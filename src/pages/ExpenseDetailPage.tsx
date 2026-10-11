@@ -7,6 +7,7 @@ import {
 import { getExpense, deleteExpense } from '@/api/expenses';
 import { useToast } from '@/contexts/ToastContext';
 import { formatCurrency, formatDateLong } from '@/lib/format';
+import { EnteredByLine } from '@/components/common/EnteredByLine';
 
 export function ExpenseDetailPage() {
     const { id } = useParams<{ id: string }>();
@@ -117,6 +118,9 @@ export function ExpenseDetailPage() {
                         −{formatCurrency(expense.amount)}
                     </span>
                 </div>
+
+                <EnteredByLine enteredByName={expense.enteredByName} createdAt={expense.createdAt} />
+
 
                 {/* Notes */}
                 {expense.notes && (
