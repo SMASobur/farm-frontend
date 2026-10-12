@@ -8,6 +8,7 @@ import {
 import { getCustomer, deleteCustomer } from '@/api/customers';
 import { getCustomerTypeColor, getCustomerTypeEmoji } from '@/types';
 import { CustomerSalesHistory } from '@/components/customers/CustomerSalesHistory';
+import {useToast} from "@/contexts/ToastContext.tsx";
 
 export function CustomerDetailPage() {
     const { id } = useParams<{ id: string }>();
@@ -15,6 +16,8 @@ export function CustomerDetailPage() {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     const [confirmDelete, setConfirmDelete] = useState(false);
+    const toast = useToast();
+
 
     const { data, isLoading, isError } = useQuery({
         queryKey: ['customer', customerId],
@@ -27,6 +30,7 @@ export function CustomerDetailPage() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['customers'] });
             queryClient.invalidateQueries({ queryKey: ['dashboard-summary'] });
+            toast.success('Customer deleted', `Customer: ${customer.name}`);
             navigate('/customers');
         },
     });

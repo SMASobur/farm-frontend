@@ -1,24 +1,25 @@
 import { useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useFarm } from '@/hooks/useFarm';
+import { FarmLogoModal } from '@/components/farm/FarmLogoModal';
 import {
   LayoutDashboard,
-  Beef,
+  Egg,
   Users,
   UserCog,
   ShoppingCart,
   Receipt,
   BarChart3,
+  UserPlus,
   Settings,
   LogOut,
-  UserPlus,
-  Menu,
+  Image as ImageIcon,
 } from 'lucide-react';
-import { MobileDrawer } from './MobileDrawer';
 
 const navItems = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/animals',   label: 'Animals',   icon: Beef },
+  { to: '/animals',   label: 'Animals',   icon: Egg },
   { to: '/customers', label: 'Customers', icon: Users },
   { to: '/workers',   label: 'Workers',   icon: UserCog },
   { to: '/sales',     label: 'Sales',     icon: ShoppingCart },
@@ -30,57 +31,79 @@ const navItems = [
 
 export function AppLayout() {
   const { user, logout } = useAuth();
+  const { data: farm } = useFarm();
   const navigate = useNavigate();
   const location = useLocation();
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [showLogoModal, setShowLogoModal] = useState(false);
 
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
 
+  // Determine what to display for the farm logo / initial
+  const displayFarmName = farm?.name || user?.farmName || 'Farm';
+  const farmInitial = displayFarmName.charAt(0).toUpperCase();
+  const logoUrl = farm?.logoUrl;
+
   return (
       <div className="min-h-screen bg-gray-50">
         {/* Header */}
         <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
           <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-            <div className="flex items-center gap-2 md:gap-3">
-              {/* Hamburger — mobile only */}
-              <button
-                  onClick={() => setDrawerOpen(true)}
-                  className="md:hidden p-2 -ml-2 text-gray-600 hover:bg-gray-100 rounded-lg transition"
-                  aria-label="Open menu"
-              >
-                <Menu size={20} />
-              </button>
+            <div className="flex items-center gap-2 min-w-0">
+              {/* Logo / Initial */}
+              {logoUrl ? (
+                  <img
+                      src={logoUrl}
+                      alt={displayFarmName}
+                      className="w-8 h-8 rounded-md object-cover shrink-0 border border-gray-100"
+                  />
+              ) : (
+                  <div className="w-8 h-8 bg-green-600 rounded-md flex items-center justify-center text-white font-bold shrink-0">
+                    {farmInitial}
+                  </div>
+              )}
 
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-green-600 rounded-md flex items-center justify-center text-white font-bold">
-                  F
+              {/* Farm name + user */}
+              <div className="hidden sm:block min-w-0">
+                <div className="font-semibold text-gray-900 leading-tight truncate">
+                  {displayFarmName}
                 </div>
-                <div className="hidden sm:block">
-                  <div className="font-semibold text-gray-900 leading-tight">
-                    {user?.farmName || 'Farm'}
-                  </div>
-                  <div className="text-xs text-gray-500 leading-tight">
-                    {user?.fullName || user?.username} · {user?.role}
-                  </div>
+                <div className="text-xs text-gray-500 leading-tight truncate">
+                  {user?.fullName || user?.username} · {user?.role}
                 </div>
               </div>
             </div>
 
-            <button
-                onClick={handleLogout}
-                className="flex items-center gap-1.5 text-sm text-gray-600 hover:text-red-600 px-3 py-1.5 rounded hover:bg-gray-100 transition"
-            >
-              <LogOut size={16} />
-              <span className="hidden sm:inline">Logout</span>
-            </button>
+            {/* Right-side actions */}
+            <div className="flex items-center gap-1">
+              {/* Change logo button */}
+              <button
+                  onClick={() => setShowLogoModal(true)}
+                  className="p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-lg transition"
+                  title="Change Farm Logo"
+                  aria-label="Change Farm Logo"
+              >
+                <ImageIcon size={18} />
+              </button>
+
+
+
+              {/* Logout */}
+              <button
+                  onClick={handleLogout}
+                  className="flex items-center gap-1.5 text-sm text-gray-600 hover:text-red-600 px-3 py-1.5 rounded-lg hover:bg-gray-100 transition"
+              >
+                <LogOut size={16} />
+                <span className="hidden sm:inline">Logout</span>
+              </button>
+            </div>
           </div>
         </header>
 
         <div className="max-w-7xl mx-auto flex">
-          {/* Sidebar — desktop only */}
+          {/* Sidebar — desktop */}
           <aside className="hidden md:block w-56 shrink-0 border-r border-gray-200 bg-white min-h-[calc(100vh-57px)] sticky top-[57px] self-start">
             <nav className="p-3 space-y-1">
               {navItems.map((item) => {
@@ -110,7 +133,7 @@ export function AppLayout() {
           </main>
         </div>
 
-        {/* Bottom nav — mobile only */}
+        {/* Bottom nav — mobile */}
         <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around py-1 z-40">
           {navItems.slice(0, 5).map((item) => {
             const Icon = item.icon;
@@ -130,12 +153,14 @@ export function AppLayout() {
           })}
         </nav>
 
-        {/* Mobile drawer */}
-        <MobileDrawer
-            open={drawerOpen}
-            onClose={() => setDrawerOpen(false)}
-            navItems={navItems}
-        />
+        {/* Farm Logo Modal */}
+        {showLogoModal && (
+            <FarmLogoModal
+                currentLogoUrl={logoUrl ?? null}
+                farmName={displayFarmName}
+                onClose={() => setShowLogoModal(false)}
+            />
+        )}
       </div>
   );
 }

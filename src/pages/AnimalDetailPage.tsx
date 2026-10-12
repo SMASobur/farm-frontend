@@ -9,6 +9,7 @@ import {
     STATUS_LABELS, STATUS_COLORS, GENDER_LABELS, getSpeciesEmoji,
 } from '@/types';
 import {AnimalProductionHistory} from "@/components/animals/AnimalProductionHistory.tsx";
+import {useToast} from "@/contexts/ToastContext.tsx";
 
 export function AnimalDetailPage() {
     const {id} = useParams<{ id: string }>();
@@ -16,6 +17,8 @@ export function AnimalDetailPage() {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     const [confirmDelete, setConfirmDelete] = useState(false);
+    const toast = useToast();
+
 
     const {data, isLoading, isError} = useQuery({
         queryKey: ['animal', animalId],
@@ -26,9 +29,16 @@ export function AnimalDetailPage() {
     const deleteMutation = useMutation({
         mutationFn: () => deleteAnimal(animalId),
         onSuccess: () => {
-            queryClient.invalidateQueries({queryKey: ['animals']});
-            queryClient.invalidateQueries({queryKey: ['dashboard-summary']});
+            queryClient.invalidateQueries({ queryKey: ['animals'] });
+            queryClient.invalidateQueries({ queryKey: ['dashboard-summary'] });
+            toast.success('Animal deleted', `Tag: ${animal.tagNumber}`);
             navigate('/animals');
+        },
+        onError: (err: any) => {
+            toast.error(
+                'Could not delete animal',
+                err.response?.data?.message || 'Something went wrong'
+            );
         },
     });
 

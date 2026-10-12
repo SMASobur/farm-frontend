@@ -46,14 +46,13 @@ export function WorkerPaymentHistory({ workerId, workerName, monthlySalary }: Pr
                 <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
                     <Wallet size={14} />
                     Payments
-                </h2>
-                <Link
-                    to={`/expenses/new?workerId=${workerId}`}
-                    className="inline-flex items-center gap-1 text-xs font-medium text-green-600 hover:text-green-700"
-                >
-                    <Plus size={12} />
-                    Add Payment
-                </Link>
+                </h2><Link
+                to={`/expenses/new?workerId=${workerId}`}
+                className="inline-flex items-center gap-1 rounded-md bg-green-600 px-3 py-1.5 text-s font-medium text-white shadow-sm transition-colors hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+            >
+                <Plus size={20} />
+                Add Payment / Salary
+            </Link>
             </div>
 
             {/* Loading */}
