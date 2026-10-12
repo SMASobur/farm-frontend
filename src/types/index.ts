@@ -314,11 +314,15 @@ export interface SaleRequest {
     date: string;
     categoryId: number;
     unitId?: number;
+    customProductDefaultUnitId?: number;
     customUnitName?: string;
+    customUnitNameBn?: string;
+    customUnitAbbreviation?: string;
     saveCustomUnitToUnits?: boolean;
     quantity: number;
     unitPrice: number;
     customProductName?: string;
+    customProductNameBn?: string;
     saveCustomProductAsCategory?: boolean;
     notes?: string;
     initialPayment?: number;
@@ -418,11 +422,13 @@ export interface Expense {
 export interface ExpenseRequest {
     date: string;
     categoryId: number;
+    workerId?: number;
     description: string;
     amount: number;
     notes?: string;
-    workerId?: number;
-
+    customCategoryNameEn?: string;
+    customCategoryNameBn?: string;
+    saveCustomCategory?: boolean;
 }
 
 // ============================================================

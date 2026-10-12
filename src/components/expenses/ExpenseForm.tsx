@@ -8,6 +8,7 @@ import type { Expense, ExpenseRequest, Worker } from '@/types';
 import { Field } from '@/components/forms/Field';
 import { Input } from '@/components/forms/Input';
 import { Select } from '@/components/forms/Select';
+import {ExpenseCategorySelect} from "@/components/forms/ExpenseCategorySelect.tsx";
 
 function todayISO(): string {
     return new Date().toISOString().split('T')[0];
@@ -34,12 +35,6 @@ export function ExpenseForm({
 
     const [date, setDate] = useState(initial?.date ?? todayISO());
 
-    /**
-     * Category selection state:
-     *   undefined → user has not interacted yet (may auto-fill from prefill)
-     *   null      → user explicitly cleared the selection
-     *   number    → user chose a specific category
-     */
     const [userCategoryId, setUserCategoryId] = useState<number | null | undefined>(
         initial?.categoryId ?? undefined
     );
@@ -56,6 +51,10 @@ export function ExpenseForm({
     const [saving, setSaving] = useState(false);
     const [deleting, setDeleting] = useState(false);
     const [confirmDelete, setConfirmDelete] = useState(false);
+
+    const [customCategoryNameEn, setCustomCategoryNameEn] = useState('');
+    const [customCategoryNameBn, setCustomCategoryNameBn] = useState('');
+    const [saveCustomCategory, setSaveCustomCategory] = useState(false);
 
     // Lookups
     const categoriesQuery = useQuery({
@@ -95,15 +94,22 @@ export function ExpenseForm({
         });
     };
 
+    const isOtherCategory = selectedCategory?.code === 'OTHER';
+
+
     const validate = (): boolean => {
         const next: Record<string, string> = {};
         if (effectiveCategoryId === null) next.categoryId = 'Category is required';
+        if (isOtherCategory && !customCategoryNameEn.trim()) {
+            next.categoryId = 'Please specify the custom category name';
+        }
         if (!description.trim()) next.description = 'Description is required';
         const amt = parseFloat(amount);
         if (!amt || amt <= 0) next.amount = 'Amount must be positive';
         setErrors(next);
         return Object.keys(next).length === 0;
     };
+
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
@@ -112,13 +118,24 @@ export function ExpenseForm({
 
         setSaving(true);
         try {
+            const isOtherCategory = selectedCategory?.code === 'OTHER';
+
             const payload: ExpenseRequest = {
                 date,
                 categoryId: effectiveCategoryId!,
+                workerId: isSalaryCategory && workerId ? workerId : undefined,
                 description: description.trim(),
                 amount: parseFloat(amount),
                 notes: notes.trim() || undefined,
-                workerId: isSalaryCategory && workerId ? workerId : undefined,
+                customCategoryNameEn: isOtherCategory && customCategoryNameEn.trim()
+                    ? customCategoryNameEn.trim()
+                    : undefined,
+                customCategoryNameBn: isOtherCategory && customCategoryNameBn.trim()
+                    ? customCategoryNameBn.trim()
+                    : undefined,
+                saveCustomCategory: isOtherCategory && customCategoryNameEn.trim()
+                    ? saveCustomCategory
+                    : undefined,
             };
             await onSubmit(payload);
         } catch (err: any) {
@@ -176,25 +193,23 @@ export function ExpenseForm({
                     />
                 </Field>
 
-                <Field label="Category" htmlFor="categoryId" required error={errors.categoryId}>
-                    <Select
-                        id="categoryId"
-                        value={effectiveCategoryId ?? ''}
-                        onChange={(e) => {
-                            setUserCategoryId(e.target.value ? Number(e.target.value) : null);
-                            clearError('categoryId');
-                        }}
-                        hasError={!!errors.categoryId}
-                    >
-                        <option value="">Select category…</option>
-                        {categories.map((c) => (
-                            <option key={c.id} value={c.id}>
-                                {c.name}
-                                {c.nameBn ? ` · ${c.nameBn}` : ''}
-                            </option>
-                        ))}
-                    </Select>
-                </Field>
+                <ExpenseCategorySelect
+                    categories={categories}
+                    value={effectiveCategoryId}
+                    customNameEn={customCategoryNameEn}
+                    customNameBn={customCategoryNameBn}
+                    saveCustom={saveCustomCategory}
+                    onChange={(id, nameEn, nameBn, save) => {
+                        setUserCategoryId(id);
+                        setCustomCategoryNameEn(nameEn);
+                        setCustomCategoryNameBn(nameBn);
+                        setSaveCustomCategory(save);
+                        clearError('categoryId');
+                    }}
+                    required
+                    error={errors.categoryId}
+                    hasError={!!errors.categoryId}
+                />
             </div>
 
             {/* Worker link — only shown for SALARY category */}
