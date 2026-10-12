@@ -106,15 +106,15 @@ export interface Animal {
     milkProducer: boolean;
     eggProducer: boolean;
 }
-
 export interface AnimalRequest {
     tagNumber: string;
     name?: string;
     speciesId?: number;
     customSpeciesName?: string;
-    saveCustomSpecies?: boolean;
+    customSpeciesNameBn?: string;
     customSpeciesMilkProducer?: boolean;
     customSpeciesEggProducer?: boolean;
+    saveCustomSpecies?: boolean;
     status?: AnimalStatus;
     gender?: Gender;
     dateOfBirth?: string;
