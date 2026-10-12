@@ -1,23 +1,23 @@
-import { useParams, Link, useNavigate } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import {useParams, Link, useNavigate} from 'react-router-dom';
+import {useQuery, useMutation, useQueryClient} from '@tanstack/react-query';
+import {useState} from 'react';
 import {
-    ArrowLeft, Pencil, Trash2, AlertCircle, Loader2, Milk,
+    ArrowLeft, Pencil, Trash2, AlertCircle, Loader2, Milk, Egg,
 } from 'lucide-react';
-import { getAnimal, deleteAnimal } from '@/api/animals';
+import {getAnimal, deleteAnimal} from '@/api/animals';
 import {
     STATUS_LABELS, STATUS_COLORS, GENDER_LABELS, getSpeciesEmoji,
 } from '@/types';
 import {AnimalProductionHistory} from "@/components/animals/AnimalProductionHistory.tsx";
 
 export function AnimalDetailPage() {
-    const { id } = useParams<{ id: string }>();
+    const {id} = useParams<{ id: string }>();
     const animalId = Number(id);
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     const [confirmDelete, setConfirmDelete] = useState(false);
 
-    const { data, isLoading, isError } = useQuery({
+    const {data, isLoading, isError} = useQuery({
         queryKey: ['animal', animalId],
         queryFn: () => getAnimal(animalId),
         enabled: Number.isFinite(animalId),
@@ -26,8 +26,8 @@ export function AnimalDetailPage() {
     const deleteMutation = useMutation({
         mutationFn: () => deleteAnimal(animalId),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['animals'] });
-            queryClient.invalidateQueries({ queryKey: ['dashboard-summary'] });
+            queryClient.invalidateQueries({queryKey: ['animals']});
+            queryClient.invalidateQueries({queryKey: ['dashboard-summary']});
             navigate('/animals');
         },
     });
@@ -47,9 +47,10 @@ export function AnimalDetailPage() {
         return (
             <div className="p-4 md:p-6 max-w-3xl mx-auto">
                 <div className="bg-red-50 border border-red-100 rounded-2xl p-6 text-center">
-                    <AlertCircle className="mx-auto text-red-500 mb-3" size={40} />
+                    <AlertCircle className="mx-auto text-red-500 mb-3" size={40}/>
                     <p className="text-red-800 font-semibold">Animal not found</p>
-                    <Link to="/animals" className="inline-block mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+                    <Link to="/animals"
+                          className="inline-block mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
                         Back to Animals
                     </Link>
                 </div>
@@ -61,8 +62,9 @@ export function AnimalDetailPage() {
 
     return (
         <div className="p-4 md:p-6 max-w-3xl mx-auto space-y-5">
-            <Link to="/animals" className="inline-flex items-center gap-1.5 text-sm text-gray-600 hover:text-green-600 transition">
-                <ArrowLeft size={16} />
+            <Link to="/animals"
+                  className="inline-flex items-center gap-1.5 text-sm text-gray-600 hover:text-green-600 transition">
+                <ArrowLeft size={16}/>
                 Back to Animals
             </Link>
 
@@ -73,12 +75,19 @@ export function AnimalDetailPage() {
                         <h1 className="text-2xl font-bold text-gray-900 truncate">{animal.tagNumber}</h1>
                         {animal.name && <p className="text-gray-500 mt-0.5">{animal.name}</p>}
                         <div className="flex flex-wrap items-center gap-2 mt-2">
-                            <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${STATUS_COLORS[animal.status]}`}>
-                                {STATUS_LABELS[animal.status]}
-                            </span>
+    <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${STATUS_COLORS[animal.status]}`}>
+        {STATUS_LABELS[animal.status]}
+    </span>
                             {animal.milkProducer && (
-                                <span className="text-xs px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 font-medium inline-flex items-center gap-1">
-                                    <Milk size={12} /> Milk Producer
+                                <span
+                                    className="text-xs px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 font-medium inline-flex items-center gap-1">
+                                    <Milk size={12}/> Milk Producer
+                                </span>
+                            )}
+                            {animal.eggProducer && (
+                                <span
+                                    className="text-xs px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 font-medium inline-flex items-center gap-1">
+                                    <Egg size={12}/> Egg Producer
                                 </span>
                             )}
                         </div>
@@ -86,15 +95,19 @@ export function AnimalDetailPage() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 pt-6 border-t border-gray-100">
-                    <InfoItem label="Species" value={animal.speciesName} />
-                    <InfoItem label="Gender" value={animal.gender ? GENDER_LABELS[animal.gender] : '—'} />
+                    <InfoItem label="Species" value={animal.speciesName}/>
+                    <InfoItem label="Gender" value={animal.gender ? GENDER_LABELS[animal.gender] : '—'}/>
                     <InfoItem
                         label="Date of Birth"
                         value={animal.dateOfBirth
-                            ? new Date(animal.dateOfBirth).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+                            ? new Date(animal.dateOfBirth).toLocaleDateString('en-GB', {
+                                day: 'numeric',
+                                month: 'short',
+                                year: 'numeric'
+                            })
                             : '—'}
                     />
-                    <InfoItem label="Age" value={animal.dateOfBirth ? calculateAge(animal.dateOfBirth) : '—'} />
+                    <InfoItem label="Age" value={animal.dateOfBirth ? calculateAge(animal.dateOfBirth) : '—'}/>
                 </div>
 
                 <div className="flex items-center gap-3 mt-5 pt-5 border-t border-gray-100">
@@ -102,7 +115,7 @@ export function AnimalDetailPage() {
                         to={`/animals/${animal.id}/edit`}
                         className="inline-flex items-center gap-1.5 bg-green-600 text-white px-4 py-2.5 rounded-lg font-medium hover:bg-green-700 transition"
                     >
-                        <Pencil size={16} />
+                        <Pencil size={16}/>
                         Edit
                     </Link>
                     {!confirmDelete && (
@@ -110,7 +123,7 @@ export function AnimalDetailPage() {
                             onClick={() => setConfirmDelete(true)}
                             className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg font-medium text-red-600 hover:bg-red-50 transition ml-auto"
                         >
-                            <Trash2 size={16} />
+                            <Trash2 size={16}/>
                             Delete
                         </button>
                     )}
@@ -125,7 +138,9 @@ export function AnimalDetailPage() {
                                 disabled={deleteMutation.isPending}
                                 className="bg-red-600 text-white text-sm px-3 py-1.5 rounded-lg hover:bg-red-700 disabled:opacity-50 inline-flex items-center gap-1.5"
                             >
-                                {deleteMutation.isPending ? <><Loader2 size={14} className="animate-spin" />Deleting…</> : <><Trash2 size={14} />Yes, delete</>}
+                                {deleteMutation.isPending ? <><Loader2 size={14}
+                                                                       className="animate-spin"/>Deleting…</> : <>
+                                    <Trash2 size={14}/>Yes, delete</>}
                             </button>
                             <button
                                 onClick={() => setConfirmDelete(false)}
@@ -141,12 +156,12 @@ export function AnimalDetailPage() {
 
             </div>
             {/* Animal history */}
-            <AnimalProductionHistory animal={animal} />
+            <AnimalProductionHistory animal={animal}/>
         </div>
     );
 }
 
-function InfoItem({ label, value }: { label: string; value: string }) {
+function InfoItem({label, value}: { label: string; value: string }) {
     return (
         <div>
             <div className="text-xs text-gray-500 uppercase tracking-wider font-medium">{label}</div>

@@ -69,6 +69,7 @@ export interface Species {
     name: string;
     nameBn: string | null;
     milkProducer: boolean;
+    eggProducer: boolean;
     active: boolean;
     systemDefault: boolean;
     displayOrder: number;
@@ -103,6 +104,7 @@ export interface Animal {
     dateOfBirth: string | null;
     createdAt: string;
     milkProducer: boolean;
+    eggProducer: boolean;
 }
 
 export interface AnimalRequest {
@@ -111,6 +113,8 @@ export interface AnimalRequest {
     speciesId?: number;
     customSpeciesName?: string;
     saveCustomSpecies?: boolean;
+    customSpeciesMilkProducer?: boolean;
+    customSpeciesEggProducer?: boolean;
     status?: AnimalStatus;
     gender?: Gender;
     dateOfBirth?: string;

@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import type { Animal } from '@/types';
 import { STATUS_LABELS, STATUS_COLORS, GENDER_LABELS, getSpeciesEmoji } from '@/types';
-import { Milk } from 'lucide-react';
+import {Egg, Milk} from 'lucide-react';
 
 export function AnimalCard({ animal }: { animal: Animal }) {
     return (
@@ -49,6 +49,15 @@ export function AnimalCard({ animal }: { animal: Animal }) {
                             <Milk size={12} />
                             Milk
                         </span>
+                    </>
+                )}
+                {animal.eggProducer && (
+                    <>
+                        <span className="text-gray-300">·</span>
+                        <span className="inline-flex items-center gap-1 text-amber-600">
+                            <Egg size={12} />
+                            Eggs
+        </span>
                     </>
                 )}
             </div>

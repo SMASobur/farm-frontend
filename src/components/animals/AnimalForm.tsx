@@ -12,7 +12,6 @@ import { SpeciesSelect } from '@/components/forms/SpeciesSelect';
 
 const STATUS_OPTIONS: AnimalStatus[] = ['ACTIVE', 'PREGNANT', 'DRY', 'SICK', 'SOLD', 'DEAD'];
 const GENDER_OPTIONS: Gender[] = ['FEMALE', 'MALE', 'UNKNOWN'];
-const MILK_SPECIES_CODES = ['COW', 'GOAT', 'SHEEP', 'BUFFALO'];
 
 interface Props {
     initial?: Animal;
@@ -40,6 +39,9 @@ export function AnimalForm({ initial, onSubmit, onDelete, mode, cancelTo = '/ani
     const [saving, setSaving] = useState(false);
     const [deleting, setDeleting] = useState(false);
     const [confirmDelete, setConfirmDelete] = useState(false);
+
+    const [customSpeciesMilkProducer, setCustomSpeciesMilkProducer] = useState(false);
+    const [customSpeciesEggProducer, setCustomSpeciesEggProducer] = useState(false);
 
     // Lookup: species list
     const speciesQuery = useQuery({
@@ -87,6 +89,9 @@ export function AnimalForm({ initial, onSubmit, onDelete, mode, cancelTo = '/ani
                 // Only send customSpeciesName when using Other
                 customSpeciesName: isOtherSpecies ? customSpeciesName.trim() || undefined : undefined,
                 saveCustomSpecies: isOtherSpecies && customSpeciesName.trim() ? saveCustomSpecies : undefined,
+
+                customSpeciesMilkProducer: isOtherSpecies && saveCustomSpecies ? customSpeciesMilkProducer : undefined,
+                customSpeciesEggProducer: isOtherSpecies && saveCustomSpecies ? customSpeciesEggProducer : undefined,
                 status,
                 gender,
                 dateOfBirth: dateOfBirth || undefined,
@@ -127,9 +132,12 @@ export function AnimalForm({ initial, onSubmit, onDelete, mode, cancelTo = '/ani
     }
 
     const selectedSpecies = speciesList.find((s) => s.id === speciesId);
-    const isMilkSpecies = selectedSpecies
-        ? MILK_SPECIES_CODES.includes(selectedSpecies.code)
-        : false;
+    const isOtherSpecies = selectedSpecies?.code === 'OTHER';
+
+    const isMilkSpecies = isOtherSpecies
+        ? customSpeciesMilkProducer
+        : (selectedSpecies?.milkProducer ?? false);
+
     const isFemale = gender === 'FEMALE';
 
     return (
@@ -167,10 +175,14 @@ export function AnimalForm({ initial, onSubmit, onDelete, mode, cancelTo = '/ani
                 value={speciesId}
                 customSpeciesName={customSpeciesName}
                 saveCustom={saveCustomSpecies}
-                onChange={(id, customName, save) => {
+                customMilkProducer={customSpeciesMilkProducer}
+                customEggProducer={customSpeciesEggProducer}
+                onChange={(id, customName, save, milk, egg) => {
                     setSpeciesId(id);
                     setCustomSpeciesName(customName);
                     setSaveCustomSpecies(save);
+                    setCustomSpeciesMilkProducer(milk);
+                    setCustomSpeciesEggProducer(egg);
                     clearError('speciesId');
                 }}
                 required
