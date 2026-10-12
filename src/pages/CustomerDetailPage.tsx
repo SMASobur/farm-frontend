@@ -3,12 +3,14 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import {
     ArrowLeft, Pencil, Trash2, AlertCircle, Loader2, Phone, MapPin,
-    Receipt,
+    Receipt, FileText,
 } from 'lucide-react';
 import { getCustomer, deleteCustomer } from '@/api/customers';
 import { getCustomerTypeColor, getCustomerTypeEmoji } from '@/types';
 import { CustomerSalesHistory } from '@/components/customers/CustomerSalesHistory';
 import {useToast} from "@/contexts/ToastContext.tsx";
+import { StatementModal } from '@/components/customers/StatementModal';
+
 
 export function CustomerDetailPage() {
     const { id } = useParams<{ id: string }>();
@@ -17,6 +19,9 @@ export function CustomerDetailPage() {
     const queryClient = useQueryClient();
     const [confirmDelete, setConfirmDelete] = useState(false);
     const toast = useToast();
+
+    const [showStatementModal, setShowStatementModal] = useState(false);
+
 
 
     const { data, isLoading, isError } = useQuery({
@@ -148,7 +153,22 @@ export function CustomerDetailPage() {
                         Delete
                     </button>
                 )}
+                <button
+                    onClick={() => setShowStatementModal(true)}
+                    className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 transition"
+                >
+                    <FileText size={16} />
+                    Statement
+                </button>
             </div>
+
+            {showStatementModal && (
+                <StatementModal
+                    customerId={customerId}
+                    customerName={customer.name}
+                    onClose={() => setShowStatementModal(false)}
+                />
+            )}
 
             {confirmDelete && (
                 <div className="bg-red-50 border border-red-200 rounded-2xl p-4">

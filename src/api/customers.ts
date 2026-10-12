@@ -37,3 +37,23 @@ export async function deleteCustomer(id: number): Promise<ApiResponse<void>> {
     const response = await apiClient.delete<ApiResponse<void>>(`/api/customers/${id}`);
     return response.data;
 }
+
+export async function downloadCustomerStatement(
+    customerId: number,
+    from: string,
+    to: string
+): Promise<void> {
+    const response = await apiClient.get(
+        `/api/customers/${customerId}/statement.pdf?from=${from}&to=${to}`,
+        { responseType: 'blob' }
+    );
+    const filename = `customer-statement-${from}-to-${to}.pdf`;
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+}
