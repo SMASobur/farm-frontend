@@ -32,6 +32,7 @@ export function CustomerForm({ initial, onSubmit, onDelete, mode, cancelTo = '/c
     const [saving, setSaving] = useState(false);
     const [deleting, setDeleting] = useState(false);
     const [confirmDelete, setConfirmDelete] = useState(false);
+    const [customTypeNameBn, setCustomTypeNameBn] = useState('');
 
     const customerTypesQuery = useQuery({
         queryKey: ['customer-types'],
@@ -75,10 +76,9 @@ export function CustomerForm({ initial, onSubmit, onDelete, mode, cancelTo = '/c
                 name: name.trim(),
                 phone: phone.trim() || undefined,
                 address: address.trim() || undefined,
-                // Send customerTypeId ONLY when not in Other mode
                 customerTypeId: isOther ? undefined : (customerTypeId ?? undefined),
-                // Send customTypeName ONLY when in Other mode
                 customTypeName: isOther ? customTypeName.trim() || undefined : undefined,
+                customTypeNameBn: isOther ? customTypeNameBn.trim() || undefined : undefined,
                 saveCustomType: isOther && customTypeName.trim() ? saveCustomType : undefined,
                 notes: notes.trim() || undefined,
             };
@@ -151,11 +151,13 @@ export function CustomerForm({ initial, onSubmit, onDelete, mode, cancelTo = '/c
             <CustomerTypeSelect
                 customerTypes={customerTypes}
                 value={customerTypeId}
-                customTypeName={customTypeName}
+                customName={customTypeName}
+                customNameBn={customTypeNameBn}
                 saveCustom={saveCustomType}
-                onChange={(id, customName, save) => {
+                onChange={(id, nameEn, nameBn, save) => {
                     setCustomerTypeId(id);
-                    setCustomTypeName(customName);
+                    setCustomTypeName(nameEn);
+                    setCustomTypeNameBn(nameBn);
                     setSaveCustomType(save);
                     clearError('customerTypeId');
                 }}

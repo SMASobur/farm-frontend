@@ -207,6 +207,7 @@ export interface CustomerRequest {
     address?: string;
     customerTypeId?: number;
     customTypeName?: string;
+    customTypeNameBn?: string;
     saveCustomType?: boolean;
     notes?: string;
 }
