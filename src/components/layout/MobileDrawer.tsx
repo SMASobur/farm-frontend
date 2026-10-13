@@ -14,9 +14,11 @@ interface Props {
     open: boolean;
     onClose: () => void;
     navItems: NavItem[];
+    farmName: string;
+    farmLogoUrl: string | null;
 }
 
-export function MobileDrawer({ open, onClose, navItems }: Props) {
+export function MobileDrawer({ open, onClose, navItems, farmName, farmLogoUrl }: Props) {
     const { user } = useAuth();
     const location = useLocation();
 
@@ -39,9 +41,11 @@ export function MobileDrawer({ open, onClose, navItems }: Props) {
 
     if (!open) return null;
 
+    const farmInitial = farmName.charAt(0).toUpperCase();
+
     return (
         <div className="fixed inset-0 z-50 md:hidden">
-            {/* Backdrop — tapping anywhere on it closes the drawer */}
+            {/* Backdrop */}
             <div
                 className="absolute inset-0 bg-black/40 animate-in fade-in duration-150"
                 onClick={onClose}
@@ -50,16 +54,24 @@ export function MobileDrawer({ open, onClose, navItems }: Props) {
 
             {/* Drawer */}
             <div className="absolute left-0 top-0 bottom-0 w-72 bg-white shadow-xl flex flex-col animate-in slide-in-from-left duration-200">
-                {/* Header with user info */}
+                {/* Header */}
                 <div className="p-4 border-b border-gray-100">
                     <div className="flex items-start justify-between gap-3 mb-3">
                         <div className="flex items-center gap-2 min-w-0">
-                            <div className="w-9 h-9 bg-green-600 rounded-md flex items-center justify-center text-white font-bold shrink-0">
-                                F
-                            </div>
+                            {farmLogoUrl ? (
+                                <img
+                                    src={farmLogoUrl}
+                                    alt={farmName}
+                                    className="w-9 h-9 rounded-md object-cover shrink-0"
+                                />
+                            ) : (
+                                <div className="w-9 h-9 bg-green-600 rounded-md flex items-center justify-center text-white font-bold shrink-0">
+                                    {farmInitial}
+                                </div>
+                            )}
                             <div className="min-w-0">
                                 <div className="font-semibold text-gray-900 leading-tight text-sm truncate">
-                                    {user?.farmName || 'Farm'}
+                                    {farmName}
                                 </div>
                                 <div className="text-xs text-gray-500 leading-tight truncate">
                                     {user?.fullName || user?.username}
@@ -74,9 +86,7 @@ export function MobileDrawer({ open, onClose, navItems }: Props) {
                             <X size={18} />
                         </button>
                     </div>
-                    <div className="text-xs text-gray-400">
-                        {user?.role}
-                    </div>
+                    <div className="text-xs text-gray-400">{user?.role}</div>
                 </div>
 
                 {/* Nav items */}
