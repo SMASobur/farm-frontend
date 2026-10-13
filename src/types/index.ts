@@ -593,3 +593,80 @@ export const WORKER_STATUS_COLORS: Record<WorkerStatus, string> = {
     INACTIVE: 'bg-gray-100 text-gray-700',
     TERMINATED: 'bg-red-100 text-red-700',
 };
+
+// ============================================================
+// Animal Events (ProductionEvent)
+// ============================================================
+
+export type AnimalEventType =
+    | 'ILLNESS' | 'TREATMENT' | 'VACCINATION' | 'DEWORMING'
+    | 'CHECKUP' | 'PREGNANCY' | 'CALVING' | 'WEIGHT'
+    | 'PURCHASE' | 'SALE' | 'NOTE' | 'OTHER';
+
+export interface AnimalEvent {
+    id: number;
+    animalId: number | null;
+    animalTagNumber: string | null;
+    date: string;
+    eventType: AnimalEventType;
+    title: string;
+    description: string | null;
+    cost: number | null;
+    enteredByUserId: number | null;
+    enteredByName: string | null;
+    createdAt: string;
+}
+
+export interface AnimalEventRequest {
+    animalId: number;
+    date?: string;
+    eventType: AnimalEventType;
+    title: string;
+    description?: string;
+    cost?: number;
+}
+
+export const ANIMAL_EVENT_LABELS: Record<AnimalEventType, string> = {
+    ILLNESS: 'Illness',
+    TREATMENT: 'Treatment',
+    VACCINATION: 'Vaccination',
+    DEWORMING: 'Deworming',
+    CHECKUP: 'Checkup',
+    PREGNANCY: 'Pregnancy',
+    CALVING: 'Calving',
+    WEIGHT: 'Weight',
+    PURCHASE: 'Purchase',
+    SALE: 'Sale',
+    NOTE: 'Note',
+    OTHER: 'Other',
+};
+
+export const ANIMAL_EVENT_COLORS: Record<AnimalEventType, string> = {
+    ILLNESS: 'bg-red-100 text-red-700',
+    TREATMENT: 'bg-amber-100 text-amber-700',
+    VACCINATION: 'bg-blue-100 text-blue-700',
+    DEWORMING: 'bg-blue-100 text-blue-700',
+    CHECKUP: 'bg-gray-100 text-gray-700',
+    PREGNANCY: 'bg-pink-100 text-pink-700',
+    CALVING: 'bg-pink-100 text-pink-700',
+    WEIGHT: 'bg-emerald-100 text-emerald-700',
+    PURCHASE: 'bg-green-100 text-green-700',
+    SALE: 'bg-purple-100 text-purple-700',
+    NOTE: 'bg-gray-100 text-gray-700',
+    OTHER: 'bg-gray-100 text-gray-700',
+};
+
+export const ANIMAL_EVENT_EMOJI: Record<AnimalEventType, string> = {
+    ILLNESS: '🤒',
+    TREATMENT: '💊',
+    VACCINATION: '💉',
+    DEWORMING: '🪱',
+    CHECKUP: '🩺',
+    PREGNANCY: '🤰',
+    CALVING: '🐄',
+    WEIGHT: '⚖️',
+    PURCHASE: '🛒',
+    SALE: '💰',
+    NOTE: '📝',
+    OTHER: '📌',
+};

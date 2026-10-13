@@ -10,6 +10,7 @@ import {
 } from '@/types';
 import {AnimalProductionHistory} from "@/components/animals/AnimalProductionHistory.tsx";
 import {useToast} from "@/contexts/ToastContext.tsx";
+import {AnimalEventList} from "@/components/animals/AnimalEventList.tsx";
 
 export function AnimalDetailPage() {
     const {id} = useParams<{ id: string }>();
@@ -167,6 +168,12 @@ export function AnimalDetailPage() {
             </div>
             {/* Animal history */}
             <AnimalProductionHistory animal={animal}/>
+
+            <AnimalEventList
+                animalId={animal.id}
+                animalTagNumber={animal.tagNumber}
+            />
+
         </div>
     );
 }
