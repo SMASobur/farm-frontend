@@ -16,7 +16,7 @@ import { ANIMAL_EVENT_LABELS } from '@/types';
 const EVENT_TYPES: AnimalEventType[] = [
     'ILLNESS', 'TREATMENT', 'VACCINATION', 'DEWORMING',
     'CHECKUP', 'PREGNANCY', 'CALVING', 'WEIGHT',
-    'PURCHASE', 'SALE', 'NOTE', 'OTHER',
+    'PURCHASE', 'SALE', 'DEATH', 'NOTE', 'OTHER',
 ];
 
 function todayISO(): string {

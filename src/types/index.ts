@@ -601,7 +601,7 @@ export const WORKER_STATUS_COLORS: Record<WorkerStatus, string> = {
 export type AnimalEventType =
     | 'ILLNESS' | 'TREATMENT' | 'VACCINATION' | 'DEWORMING'
     | 'CHECKUP' | 'PREGNANCY' | 'CALVING' | 'WEIGHT'
-    | 'PURCHASE' | 'SALE' | 'NOTE' | 'OTHER';
+    | 'PURCHASE' | 'SALE' | 'DEATH' | 'NOTE' | 'OTHER';
 
 export interface AnimalEvent {
     id: number;
@@ -637,6 +637,7 @@ export const ANIMAL_EVENT_LABELS: Record<AnimalEventType, string> = {
     WEIGHT: 'Weight',
     PURCHASE: 'Purchase',
     SALE: 'Sale',
+    DEATH: 'Death',
     NOTE: 'Note',
     OTHER: 'Other',
 };
@@ -652,6 +653,7 @@ export const ANIMAL_EVENT_COLORS: Record<AnimalEventType, string> = {
     WEIGHT: 'bg-emerald-100 text-emerald-700',
     PURCHASE: 'bg-green-100 text-green-700',
     SALE: 'bg-purple-100 text-purple-700',
+    DEATH: 'bg-gray-800 text-white',
     NOTE: 'bg-gray-100 text-gray-700',
     OTHER: 'bg-gray-100 text-gray-700',
 };
@@ -667,6 +669,7 @@ export const ANIMAL_EVENT_EMOJI: Record<AnimalEventType, string> = {
     WEIGHT: '⚖️',
     PURCHASE: '🛒',
     SALE: '💰',
+    DEATH: '⚰️',
     NOTE: '📝',
     OTHER: '📌',
 };
