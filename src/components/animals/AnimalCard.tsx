@@ -1,9 +1,19 @@
 import { Link } from 'react-router-dom';
 import type { Animal } from '@/types';
-import { STATUS_LABELS, STATUS_COLORS, GENDER_LABELS, getSpeciesEmoji } from '@/types';
-import {Egg, Milk} from 'lucide-react';
+import {
+    LIFECYCLE_STATUS_LABELS,
+    LIFECYCLE_STATUS_COLORS,
+    GENDER_LABELS,
+    getSpeciesEmoji,
+} from '@/types';
 
 export function AnimalCard({ animal }: { animal: Animal }) {
+    const derivedBadges = [
+        animal.currentlyPregnant && { label: 'Pregnant', emoji: '🤰', color: 'bg-pink-100 text-pink-700' },
+        animal.currentlySick && { label: 'Sick', emoji: '💊', color: 'bg-amber-100 text-amber-700' },
+        animal.currentlyMilking && { label: 'Milking', emoji: '🥛', color: 'bg-blue-100 text-blue-700' },
+    ].filter(Boolean) as { label: string; emoji: string; color: string }[];
+
     return (
         <Link
             to={`/animals/${animal.id}`}
@@ -27,13 +37,14 @@ export function AnimalCard({ animal }: { animal: Animal }) {
                 </div>
                 <span
                     className={`text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${
-                        STATUS_COLORS[animal.status]
+                        LIFECYCLE_STATUS_COLORS[animal.lifecycleStatus]
                     }`}
                 >
-                    {STATUS_LABELS[animal.status]}
+                    {LIFECYCLE_STATUS_LABELS[animal.lifecycleStatus]}
                 </span>
             </div>
 
+            {/* Species + gender + milk producer */}
             <div className="flex items-center gap-2 mt-3 text-xs text-gray-500">
                 <span>{animal.speciesName}</span>
                 {animal.gender && (
@@ -46,21 +57,34 @@ export function AnimalCard({ animal }: { animal: Animal }) {
                     <>
                         <span className="text-gray-300">·</span>
                         <span className="inline-flex items-center gap-1 text-blue-600">
-                            <Milk size={12} />
-                            Milk
+                            🥛 Milk
                         </span>
                     </>
                 )}
                 {animal.eggProducer && (
                     <>
                         <span className="text-gray-300">·</span>
-                        <span className="inline-flex items-center gap-1 text-amber-600">
-                            <Egg size={12} />
-                            Eggs
-        </span>
+                        <span className="inline-flex items-center gap-1 text-blue-600">
+                            🥚 Egg
+                        </span>
                     </>
                 )}
             </div>
+
+            {/* Derived condition badges */}
+            {derivedBadges.length > 0 && (
+                <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                    {derivedBadges.map((b) => (
+                        <span
+                            key={b.label}
+                            className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium ${b.color}`}
+                        >
+                            <span aria-hidden>{b.emoji}</span>
+                            {b.label}
+                        </span>
+                    ))}
+                </div>
+            )}
         </Link>
     );
 }

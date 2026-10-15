@@ -2,11 +2,14 @@ import {useParams, Link, useNavigate} from 'react-router-dom';
 import {useQuery, useMutation, useQueryClient} from '@tanstack/react-query';
 import {useState} from 'react';
 import {
-    ArrowLeft, Pencil, Trash2, AlertCircle, Loader2, Milk, Egg,
+    ArrowLeft, Pencil, Trash2, AlertCircle, Loader2, Egg,
 } from 'lucide-react';
 import {getAnimal, deleteAnimal} from '@/api/animals';
 import {
-    STATUS_LABELS, STATUS_COLORS, GENDER_LABELS, getSpeciesEmoji,
+    LIFECYCLE_STATUS_LABELS,
+    LIFECYCLE_STATUS_COLORS,
+    GENDER_LABELS,
+    getSpeciesEmoji,
 } from '@/types';
 import {AnimalProductionHistory} from "@/components/animals/AnimalProductionHistory.tsx";
 import {useToast} from "@/contexts/ToastContext.tsx";
@@ -32,7 +35,7 @@ export function AnimalDetailPage() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['animals'] });
             queryClient.invalidateQueries({ queryKey: ['dashboard-summary'] });
-            toast.success('Animal deleted', `Tag: ${animal.tagNumber}`);
+            toast.success('Animal deleted');
             navigate('/animals');
         },
         onError: (err: any) => {
@@ -86,15 +89,32 @@ export function AnimalDetailPage() {
                         <h1 className="text-2xl font-bold text-gray-900 truncate">{animal.tagNumber}</h1>
                         {animal.name && <p className="text-gray-500 mt-0.5">{animal.name}</p>}
                         <div className="flex flex-wrap items-center gap-2 mt-2">
-    <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${STATUS_COLORS[animal.status]}`}>
-        {STATUS_LABELS[animal.status]}
+                            <div className="flex flex-wrap items-center gap-2 mt-2">
+                                {/* Lifecycle status */}
+                                <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${LIFECYCLE_STATUS_COLORS[animal.lifecycleStatus]}`}>
+        {LIFECYCLE_STATUS_LABELS[animal.lifecycleStatus]}
     </span>
-                            {animal.milkProducer && (
-                                <span
-                                    className="text-xs px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 font-medium inline-flex items-center gap-1">
-                                    <Milk size={12}/> Milk Producer
-                                </span>
-                            )}
+
+
+                                {/* Derived conditions */}
+                                {animal.currentlyPregnant && (
+                                    <span className="text-xs px-2.5 py-1 rounded-full bg-pink-100 text-pink-700 font-medium">
+            🤰 Pregnant
+        </span>
+                                )}
+                                {animal.currentlySick && (
+                                    <span className="text-xs px-2.5 py-1 rounded-full bg-amber-100 text-amber-700 font-medium">
+            💊 Sick
+        </span>
+                                )}
+                                {animal.currentlyMilking && (
+                                    <span className="text-xs px-2.5 py-1 rounded-full bg-blue-100 text-blue-700 font-medium">
+            🥛 Milking
+        </span>
+                                )}
+                            </div>
+
+
                             {animal.eggProducer && (
                                 <span
                                     className="text-xs px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 font-medium inline-flex items-center gap-1">

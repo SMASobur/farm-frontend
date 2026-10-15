@@ -3,14 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Loader2, Save, Trash2 } from 'lucide-react';
 import { listSpecies } from '@/api/species';
-import type { Animal, AnimalRequest, AnimalStatus, Gender } from '@/types';
-import { STATUS_LABELS, GENDER_LABELS } from '@/types';
+import type { Animal, AnimalRequest, LifecycleStatus, Gender } from '@/types';
+import { LIFECYCLE_STATUS_LABELS, GENDER_LABELS } from '@/types';
 import { Field } from '@/components/forms/Field';
 import { Input } from '@/components/forms/Input';
 import { Select } from '@/components/forms/Select';
 import { SpeciesSelect } from '@/components/forms/SpeciesSelect';
 
-const STATUS_OPTIONS: AnimalStatus[] = ['ACTIVE', 'PREGNANT', 'DRY', 'SICK', 'SOLD', 'DEAD'];
+const LIFECYCLE_OPTIONS: LifecycleStatus[] = ['ACTIVE', 'SOLD', 'DEAD', 'CULLED'];
 const GENDER_OPTIONS: Gender[] = ['FEMALE', 'MALE', 'UNKNOWN'];
 
 interface Props {
@@ -33,7 +33,9 @@ export function AnimalForm({ initial, onSubmit, onDelete, mode, cancelTo = '/ani
     const [customSpeciesMilkProducer, setCustomSpeciesMilkProducer] = useState(false);
     const [customSpeciesEggProducer, setCustomSpeciesEggProducer] = useState(false);
     const [saveCustomSpecies, setSaveCustomSpecies] = useState(false);
-    const [status, setStatus] = useState<AnimalStatus>(initial?.status ?? 'ACTIVE');
+    const [lifecycleStatus, setLifecycleStatus] = useState<LifecycleStatus>(
+        initial?.lifecycleStatus ?? 'ACTIVE'
+    );
     const [gender, setGender] = useState<Gender>(initial?.gender ?? 'FEMALE');
     const [dateOfBirth, setDateOfBirth] = useState(initial?.dateOfBirth ?? '');
 
@@ -87,14 +89,8 @@ export function AnimalForm({ initial, onSubmit, onDelete, mode, cancelTo = '/ani
                 speciesId: isOtherSpecies ? undefined : (speciesId ?? undefined),
                 customSpeciesName: isOtherSpecies ? customSpeciesName.trim() || undefined : undefined,
                 customSpeciesNameBn: isOtherSpecies ? customSpeciesNameBn.trim() || undefined : undefined,
-                customSpeciesMilkProducer: isOtherSpecies && customSpeciesName.trim()
-                    ? customSpeciesMilkProducer
-                    : undefined,
-                customSpeciesEggProducer: isOtherSpecies && customSpeciesName.trim()
-                    ? customSpeciesEggProducer
-                    : undefined,
                 saveCustomSpecies: isOtherSpecies && customSpeciesName.trim() ? saveCustomSpecies : undefined,
-                status,
+                lifecycleStatus,
                 gender,
                 dateOfBirth: dateOfBirth || undefined,
             };
@@ -132,15 +128,6 @@ export function AnimalForm({ initial, onSubmit, onDelete, mode, cancelTo = '/ani
             </div>
         );
     }
-
-    const selectedSpecies = speciesList.find((s) => s.id === speciesId);
-    const isOtherSpecies = selectedSpecies?.code === 'OTHER';
-
-    const isMilkSpecies = isOtherSpecies
-        ? customSpeciesMilkProducer
-        : (selectedSpecies?.milkProducer ?? false);
-
-    const isFemale = gender === 'FEMALE';
 
     return (
         <form onSubmit={handleSubmit} className="space-y-5">
@@ -207,22 +194,21 @@ export function AnimalForm({ initial, onSubmit, onDelete, mode, cancelTo = '/ani
                     </Select>
                 </Field>
 
-                <Field label="Status" htmlFor="status">
+                <Field
+                    label="Lifecycle Status"
+                    htmlFor="lifecycleStatus"
+                    help="Lifecycle only. Temporary states tracked via events."
+                >
                     <Select
-                        id="status"
-                        value={status}
-                        onChange={(e) => setStatus(e.target.value as AnimalStatus)}
+                        id="lifecycleStatus"
+                        value={lifecycleStatus}
+                        onChange={(e) => setLifecycleStatus(e.target.value as LifecycleStatus)}
                     >
-                        {STATUS_OPTIONS.map((s) => {
-                            const disabled =
-                                (s === 'PREGNANT' && (!isFemale || !isMilkSpecies)) ||
-                                (s === 'DRY' && (!isFemale || !isMilkSpecies));
-                            return (
-                                <option key={s} value={s} disabled={disabled}>
-                                    {STATUS_LABELS[s]}
-                                </option>
-                            );
-                        })}
+                        {LIFECYCLE_OPTIONS.map((s) => (
+                            <option key={s} value={s}>
+                                {LIFECYCLE_STATUS_LABELS[s]}
+                            </option>
+                        ))}
                     </Select>
                 </Field>
             </div>

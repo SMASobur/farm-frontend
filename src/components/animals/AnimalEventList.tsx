@@ -17,7 +17,7 @@ interface Props {
 }
 
 const FILTER_OPTIONS: (AnimalEventType | 'ALL')[] = [
-    'ALL', 'ILLNESS', 'TREATMENT', 'VACCINATION', 'PREGNANCY', 'WEIGHT',
+    'ALL', 'ILLNESS', 'TREATMENT', 'RECOVERY', 'VACCINATION', 'PREGNANCY', 'WEIGHT',
 ];
 
 export function AnimalEventList({ animalId, animalTagNumber }: Props) {

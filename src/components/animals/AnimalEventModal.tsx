@@ -14,7 +14,7 @@ import type { AnimalEvent, AnimalEventRequest, AnimalEventType } from '@/types';
 import { ANIMAL_EVENT_LABELS } from '@/types';
 
 const EVENT_TYPES: AnimalEventType[] = [
-    'ILLNESS', 'TREATMENT', 'VACCINATION', 'DEWORMING',
+    'ILLNESS', 'TREATMENT', 'RECOVERY', 'VACCINATION', 'DEWORMING',
     'CHECKUP', 'PREGNANCY', 'CALVING', 'WEIGHT',
     'PURCHASE', 'SALE', 'DEATH', 'NOTE', 'OTHER',
 ];
@@ -86,16 +86,12 @@ export function AnimalEventModal({ animalId, animalTagNumber, initial, onClose }
         e.preventDefault();
         setError('');
 
-        if (!title.trim()) {
-            setError('Title is required');
-            return;
-        }
 
         const payload: AnimalEventRequest = {
             animalId,
             date,
             eventType,
-            title: title.trim(),
+            title: title.trim() || undefined,
             description: description.trim() || undefined,
             cost: cost && !isNaN(parseFloat(cost)) ? parseFloat(cost) : undefined,
         };
@@ -164,7 +160,6 @@ export function AnimalEventModal({ animalId, animalTagNumber, initial, onClose }
                     <Field
                         label="Title"
                         htmlFor="title"
-                        required
                         help="Short description, e.g., 'Fever', 'FMD Vaccine', 'Weighed 320kg'"
                     >
                         <Input

@@ -76,18 +76,11 @@ export interface Species {
     createdAt: string;
 }
 
-
 // ============================================================
 // Animal
 // ============================================================
 
-export type AnimalStatus =
-    | 'ACTIVE'
-    | 'PREGNANT'
-    | 'DRY'
-    | 'SICK'
-    | 'SOLD'
-    | 'DEAD';
+export type LifecycleStatus = 'ACTIVE' | 'SOLD' | 'DEAD' | 'CULLED';
 
 export type Gender = 'MALE' | 'FEMALE' | 'UNKNOWN';
 
@@ -95,42 +88,58 @@ export interface Animal {
     id: number;
     tagNumber: string;
     name: string | null;
+
+    // Species (entity)
     speciesId: number;
     speciesCode: string;
     speciesName: string;
     speciesNameBn: string | null;
-    status: AnimalStatus;
+
+    // Lifecycle — manual, terminal states only
+    lifecycleStatus: LifecycleStatus;
+
     gender: Gender | null;
     dateOfBirth: string | null;
     createdAt: string;
+
+    // Species-based capabilities
     milkProducer: boolean;
     eggProducer: boolean;
+
+    // Derived from events
+    currentlyPregnant: boolean;
+    currentlySick: boolean;
+    currentlyMilking: boolean;
 }
+
 export interface AnimalRequest {
     tagNumber: string;
     name?: string;
     speciesId?: number;
     customSpeciesName?: string;
     customSpeciesNameBn?: string;
-    customSpeciesMilkProducer?: boolean;
-    customSpeciesEggProducer?: boolean;
     saveCustomSpecies?: boolean;
-    status?: AnimalStatus;
+    lifecycleStatus?: LifecycleStatus;
     gender?: Gender;
     dateOfBirth?: string;
 }
 
 // ============================================================
-// Constants (used by UI dropdowns)
+// Animal constants
 // ============================================================
 
-export const STATUS_LABELS: Record<AnimalStatus, string> = {
+export const LIFECYCLE_STATUS_LABELS: Record<LifecycleStatus, string> = {
     ACTIVE: 'Active',
-    PREGNANT: 'Pregnant',
-    DRY: 'Dry',
-    SICK: 'Sick',
     SOLD: 'Sold',
     DEAD: 'Dead',
+    CULLED: 'Culled',
+};
+
+export const LIFECYCLE_STATUS_COLORS: Record<LifecycleStatus, string> = {
+    ACTIVE: 'bg-green-100 text-green-700',
+    SOLD: 'bg-purple-100 text-purple-700',
+    DEAD: 'bg-gray-800 text-white',
+    CULLED: 'bg-gray-200 text-gray-700',
 };
 
 export const GENDER_LABELS: Record<Gender, string> = {
@@ -139,16 +148,7 @@ export const GENDER_LABELS: Record<Gender, string> = {
     UNKNOWN: 'Unknown',
 };
 
-export const STATUS_COLORS: Record<AnimalStatus, string> = {
-    ACTIVE: 'bg-green-100 text-green-700',
-    PREGNANT: 'bg-pink-100 text-pink-700',
-    DRY: 'bg-gray-100 text-gray-700',
-    SICK: 'bg-amber-100 text-amber-700',
-    SOLD: 'bg-blue-100 text-blue-700',
-    DEAD: 'bg-red-100 text-red-700',
-};
-
-// Emoji map — keyed by species CODE (since species is now dynamic)
+// Species emoji map (keyed by species CODE)
 export const SPECIES_CODE_EMOJI: Record<string, string> = {
     COW: '🐄',
     GOAT: '🐐',
@@ -161,11 +161,11 @@ export const SPECIES_CODE_EMOJI: Record<string, string> = {
 };
 
 export function getSpeciesEmoji(code: string): string {
-    return SPECIES_CODE_EMOJI[code] || '🐥';
+    return SPECIES_CODE_EMOJI[code] || '🐾';
 }
 
-// Milk-producing species codes (for filtering)
 export const MILK_SPECIES_CODES = ['COW', 'GOAT', 'SHEEP', 'BUFFALO'];
+
 
 
 // ============================================================
@@ -599,7 +599,7 @@ export const WORKER_STATUS_COLORS: Record<WorkerStatus, string> = {
 // ============================================================
 
 export type AnimalEventType =
-    | 'ILLNESS' | 'TREATMENT' | 'VACCINATION' | 'DEWORMING'
+    | 'ILLNESS' | 'TREATMENT' | 'RECOVERY' | 'VACCINATION' | 'DEWORMING'
     | 'CHECKUP' | 'PREGNANCY' | 'CALVING' | 'WEIGHT'
     | 'PURCHASE' | 'SALE' | 'DEATH' | 'NOTE' | 'OTHER';
 
@@ -621,7 +621,7 @@ export interface AnimalEventRequest {
     animalId: number;
     date?: string;
     eventType: AnimalEventType;
-    title: string;
+    title?: string;
     description?: string;
     cost?: number;
 }
@@ -629,6 +629,7 @@ export interface AnimalEventRequest {
 export const ANIMAL_EVENT_LABELS: Record<AnimalEventType, string> = {
     ILLNESS: 'Illness',
     TREATMENT: 'Treatment',
+    RECOVERY: 'Recovery',
     VACCINATION: 'Vaccination',
     DEWORMING: 'Deworming',
     CHECKUP: 'Checkup',
@@ -645,6 +646,7 @@ export const ANIMAL_EVENT_LABELS: Record<AnimalEventType, string> = {
 export const ANIMAL_EVENT_COLORS: Record<AnimalEventType, string> = {
     ILLNESS: 'bg-red-100 text-red-700',
     TREATMENT: 'bg-amber-100 text-amber-700',
+    RECOVERY: 'bg-green-100 text-green-700',
     VACCINATION: 'bg-blue-100 text-blue-700',
     DEWORMING: 'bg-blue-100 text-blue-700',
     CHECKUP: 'bg-gray-100 text-gray-700',
@@ -661,6 +663,7 @@ export const ANIMAL_EVENT_COLORS: Record<AnimalEventType, string> = {
 export const ANIMAL_EVENT_EMOJI: Record<AnimalEventType, string> = {
     ILLNESS: '🤒',
     TREATMENT: '💊',
+    RECOVERY: '✅',
     VACCINATION: '💉',
     DEWORMING: '🪱',
     CHECKUP: '🩺',

@@ -1,9 +1,9 @@
 import { apiClient } from './client';
-import type { ApiResponse, Animal, AnimalRequest, AnimalStatus } from '@/types';
+import type { ApiResponse, Animal, AnimalRequest, LifecycleStatus } from '@/types';
 
 export interface AnimalFilters {
     speciesId?: number;
-    status?: AnimalStatus;
+    status?: LifecycleStatus;
 }
 
 export async function listAnimals(filters?: AnimalFilters): Promise<ApiResponse<Animal[]>> {

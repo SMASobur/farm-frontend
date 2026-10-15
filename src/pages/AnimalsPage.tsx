@@ -4,17 +4,18 @@ import { Link } from 'react-router-dom';
 import { Plus, Search, AlertCircle, RefreshCw, Beef } from 'lucide-react';
 import { listAnimals } from '@/api/animals';
 import { listSpecies } from '@/api/species';
-import type { Species, AnimalStatus, Animal } from '@/types';
+import type { Species, LifecycleStatus, Animal } from '@/types';
+import { LIFECYCLE_STATUS_LABELS } from '@/types';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useKeyPress } from '@/hooks/useKeyPress';
 import { AnimalCard } from '@/components/animals/AnimalCard';
 import { AnimalsSkeleton } from '@/components/animals/AnimalsSkeleton';
 
-const STATUS_OPTIONS: AnimalStatus[] = ['ACTIVE', 'PREGNANT', 'DRY', 'SICK', 'SOLD', 'DEAD'];
+const LIFECYCLE_OPTIONS: LifecycleStatus[] = ['ACTIVE', 'SOLD', 'DEAD', 'CULLED'];
 
 export function AnimalsPage() {
     const [speciesId, setSpeciesId] = useState<number | null>(null);
-    const [status, setStatus] = useState<AnimalStatus | null>(null);
+    const [lifecycle, setLifecycle] = useState<LifecycleStatus | null>(null);
     const [searchInput, setSearchInput] = useState('');
     const search = useDebounce(searchInput, 300);
     const searchRef = useRef<HTMLInputElement>(null);
@@ -35,10 +36,10 @@ export function AnimalsPage() {
 
     // Animals list
     const { data, isLoading, isError, refetch, isFetching } = useQuery({
-        queryKey: ['animals', speciesId, status],
+        queryKey: ['animals', speciesId, lifecycle],
         queryFn: () => listAnimals({
             speciesId: speciesId || undefined,
-            status: status || undefined,
+            status: lifecycle || undefined,
         }),
     });
 
@@ -51,16 +52,17 @@ export function AnimalsPage() {
         })
         : animals;
 
-    const hasActiveFilters = speciesId !== null || status !== null || search !== '';
+    const hasActiveFilters = speciesId !== null || lifecycle !== null || search !== '';
 
     const clearFilters = () => {
         setSpeciesId(null);
-        setStatus(null);
+        setLifecycle(null);
         setSearchInput('');
     };
 
     return (
         <div className="p-4 md:p-6 space-y-6">
+            {/* Header */}
             <div className="flex items-start justify-between gap-3">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">Animals</h1>
@@ -78,6 +80,7 @@ export function AnimalsPage() {
                 </Link>
             </div>
 
+            {/* Search */}
             <div className="relative">
                 <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input
@@ -90,7 +93,7 @@ export function AnimalsPage() {
                 />
             </div>
 
-            {/* Species filter (dynamic chips) */}
+            {/* Species filter */}
             <div>
                 <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
                     Species
@@ -108,24 +111,25 @@ export function AnimalsPage() {
                 </div>
             </div>
 
-            {/* Status filter */}
+            {/* Lifecycle filter */}
             <div>
                 <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
-                    Status
+                    Lifecycle
                 </div>
                 <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4">
-                    <FilterChip label="All" active={status === null} onClick={() => setStatus(null)} />
-                    {STATUS_OPTIONS.map((s) => (
+                    <FilterChip label="All" active={lifecycle === null} onClick={() => setLifecycle(null)} />
+                    {LIFECYCLE_OPTIONS.map((s) => (
                         <FilterChip
                             key={s}
-                            label={s.charAt(0) + s.slice(1).toLowerCase()}
-                            active={status === s}
-                            onClick={() => setStatus(status === s ? null : s)}
+                            label={LIFECYCLE_STATUS_LABELS[s]}
+                            active={lifecycle === s}
+                            onClick={() => setLifecycle(lifecycle === s ? null : s)}
                         />
                     ))}
                 </div>
             </div>
 
+            {/* Refreshing */}
             {isFetching && !isLoading && (
                 <div className="bg-blue-50 border border-blue-100 rounded-xl px-3 py-2 flex items-center gap-2 text-xs text-blue-800">
                     <RefreshCw size={12} className="animate-spin shrink-0" />
@@ -133,6 +137,7 @@ export function AnimalsPage() {
                 </div>
             )}
 
+            {/* Content */}
             {isLoading ? (
                 <AnimalsSkeleton />
             ) : isError ? (
