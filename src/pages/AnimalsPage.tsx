@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { Plus, Search, AlertCircle, RefreshCw, Beef } from 'lucide-react';
 import { listAnimals } from '@/api/animals';
+import type { AnimalCondition } from '@/api/animals';
 import { listSpecies } from '@/api/species';
 import type { Species, LifecycleStatus, Animal } from '@/types';
 import { LIFECYCLE_STATUS_LABELS } from '@/types';
@@ -13,9 +14,16 @@ import { AnimalsSkeleton } from '@/components/animals/AnimalsSkeleton';
 
 const LIFECYCLE_OPTIONS: LifecycleStatus[] = ['ACTIVE', 'SOLD', 'DEAD', 'CULLED'];
 
+const CONDITION_OPTIONS: { value: AnimalCondition; label: string }[] = [
+    { value: 'PREGNANT', label: 'Pregnant' },
+    { value: 'SICK', label: 'Sick' },
+    { value: 'MILKING', label: 'Milking' },
+];
+
 export function AnimalsPage() {
     const [speciesId, setSpeciesId] = useState<number | null>(null);
     const [lifecycle, setLifecycle] = useState<LifecycleStatus | null>(null);
+    const [condition, setCondition] = useState<AnimalCondition | null>(null);
     const [searchInput, setSearchInput] = useState('');
     const search = useDebounce(searchInput, 300);
     const searchRef = useRef<HTMLInputElement>(null);
@@ -36,27 +44,24 @@ export function AnimalsPage() {
 
     // Animals list
     const { data, isLoading, isError, refetch, isFetching } = useQuery({
-        queryKey: ['animals', speciesId, lifecycle],
+        queryKey: ['animals', speciesId, lifecycle, condition, search],
         queryFn: () => listAnimals({
             speciesId: speciesId || undefined,
             status: lifecycle || undefined,
+            condition: condition || undefined,
+            search: search || undefined,
         }),
     });
 
     const animals: Animal[] = data?.data ?? [];
-    const filtered = search
-        ? animals.filter((a) => {
-            const s = search.toLowerCase();
-            return a.tagNumber.toLowerCase().includes(s) ||
-                (a.name ?? '').toLowerCase().includes(s);
-        })
-        : animals;
 
-    const hasActiveFilters = speciesId !== null || lifecycle !== null || search !== '';
+    const hasActiveFilters =
+        speciesId !== null || lifecycle !== null || condition !== null || search !== '';
 
     const clearFilters = () => {
         setSpeciesId(null);
         setLifecycle(null);
+        setCondition(null);
         setSearchInput('');
     };
 
@@ -129,6 +134,24 @@ export function AnimalsPage() {
                 </div>
             </div>
 
+            {/* Condition filter */}
+            <div>
+                <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                    Condition
+                </div>
+                <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4">
+                    <FilterChip label="All" active={condition === null} onClick={() => setCondition(null)} />
+                    {CONDITION_OPTIONS.map((c) => (
+                        <FilterChip
+                            key={c.value}
+                            label={c.label}
+                            active={condition === c.value}
+                            onClick={() => setCondition(condition === c.value ? null : c.value)}
+                        />
+                    ))}
+                </div>
+            </div>
+
             {/* Refreshing */}
             {isFetching && !isLoading && (
                 <div className="bg-blue-50 border border-blue-100 rounded-xl px-3 py-2 flex items-center gap-2 text-xs text-blue-800">
@@ -142,11 +165,11 @@ export function AnimalsPage() {
                 <AnimalsSkeleton />
             ) : isError ? (
                 <ErrorState onRetry={() => refetch()} />
-            ) : filtered.length === 0 ? (
+            ) : animals.length === 0 ? (
                 <EmptyState hasFilters={hasActiveFilters} onClear={clearFilters} />
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 fade-in">
-                    {filtered.map((animal) => (
+                    {animals.map((animal) => (
                         <AnimalCard key={animal.id} animal={animal} />
                     ))}
                 </div>

@@ -1,15 +1,21 @@
 import { apiClient } from './client';
 import type { ApiResponse, Animal, AnimalRequest, LifecycleStatus } from '@/types';
 
+export type AnimalCondition = 'PREGNANT' | 'SICK' | 'MILKING';
+
 export interface AnimalFilters {
     speciesId?: number;
     status?: LifecycleStatus;
+    condition?: AnimalCondition;
+    search?: string;
 }
 
 export async function listAnimals(filters?: AnimalFilters): Promise<ApiResponse<Animal[]>> {
     const params = new URLSearchParams();
     if (filters?.speciesId) params.set('speciesId', String(filters.speciesId));
     if (filters?.status) params.set('status', filters.status);
+    if (filters?.condition) params.set('condition', filters.condition);
+    if (filters?.search) params.set('search', filters.search);
 
     const qs = params.toString();
     const url = qs ? `/api/animals?${qs}` : '/api/animals';
