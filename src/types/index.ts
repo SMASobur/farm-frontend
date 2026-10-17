@@ -676,3 +676,25 @@ export const ANIMAL_EVENT_EMOJI: Record<AnimalEventType, string> = {
     NOTE: '📝',
     OTHER: '📌',
 };
+
+
+// ============================================================
+// Dashboard Alerts
+// ============================================================
+
+export type AlertType = 'LOW_MILK_PRODUCTION' | 'OVERDUE_PAYMENT' | 'SALARY_DUE';
+export type AlertSeverity = 'DANGER' | 'WARNING' | 'INFO';
+
+export interface DashboardAlert {
+    type: AlertType;
+    severity: AlertSeverity;
+    title: string;
+    message: string;
+    value: number | null;
+    link: string;
+}
+
+export interface DashboardAlertsResponse {
+    totalCount: number;
+    alerts: DashboardAlert[];
+}

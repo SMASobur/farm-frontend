@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { getSummary } from '@/api/dashboard';
 import { formatCurrency, formatNumber, formatDateLong } from '@/lib/format';
+import { AlertsSection } from '@/components/dashboard/AlertsSection';
 import {
     Milk,
     Egg,
@@ -171,6 +172,12 @@ export function DashboardPage() {
                     </div>
                 </div>
             </section>
+
+
+            {/* Alerts — new */}
+            <AlertsSection />
+
+
 
             {/* Outstanding */}
             <section>
