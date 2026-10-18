@@ -28,6 +28,10 @@ import { WorkersPage } from '@/pages/WorkersPage';
 import { NewWorkerPage } from '@/pages/NewWorkerPage';
 import { EditWorkerPage } from '@/pages/EditWorkerPage';
 import { WorkerDetailPage } from '@/pages/WorkerDetailPage';
+import { MilkPage } from '@/pages/MilkPage';
+import { NewMilkPage } from '@/pages/NewMilkPage';
+import { EditMilkPage } from '@/pages/EditMilkPage';
+
 import { TeamPage } from '@/pages/TeamPage';
 import { JoinFarmPage } from '@/pages/JoinFarmPage';
 
@@ -89,6 +93,10 @@ export default function App() {
                                 <Route path="/workers/new" element={<NewWorkerPage />} />
                                 <Route path="/workers/:id" element={<WorkerDetailPage />} />
                                 <Route path="/workers/:id/edit" element={<EditWorkerPage />} />
+
+                                <Route path="/milk" element={<MilkPage />} />
+                                <Route path="/milk/new" element={<NewMilkPage />} />
+                                <Route path="/milk/:id/edit" element={<EditMilkPage />} />
 
                                 <Route path="/team" element={<TeamPage />} />     {/* ← MOVED HERE */}
 

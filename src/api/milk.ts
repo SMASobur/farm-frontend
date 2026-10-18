@@ -9,6 +9,7 @@ export interface MilkFilters {
 
 export async function listMilk(filters?: MilkFilters): Promise<ApiResponse<MilkProduction[]>> {
     const params = new URLSearchParams();
+    if (filters?.animalId) params.set('animalId', String(filters.animalId));
     if (filters?.from) params.set('from', filters.from);
     if (filters?.to) params.set('to', filters.to);
 
@@ -28,5 +29,32 @@ export async function listMilkByAnimal(animalId: number): Promise<ApiResponse<Mi
 
 export async function getMilkProduction(id: number): Promise<ApiResponse<MilkProduction>> {
     const response = await apiClient.get<ApiResponse<MilkProduction>>(`/api/milk/${id}`);
+    return response.data;
+}
+
+export async function createMilk(request: {
+    animalId: number;
+    date: string;
+    morningLiters?: number;
+    noonLiters?: number;
+    nightLiters?: number;
+}): Promise<ApiResponse<MilkProduction>> {
+    const response = await apiClient.post<ApiResponse<MilkProduction>>('/api/milk', request);
+    return response.data;
+}
+
+export async function updateMilk(id: number, request: {
+    animalId: number;
+    date: string;
+    morningLiters?: number;
+    noonLiters?: number;
+    nightLiters?: number;
+}): Promise<ApiResponse<MilkProduction>> {
+    const response = await apiClient.put<ApiResponse<MilkProduction>>(`/api/milk/${id}`, request);
+    return response.data;
+}
+
+export async function deleteMilk(id: number): Promise<ApiResponse<void>> {
+    const response = await apiClient.delete<ApiResponse<void>>(`/api/milk/${id}`);
     return response.data;
 }

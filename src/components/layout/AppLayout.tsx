@@ -5,6 +5,7 @@ import { useFarm } from '@/hooks/useFarm';
 import {
   LayoutDashboard,
   Beef,
+  Milk,
   Users,
   UserCog,
   ShoppingCart,
@@ -22,6 +23,7 @@ import { FarmLogoModal } from '@/components/farm/FarmLogoModal';
 const navItems = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/animals',   label: 'Animals',   icon: Beef },
+  { to: '/milk',      label: 'Milk',     icon: Milk },
   { to: '/customers', label: 'Customers', icon: Users },
   { to: '/workers',   label: 'Workers',   icon: UserCog },
   { to: '/sales',     label: 'Sales',     icon: ShoppingCart },
