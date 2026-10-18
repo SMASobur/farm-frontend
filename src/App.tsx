@@ -31,6 +31,10 @@ import { WorkerDetailPage } from '@/pages/WorkerDetailPage';
 import { MilkPage } from '@/pages/MilkPage';
 import { NewMilkPage } from '@/pages/NewMilkPage';
 import { EditMilkPage } from '@/pages/EditMilkPage';
+import { FlocksPage } from '@/pages/FlocksPage';
+import { NewFlockPage } from '@/pages/NewFlockPage';
+import { EditFlockPage } from '@/pages/EditFlockPage';
+import { FlockDetailPage } from '@/pages/FlockDetailPage';
 
 import { TeamPage } from '@/pages/TeamPage';
 import { JoinFarmPage } from '@/pages/JoinFarmPage';
@@ -98,7 +102,12 @@ export default function App() {
                                 <Route path="/milk/new" element={<NewMilkPage />} />
                                 <Route path="/milk/:id/edit" element={<EditMilkPage />} />
 
-                                <Route path="/team" element={<TeamPage />} />     {/* ← MOVED HERE */}
+                                <Route path="/team" element={<TeamPage />} />
+
+                                <Route path="/flocks" element={<FlocksPage />} />
+                                <Route path="/flocks/new" element={<NewFlockPage />} />
+                                <Route path="/flocks/:id" element={<FlockDetailPage />} />
+                                <Route path="/flocks/:id/edit" element={<EditFlockPage />} />
 
                                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
                                 <Route path="*" element={<Navigate to="/dashboard" replace />} />

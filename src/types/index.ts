@@ -700,3 +700,51 @@ export interface DashboardAlertsResponse {
     totalCount: number;
     alerts: DashboardAlert[];
 }
+
+// ============================================================
+// Flock (Batch)
+// ============================================================
+
+export type FlockStatus = 'ACTIVE' | 'RETIRED' | 'SOLD' | 'DISEASED';
+
+export interface Flock {
+    id: number;
+    flockCode: string;
+    name: string | null;
+    speciesId: number;
+    speciesCode: string;
+    speciesName: string;
+    speciesNameBn: string | null;
+    birdCount: number;
+    status: FlockStatus;
+    startedOn: string | null;
+    createdAt: string;
+}
+
+export interface FlockRequest {
+    flockCode: string;
+    name?: string;
+    speciesId?: number;
+    customSpeciesName?: string;
+    customSpeciesNameBn?: string;
+    customSpeciesMilkProducer?: boolean;
+    customSpeciesEggProducer?: boolean;
+    saveCustomSpecies?: boolean;
+    birdCount: number;
+    status?: FlockStatus;
+    startedOn?: string;
+}
+
+export const FLOCK_STATUS_LABELS: Record<FlockStatus, string> = {
+    ACTIVE: 'Active',
+    RETIRED: 'Retired',
+    SOLD: 'Sold',
+    DISEASED: 'Diseased',
+};
+
+export const FLOCK_STATUS_COLORS: Record<FlockStatus, string> = {
+    ACTIVE: 'bg-green-100 text-green-700',
+    RETIRED: 'bg-gray-100 text-gray-700',
+    SOLD: 'bg-blue-100 text-blue-700',
+    DISEASED: 'bg-red-100 text-red-700',
+};
