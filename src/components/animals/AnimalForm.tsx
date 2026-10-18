@@ -89,8 +89,9 @@ export function AnimalForm({ initial, onSubmit, onDelete, mode, cancelTo = '/ani
                 speciesId: isOtherSpecies ? undefined : (speciesId ?? undefined),
                 customSpeciesName: isOtherSpecies ? customSpeciesName.trim() || undefined : undefined,
                 customSpeciesNameBn: isOtherSpecies ? customSpeciesNameBn.trim() || undefined : undefined,
+                customSpeciesMilkProducer: isOtherSpecies ? customSpeciesMilkProducer : undefined,
+                customSpeciesEggProducer: isOtherSpecies ? customSpeciesEggProducer : undefined,
                 saveCustomSpecies: isOtherSpecies && customSpeciesName.trim() ? saveCustomSpecies : undefined,
-                lifecycleStatus,
                 gender,
                 dateOfBirth: dateOfBirth || undefined,
             };
@@ -167,12 +168,12 @@ export function AnimalForm({ initial, onSubmit, onDelete, mode, cancelTo = '/ani
                 customMilkProducer={customSpeciesMilkProducer}
                 customEggProducer={customSpeciesEggProducer}
                 saveCustom={saveCustomSpecies}
-                onChange={(id, nameEn, nameBn, milkProducer, eggProducer, save) => {
+                onChange={(id, nameEn, nameBn, milkProd, eggProd, save) => {
                     setSpeciesId(id);
                     setCustomSpeciesName(nameEn);
                     setCustomSpeciesNameBn(nameBn);
-                    setCustomSpeciesMilkProducer(milkProducer);
-                    setCustomSpeciesEggProducer(eggProducer);
+                    setCustomSpeciesMilkProducer(milkProd);
+                    setCustomSpeciesEggProducer(eggProd);
                     setSaveCustomSpecies(save);
                     clearError('speciesId');
                 }}

@@ -7,7 +7,7 @@ import type { Animal, MilkProduction } from '@/types';
 import { formatNumber } from '@/lib/format';
 import { Field } from '@/components/forms/Field';
 import { Input } from '@/components/forms/Input';
-import { Select } from '@/components/forms/Select';
+import { AnimalCombobox } from '@/components/forms/AnimalCombobox';
 
 function todayISO(): string {
     return new Date().toISOString().split('T')[0];
@@ -153,23 +153,15 @@ export function MilkForm({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Field label="Animal" htmlFor="animalId" required error={errors.animalId}>
-                    <Select
-                        id="animalId"
-                        value={animalId ?? ''}
-                        onChange={(e) => {
-                            setAnimalId(e.target.value ? Number(e.target.value) : null);
+                    <AnimalCombobox
+                        animals={animals}
+                        value={animalId}
+                        onChange={(id) => {
+                            setAnimalId(id);
                             clearError('animalId');
                         }}
                         hasError={!!errors.animalId}
-                    >
-                        <option value="">Select animal…</option>
-                        {animals.map((a) => (
-                            <option key={a.id} value={a.id}>
-                                {a.tagNumber}
-                                {a.name ? ` · ${a.name}` : ''}
-                            </option>
-                        ))}
-                    </Select>
+                    />
                 </Field>
 
                 <Field label="Date" htmlFor="date" required error={errors.date}>

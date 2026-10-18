@@ -118,6 +118,8 @@ export interface AnimalRequest {
     speciesId?: number;
     customSpeciesName?: string;
     customSpeciesNameBn?: string;
+    customSpeciesMilkProducer?: boolean;
+    customSpeciesEggProducer?: boolean;
     saveCustomSpecies?: boolean;
     lifecycleStatus?: LifecycleStatus;
     gender?: Gender;
