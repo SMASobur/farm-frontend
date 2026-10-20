@@ -33,7 +33,6 @@ interface Props {
 export function EggForm({ initial, onSubmit, onDelete, mode, cancelTo }: Props) {
     const navigate = useNavigate();
 
-    // Default to BATCH for new entries (realistic for large farms)
     const initialSource: 'ANIMAL' | 'FLOCK' =
         initial?.sourceType === 'ANIMAL' ? 'ANIMAL' : 'FLOCK';
     const [sourceType, setSourceType] = useState<'ANIMAL' | 'FLOCK'>(initialSource);
@@ -54,7 +53,6 @@ export function EggForm({ initial, onSubmit, onDelete, mode, cancelTo }: Props) 
     const [deleting, setDeleting] = useState(false);
     const [confirmDelete, setConfirmDelete] = useState(false);
 
-    // Lookups
     const animalsQuery = useQuery({
         queryKey: ['animals'],
         queryFn: () => listAnimals(),
@@ -65,7 +63,6 @@ export function EggForm({ initial, onSubmit, onDelete, mode, cancelTo }: Props) 
         queryFn: () => listFlocks({ status: 'ACTIVE' }),
     });
 
-    // Only egg-producing active animals
     const animals: Animal[] = (animalsQuery.data?.data ?? []).filter(
         (a) => a.eggProducer && a.lifecycleStatus === 'ACTIVE'
     );
@@ -84,11 +81,20 @@ export function EggForm({ initial, onSubmit, onDelete, mode, cancelTo }: Props) 
     const cracked = parseInt(crackedEggs) || 0;
     const total = good + cracked;
 
-    // Find selected flock's bird count for yield calculation
     const selectedFlock = flocks.find((f) => f.id === flockId);
     const eggsPerBird = selectedFlock && selectedFlock.birdCount > 0
         ? total / selectedFlock.birdCount
         : null;
+
+    // Max eggs for the currently selected source
+    const maxEggs = sourceType === 'FLOCK'
+        ? (selectedFlock?.birdCount ?? 0) * 2
+        : 2;
+
+    const isOverMax = total > maxEggs && (
+        (sourceType === 'FLOCK' && selectedFlock != null) ||
+        (sourceType === 'ANIMAL' && animalId !== null)
+    );
 
     const validate = (): boolean => {
         const next: Record<string, string> = {};
@@ -97,6 +103,15 @@ export function EggForm({ initial, onSubmit, onDelete, mode, cancelTo }: Props) 
         if (!date) next.date = 'Date is required';
         if (total <= 0) next.eggs = 'Enter at least one egg';
         if (good < 0 || cracked < 0) next.eggs = 'Counts cannot be negative';
+
+        if (sourceType === 'FLOCK' && selectedFlock && total > maxEggs) {
+            next.eggs = `${selectedFlock.birdCount} birds cannot produce more than ${maxEggs} eggs/day`;
+        }
+
+        if (sourceType === 'ANIMAL' && animalId !== null && total > 2) {
+            next.eggs = 'A single bird cannot lay more than 2 eggs per day';
+        }
+
         setErrors(next);
         return Object.keys(next).length === 0;
     };
@@ -281,7 +296,6 @@ export function EggForm({ initial, onSubmit, onDelete, mode, cancelTo }: Props) 
                 </div>
             )}
 
-            {/* Egg counts */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Field label="Good Eggs" htmlFor="goodEggs">
                     <div className="relative">
@@ -318,7 +332,21 @@ export function EggForm({ initial, onSubmit, onDelete, mode, cancelTo }: Props) 
                 <p className="text-xs text-red-600">{errors.eggs}</p>
             )}
 
-            {/* Total + yield */}
+            {/* Warning — full width, OUTSIDE the total box */}
+            {isOverMax && (
+                <div className="bg-red-50 border border-red-100 rounded-xl p-3 flex items-start gap-2 text-sm text-red-800">
+                    <AlertTriangle size={16} className="shrink-0 mt-0.5" />
+                    <div>
+                        <strong>Unusual count:</strong>
+                        {sourceType === 'FLOCK'
+                            ? ` ${selectedFlock?.birdCount} birds cannot produce ${total} eggs/day (max ${maxEggs}).`
+                            : ` A single bird cannot lay ${total} eggs in one day (max 2).`}
+                        {' '}Double-check your numbers.
+                    </div>
+                </div>
+            )}
+
+            {/* Total — clean 2-column layout */}
             {total > 0 && (
                 <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 flex items-center justify-between">
                     <div>
@@ -335,7 +363,6 @@ export function EggForm({ initial, onSubmit, onDelete, mode, cancelTo }: Props) 
                 </div>
             )}
 
-            {/* Actions */}
             <div className="flex items-center gap-3 pt-2">
                 <button
                     type="submit"
