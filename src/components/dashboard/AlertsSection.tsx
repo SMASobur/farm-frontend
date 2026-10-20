@@ -7,6 +7,7 @@ import {
     AlertCircle,
     Info,
     Milk,
+    Egg,
     Receipt,
     Wallet,
     ArrowRight,
@@ -45,6 +46,7 @@ const SEVERITY_STYLES: Record<
 
 const TYPE_ICONS: Record<AlertType, ReactNode> = {
     LOW_MILK_PRODUCTION: <Milk size={14} />,
+    LOW_EGG_PRODUCTION: <Egg size={14} />,
     OVERDUE_PAYMENT: <Receipt size={14} />,
     SALARY_DUE: <Wallet size={14} />,
 };
