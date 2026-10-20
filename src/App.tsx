@@ -35,6 +35,9 @@ import { FlocksPage } from '@/pages/FlocksPage';
 import { NewFlockPage } from '@/pages/NewFlockPage';
 import { EditFlockPage } from '@/pages/EditFlockPage';
 import { FlockDetailPage } from '@/pages/FlockDetailPage';
+import { EggsPage } from '@/pages/EggsPage';
+import { NewEggPage } from '@/pages/NewEggPage';
+import { EditEggPage } from '@/pages/EditEggPage';
 
 import { TeamPage } from '@/pages/TeamPage';
 import { JoinFarmPage } from '@/pages/JoinFarmPage';
@@ -108,6 +111,10 @@ export default function App() {
                                 <Route path="/flocks/new" element={<NewFlockPage />} />
                                 <Route path="/flocks/:id" element={<FlockDetailPage />} />
                                 <Route path="/flocks/:id/edit" element={<EditFlockPage />} />
+
+                                <Route path="/eggs" element={<EggsPage />} />
+                                <Route path="/eggs/new" element={<NewEggPage />} />
+                                <Route path="/eggs/:id/edit" element={<EditEggPage />} />
 
                                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
                                 <Route path="*" element={<Navigate to="/dashboard" replace />} />

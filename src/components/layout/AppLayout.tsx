@@ -5,6 +5,7 @@ import {
   Egg,
   Milk,
   Bird,
+  Ham,
   Users,
   HardHat,
   ShoppingCart,
@@ -18,8 +19,9 @@ import {
 } from 'lucide-react';
 
 const navItems = [
-  { to: '/animals',   label: 'Animals',  icon: Egg },
+  { to: '/animals',   label: 'Animals',  icon: Ham },
   { to: '/milk',      label: 'Milk',     icon: Milk },
+  { to: '/eggs',      label: 'Eggs',     icon: Egg },
   { to: '/flocks',    label: 'Batches',  icon: Bird },
   { to: '/customers', label: 'Customers', icon: Users },
   { to: '/workers',   label: 'Workers',  icon: HardHat },

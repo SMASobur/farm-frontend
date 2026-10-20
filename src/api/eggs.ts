@@ -6,6 +6,14 @@ export interface EggFilters {
     to?: string;
 }
 
+export interface EggRequest {
+    animalId?: number;
+    flockId?: number;
+    date: string;
+    goodEggs?: number;
+    crackedEggs?: number;
+}
+
 export async function listEggs(filters?: EggFilters): Promise<ApiResponse<EggProduction[]>> {
     const params = new URLSearchParams();
     if (filters?.from) params.set('from', filters.from);
@@ -34,5 +42,20 @@ export async function listEggsByFlock(flockId: number): Promise<ApiResponse<EggP
 
 export async function getEggProduction(id: number): Promise<ApiResponse<EggProduction>> {
     const response = await apiClient.get<ApiResponse<EggProduction>>(`/api/eggs/${id}`);
+    return response.data;
+}
+
+export async function createEgg(request: EggRequest): Promise<ApiResponse<EggProduction>> {
+    const response = await apiClient.post<ApiResponse<EggProduction>>('/api/eggs', request);
+    return response.data;
+}
+
+export async function updateEgg(id: number, request: EggRequest): Promise<ApiResponse<EggProduction>> {
+    const response = await apiClient.put<ApiResponse<EggProduction>>(`/api/eggs/${id}`, request);
+    return response.data;
+}
+
+export async function deleteEgg(id: number): Promise<ApiResponse<void>> {
+    const response = await apiClient.delete<ApiResponse<void>>(`/api/eggs/${id}`);
     return response.data;
 }
