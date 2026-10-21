@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Loader2, Save, Trash2, Sunrise, Sun, Moon, AlertTriangle } from 'lucide-react';
+import { Loader2, Save, Trash2, Sunrise, Sun, Moon } from 'lucide-react';
 import { listAnimals } from '@/api/animals';
 import type { Animal, MilkProduction } from '@/types';
 import { formatNumber } from '@/lib/format';
@@ -31,15 +31,7 @@ interface Props {
     prefilledDate?: string | null;
 }
 
-export function MilkForm({
-                             initial,
-                             onSubmit,
-                             onDelete,
-                             mode,
-                             cancelTo,
-                             prefilledAnimalId,
-                             prefilledDate,
-                         }: Props) {
+export function MilkForm({ initial, onSubmit, onDelete, mode, cancelTo, prefilledAnimalId, prefilledDate }: Props) {
     const navigate = useNavigate();
 
     const [animalId, setAnimalId] = useState<number | null>(
@@ -68,7 +60,7 @@ export function MilkForm({
     });
 
     const animals: Animal[] = (animalsQuery.data?.data ?? []).filter(
-        (a: Animal) => a.milkProducer && a.lifecycleStatus === 'ACTIVE'
+        (a) => a.milkProducer && a.lifecycleStatus === 'ACTIVE'
     );
 
     const clearError = (field: string) => {
@@ -84,26 +76,12 @@ export function MilkForm({
     const night = parseFloat(nightLiters) || 0;
     const total = morning + noon + night;
 
-    const selectedAnimal = animals.find((a) => a.id === animalId);
-    const maxLiters = selectedAnimal
-        ? selectedAnimal.speciesCode === 'COW' || selectedAnimal.speciesCode === 'BUFFALO'
-            ? 60
-            : selectedAnimal.speciesCode === 'GOAT' || selectedAnimal.speciesCode === 'SHEEP'
-                ? 5
-                : 60
-        : 60;
-
-    const isOverMax = animalId !== null && selectedAnimal && total > maxLiters;
-
     const validate = (): boolean => {
         const next: Record<string, string> = {};
         if (animalId === null) next.animalId = 'Animal is required';
         if (!date) next.date = 'Date is required';
-        if (total <= 0) next.liters = 'At least one milking session must have a value';
+        if (total <= 0) next.liters = 'At least one session must have a value';
         if (morning < 0 || noon < 0 || night < 0) next.liters = 'Liters cannot be negative';
-        if (isOverMax) {
-            next.liters = `${selectedAnimal!.speciesName} cannot produce more than ${maxLiters}L per day`;
-        }
         setErrors(next);
         return Object.keys(next).length === 0;
     };
@@ -169,10 +147,7 @@ export function MilkForm({
                     <AnimalCombobox
                         animals={animals}
                         value={animalId}
-                        onChange={(id) => {
-                            setAnimalId(id);
-                            clearError('animalId');
-                        }}
+                        onChange={(id) => { setAnimalId(id); clearError('animalId'); }}
                         hasError={!!errors.animalId}
                     />
                 </Field>
@@ -189,18 +164,10 @@ export function MilkForm({
                 </Field>
             </div>
 
-            {animals.length === 0 && (
-                <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 text-sm text-amber-800">
-                    You have no active milk-producing animals.
-                    Add an animal first (Cow, Goat, Sheep, or Buffalo).
-                </div>
-            )}
-
             <div>
                 <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
                     Milking Sessions (Liters)
                 </div>
-
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <Field label="Morning" htmlFor="morningLiters">
                         <div className="relative">
@@ -217,7 +184,6 @@ export function MilkForm({
                             />
                         </div>
                     </Field>
-
                     <Field label="Noon" htmlFor="noonLiters">
                         <div className="relative">
                             <Sun size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-yellow-500 pointer-events-none" />
@@ -233,7 +199,6 @@ export function MilkForm({
                             />
                         </div>
                     </Field>
-
                     <Field label="Night" htmlFor="nightLiters">
                         <div className="relative">
                             <Moon size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-indigo-500 pointer-events-none" />
@@ -250,27 +215,12 @@ export function MilkForm({
                         </div>
                     </Field>
                 </div>
-
-                {errors.liters && (
-                    <p className="text-xs text-red-600 mt-2">{errors.liters}</p>
-                )}
+                {errors.liters && <p className="text-xs text-red-600 mt-2">{errors.liters}</p>}
             </div>
 
-            {/* Warning — full width, separate from total box */}
-            {isOverMax && (
-                <div className="bg-red-50 border border-red-100 rounded-xl p-3 flex items-start gap-2 text-sm text-red-800">
-                    <AlertTriangle size={16} className="shrink-0 mt-0.5" />
-                    <div>
-                        <strong>Unusual count:</strong> {selectedAnimal?.speciesName} producing {total.toFixed(1)}L today.
-                        Typical max is {maxLiters}L/day. Double-check your numbers.
-                    </div>
-                </div>
-            )}
-
-            {/* Total — clean 2-column layout */}
             {total > 0 && (
                 <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex items-center justify-between">
-                    <span className="text-sm font-medium text-blue-900">Total today</span>
+                    <span className="text-sm font-medium text-blue-900">Total produced today</span>
                     <span className="text-2xl font-bold text-blue-900">
                         {formatNumber(total, 1)} L
                     </span>

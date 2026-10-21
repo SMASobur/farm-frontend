@@ -38,6 +38,8 @@ import { FlockDetailPage } from '@/pages/FlockDetailPage';
 import { EggsPage } from '@/pages/EggsPage';
 import { NewEggPage } from '@/pages/NewEggPage';
 import { EditEggPage } from '@/pages/EditEggPage';
+import { PoolsPage } from '@/pages/PoolsPage';
+
 
 import { TeamPage } from '@/pages/TeamPage';
 import { JoinFarmPage } from '@/pages/JoinFarmPage';
@@ -106,6 +108,8 @@ export default function App() {
                                 <Route path="/milk/:id/edit" element={<EditMilkPage />} />
 
                                 <Route path="/team" element={<TeamPage />} />
+                                <Route path="/pools" element={<PoolsPage />} />
+
 
                                 <Route path="/flocks" element={<FlocksPage />} />
                                 <Route path="/flocks/new" element={<NewFlockPage />} />

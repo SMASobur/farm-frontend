@@ -300,6 +300,10 @@ export interface Sale {
     unitCode: string;
     unitName: string;
     unitAbbreviation: string | null;
+    poolSpeciesId: number | null;
+    poolSpeciesCode: string | null;
+    poolSpeciesName: string | null;
+    poolProductType: PoolProductType | null;
     quantity: number;
     unitPrice: number;
     totalAmount: number;
@@ -317,19 +321,24 @@ export interface SaleRequest {
     date: string;
     categoryId: number;
     unitId?: number;
-    customProductDefaultUnitId?: number;
     customUnitName?: string;
     customUnitNameBn?: string;
     customUnitAbbreviation?: string;
     saveCustomUnitToUnits?: boolean;
     quantity: number;
     unitPrice: number;
+
+    // Add these missing fields:
     customProductName?: string;
     customProductNameBn?: string;
+    customProductDefaultUnitId?: number;
+
     saveCustomProductAsCategory?: boolean;
     notes?: string;
     initialPayment?: number;
     initialPaymentMethod?: PaymentMethod;
+    poolSpeciesId?: number;
+    poolProductType?: PoolProductType;
 }
 
 // ============================================================
@@ -460,8 +469,40 @@ export interface MonthlyReport {
         profitMargin: number;
     };
 }
+
 // ============================================================
-// Production
+// Pool Types
+// ============================================================
+
+export type PoolProductType = 'MILK' | 'EGG' | 'FISH' | 'CROP';
+
+export interface PoolStatus {
+    poolSpeciesId: number;
+    poolSpeciesCode: string;
+    poolSpeciesName: string;
+    poolProductType: PoolProductType;
+    poolProductTypeLabel: string;
+    date: string;
+    produced: number;
+    sold: number;
+    internalUse: number;
+    fedToAnimals: number;
+    wasted: number;
+    available: number;
+}
+
+export interface PoolUsageRequest {
+    poolSpeciesId: number;
+    poolProductType: PoolProductType;
+    date: string;
+    internalUse?: number;
+    fedToAnimals?: number;
+    wasted?: number;
+    notes?: string;
+}
+
+// ============================================================
+// Production & Sales Updates
 // ============================================================
 
 export interface MilkProduction {
@@ -474,8 +515,20 @@ export interface MilkProduction {
     noonLiters: number;
     nightLiters: number;
     totalLiters: number;
+    poolSpeciesId: number;
+    poolSpeciesCode: string;
+    poolSpeciesName: string;
+    poolProductType: PoolProductType;
     enteredByUserId?: number | null;
     enteredByName?: string | null;
+}
+
+export interface MilkProductionRequest {
+    animalId: number;
+    date: string;
+    morningLiters?: number;
+    noonLiters?: number;
+    nightLiters?: number;
 }
 
 export interface EggProduction {
@@ -488,8 +541,20 @@ export interface EggProduction {
     goodEggs: number;
     crackedEggs: number;
     totalEggs: number;
+    poolSpeciesId: number;
+    poolSpeciesCode: string;
+    poolSpeciesName: string;
+    poolProductType: PoolProductType;
     enteredByUserId?: number | null;
     enteredByName?: string | null;
+}
+
+export interface EggProductionRequest {
+    animalId?: number;
+    flockId?: number;
+    date: string;
+    goodEggs?: number;
+    crackedEggs?: number;
 }
 
 // ============================================================

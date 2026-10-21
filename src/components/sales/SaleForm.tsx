@@ -1,11 +1,12 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, Save } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
+import { Loader2, Save, AlertTriangle } from 'lucide-react';
 import { listCustomers } from '@/api/customers';
 import { listCategories } from '@/api/categories';
 import { listUnits } from '@/api/units';
-import { formatCurrency } from '@/lib/format';
+import { getPoolsStatus } from '@/api/pools';
+import { formatCurrency, formatNumber } from '@/lib/format';
 import type { PaymentMethod, Sale, SaleRequest } from '@/types';
 import { PAYMENT_METHOD_LABELS } from '@/types';
 import { Field } from '@/components/forms/Field';
@@ -35,23 +36,25 @@ export function SaleForm({ initial, onSubmit, mode, cancelTo }: Props) {
     const [customerId, setCustomerId] = useState<number | null>(initial?.customerId ?? null);
     const [date, setDate] = useState(initial?.date ?? todayISO());
 
-    // Category
+    // Category State (Fixing the missing fields from Image 2)
     const [categoryId, setCategoryId] = useState<number | null>(initial?.categoryId ?? null);
     const [customProductName, setCustomProductName] = useState(initial?.customProductName ?? '');
     const [customProductNameBn, setCustomProductNameBn] = useState('');
-    const [saveCustomCategory, setSaveCustomCategory] = useState(false);
-
-    // Unit
-    const [unitId, setUnitId] = useState<number | null>(initial?.unitId ?? null);
-    const [isCustomUnit, setIsCustomUnit] = useState(false);
-    const [customUnitName, setCustomUnitName] = useState('');
-    const [customUnitNameBn, setCustomUnitNameBn] = useState('');
-    const [customUnitAbbreviation, setCustomUnitAbbreviation] = useState('');
-    const [saveCustomUnit, setSaveCustomUnit] = useState(false);
-
     const [customProductDefaultUnitId, setCustomProductDefaultUnitId] = useState<number | null>(null);
+    const [saveCustomCategory, setSaveCustomCategory] = useState<boolean>(false);
 
-    // Amounts
+    // Unit State
+    const [unitId, setUnitId] = useState<number | null>(initial?.unitId ?? null);
+    const [isCustomUnit, setIsCustomUnit] = useState<boolean>(false);
+    const [customUnitName, setCustomUnitName] = useState<string>('');
+    const [customUnitNameBn, setCustomUnitNameBn] = useState<string>('');
+    const [customUnitAbbreviation, setCustomUnitAbbreviation] = useState<string>('');
+    const [saveCustomUnit, setSaveCustomUnit] = useState<boolean>(false);
+
+    // Pool State
+    const [poolSpeciesId, setPoolSpeciesId] = useState<number | null>(initial?.poolSpeciesId ?? null);
+
+    // Other fields
     const [quantity, setQuantity] = useState(initial?.quantity ? String(initial.quantity) : '');
     const [unitPrice, setUnitPrice] = useState(initial?.unitPrice ? String(initial.unitPrice) : '');
     const [notes, setNotes] = useState(initial?.notes ?? '');
@@ -67,32 +70,31 @@ export function SaleForm({ initial, onSubmit, mode, cancelTo }: Props) {
     const canAddInitialPayment = !isEdit;
 
     // ============ Lookups ============
-    const customersQuery = useQuery({
-        queryKey: ['customers', 'all'],
-        queryFn: () => listCustomers(),
-    });
-    const categoriesQuery = useQuery({
-        queryKey: ['categories', 'PRODUCT'],
-        queryFn: () => listCategories('PRODUCT', true),
-    });
-    const unitsQuery = useQuery({
-        queryKey: ['units'],
-        queryFn: () => listUnits(true),
-    });
+    const customersQuery = useQuery({ queryKey: ['customers', 'all'], queryFn: () => listCustomers() });
+    const categoriesQuery = useQuery({ queryKey: ['categories', 'PRODUCT'], queryFn: () => listCategories('PRODUCT', true) });
+    const unitsQuery = useQuery({ queryKey: ['units'], queryFn: () => listUnits(true) });
+    const poolsQuery = useQuery({ queryKey: ['pools', date], queryFn: () => getPoolsStatus(date) });
 
     const customers = customersQuery.data?.data ?? [];
     const categories = categoriesQuery.data?.data ?? [];
     const units = unitsQuery.data?.data ?? [];
+    const allPools = poolsQuery.data?.data ?? [];
 
     // ============ Derived ============
+    const selectedCategory = categories.find((c) => c.id === categoryId);
+    const isOtherCategory = selectedCategory?.code === 'OTHER';
+
+    // Pool logic
+    const requiresPool = selectedCategory?.code === 'MILK' || selectedCategory?.code === 'EGG';
+    const requiredPoolType = selectedCategory?.code === 'MILK' ? 'MILK' : 'EGG';
+    const availablePools = allPools.filter(p => p.poolProductType === requiredPoolType);
+    const selectedPool = availablePools.find(p => p.poolSpeciesId === poolSpeciesId);
+
     const qty = parseFloat(quantity) || 0;
     const price = parseFloat(unitPrice) || 0;
     const total = qty * price;
     const paid = parseFloat(initialPayment) || 0;
-    const due = Math.max(0, total - paid);
-
-    const selectedCategory = categories.find((c) => c.id === categoryId);
-    const isOtherCategory = selectedCategory?.code === 'OTHER';
+    const remainingDue = Math.max(0, total - paid);
 
     // ============ Helpers ============
     const clearError = (field: string) => {
@@ -108,16 +110,16 @@ export function SaleForm({ initial, onSubmit, mode, cancelTo }: Props) {
         const next: Record<string, string> = {};
         if (customerId === null) next.customerId = 'Customer is required';
         if (categoryId === null) next.categoryId = 'Category is required';
-
-        if (!isCustomUnit && unitId === null) {
-            next.unitId = 'Unit is required';
-        }
-        if (isCustomUnit && !customUnitName.trim()) {
-            next.unitId = 'Unit name is required';
-        }
-
+        if (unitId === null && !customUnitName.trim()) next.unitId = 'Unit is required';
         if (!qty || qty <= 0) next.quantity = 'Quantity must be positive';
         if (!price || price <= 0) next.unitPrice = 'Unit price must be positive';
+
+        // Pool Validation
+        if (requiresPool && poolSpeciesId === null) {
+            next.poolSpeciesId = `Please select a ${requiredPoolType} pool`;
+        } else if (requiresPool && selectedPool && qty > selectedPool.available) {
+            next.quantity = `Only ${selectedPool.available} available in this pool`;
+        }
 
         if (isOtherCategory && !customProductName.trim()) {
             next.customProductName = 'Please specify what you are selling';
@@ -128,6 +130,7 @@ export function SaleForm({ initial, onSubmit, mode, cancelTo }: Props) {
             if (paid > total) next.initialPayment = 'Payment cannot exceed total';
         }
 
+        // Edit mode validation
         if (isEdit && total < alreadyPaid) {
             next.unitPrice = `Total cannot be less than already-paid (${formatCurrency(alreadyPaid)})`;
         }
@@ -147,37 +150,36 @@ export function SaleForm({ initial, onSubmit, mode, cancelTo }: Props) {
                 customerId: customerId!,
                 date,
                 categoryId: categoryId!,
-                unitId: isCustomUnit ? undefined : (unitId ?? undefined),
-                customUnitName: isCustomUnit ? customUnitName.trim() || undefined : undefined,
-                customUnitNameBn: isCustomUnit ? customUnitNameBn.trim() || undefined : undefined,
-                customUnitAbbreviation: isCustomUnit ? customUnitAbbreviation.trim() || undefined : undefined,
-                saveCustomUnitToUnits: isCustomUnit && customUnitName.trim()
-                    ? saveCustomUnit
-                    : undefined,
+                unitId: unitId ?? undefined,
+                customUnitName: isCustomUnit ? customUnitName.trim() : undefined,
+                customUnitNameBn: isCustomUnit ? customUnitNameBn.trim() : undefined,
+                customUnitAbbreviation: isCustomUnit ? customUnitAbbreviation.trim() : undefined,
+                saveCustomUnitToUnits: isCustomUnit ? saveCustomUnit : undefined,
+                //customUnitName: customUnitName.trim() || undefined,
+                //saveCustomUnitToUnits: saveCustomUnit,
                 quantity: qty,
                 unitPrice: price,
                 customProductName: isOtherCategory ? customProductName.trim() : undefined,
-                customProductNameBn: isOtherCategory ? customProductNameBn.trim() || undefined : undefined,
-                saveCustomProductAsCategory: isOtherCategory && customProductName.trim()
-                    ? saveCustomCategory
-                    : undefined,
+                customProductNameBn: isOtherCategory ? customProductNameBn.trim() : undefined,
+                customProductDefaultUnitId: isOtherCategory ? (customProductDefaultUnitId ?? undefined) : undefined,
+                saveCustomProductAsCategory: saveCustomCategory,
                 notes: notes.trim() || undefined,
                 initialPayment: canAddInitialPayment && paid > 0 ? paid : undefined,
                 initialPaymentMethod: canAddInitialPayment && paid > 0 ? paymentMethod : undefined,
-                customProductDefaultUnitId: isOtherCategory && customProductName.trim() && saveCustomCategory
-                    ? customProductDefaultUnitId ?? undefined
-                    : undefined,
+                poolSpeciesId: requiresPool ? poolSpeciesId! : undefined,
+                poolProductType: requiresPool ? requiredPoolType : undefined,
             };
             await onSubmit(payload);
-        } catch (err: any) {
-            setSubmitError(err.response?.data?.message || 'Something went wrong');
+        } catch (err: unknown) {
+            const error = err as { response?: { data?: { message?: string } } };
+            setSubmitError(error.response?.data?.message || 'Something went wrong');
             throw err;
         } finally {
             setSaving(false);
         }
     };
 
-    const isLoading = customersQuery.isLoading || categoriesQuery.isLoading || unitsQuery.isLoading;
+    const isLoading = customersQuery.isLoading || categoriesQuery.isLoading || unitsQuery.isLoading || poolsQuery.isLoading;
 
     if (isLoading) {
         return (
@@ -202,20 +204,11 @@ export function SaleForm({ initial, onSubmit, mode, cancelTo }: Props) {
 
             {/* Customer + Date */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Field
-                    label="Customer"
-                    htmlFor="customerId"
-                    required
-                    error={errors.customerId}
-                    help={isEdit ? 'Cannot be changed on existing sales' : undefined}
-                >
+                <Field label="Customer" htmlFor="customerId" required error={errors.customerId} help={isEdit ? 'Cannot be changed' : undefined}>
                     <CustomerCombobox
                         customers={customers}
                         value={customerId}
-                        onChange={(id) => {
-                            setCustomerId(id);
-                            clearError('customerId');
-                        }}
+                        onChange={(id) => { setCustomerId(id); clearError('customerId'); }}
                         disabled={isEdit}
                         hasError={!!errors.customerId}
                     />
@@ -226,7 +219,7 @@ export function SaleForm({ initial, onSubmit, mode, cancelTo }: Props) {
                         id="date"
                         type="date"
                         value={date}
-                        onChange={(e) => setDate(e.target.value)}
+                        onChange={(e) => { setDate(e.target.value); setPoolSpeciesId(null); }}
                         max={todayISO()}
                     />
                 </Field>
@@ -247,21 +240,16 @@ export function SaleForm({ initial, onSubmit, mode, cancelTo }: Props) {
                     setCustomProductNameBn(customNameBn);
                     setCustomProductDefaultUnitId(defaultUnitId);
                     setSaveCustomCategory(save);
+                    setPoolSpeciesId(null);
                     clearError('categoryId');
-                    clearError('customProductName');
 
-                    const cat = categories.find((c) => c.id === id);
-                    if (cat) {
-                        if (cat.defaultUnitId) {
-                            setUnitId(cat.defaultUnitId);
-                            setIsCustomUnit(false);
-                            setCustomUnitName('');
-                            setCustomUnitNameBn('');
-                            setCustomUnitAbbreviation('');
-                        }
-                        if (cat.defaultPrice && !unitPrice) {
-                            setUnitPrice(String(cat.defaultPrice));
-                        }
+                    const selectedCat = categories.find(c => c.id === id);
+                    if (selectedCat?.code === 'MILK') {
+                        const literUnit = units.find(u => u.code === 'L' || u.name.toLowerCase().includes('liter'));
+                        if (literUnit) setUnitId(literUnit.id);
+                    } else if (selectedCat?.code === 'EGG') {
+                        const pieceUnit = units.find(u => u.code === 'PCS' || u.name.toLowerCase().includes('piece'));
+                        if (pieceUnit) setUnitId(pieceUnit.id);
                     }
                 }}
                 required
@@ -269,6 +257,47 @@ export function SaleForm({ initial, onSubmit, mode, cancelTo }: Props) {
                 hasError={!!errors.categoryId}
             />
 
+            {/* POOL SELECTION */}
+            {requiresPool && (
+                <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl">
+                    <Field
+                        label={`Which ${requiredPoolType.toLowerCase()} pool are you selling from?`}
+                        htmlFor="poolSpeciesId"
+                        required
+                        error={errors.poolSpeciesId}
+                    >
+                        <Select
+                            id="poolSpeciesId"
+                            value={poolSpeciesId ?? ''}
+                            onChange={(e) => {
+                                setPoolSpeciesId(e.target.value ? Number(e.target.value) : null);
+                                clearError('poolSpeciesId');
+                            }}
+                            hasError={!!errors.poolSpeciesId}
+                        >
+                            <option value="">Select pool…</option>
+                            {availablePools.map((pool) => (
+                                <option key={pool.poolSpeciesId} value={pool.poolSpeciesId}>
+                                    {pool.poolProductTypeLabel} · {formatNumber(pool.available, requiredPoolType === 'MILK' ? 1 : 0)} available
+                                </option>
+                            ))}
+                        </Select>
+                    </Field>
+
+                    {availablePools.length === 0 && (
+                        <p className="text-xs text-amber-700 mt-2 flex items-center gap-1">
+                            <AlertTriangle size={12} />
+                            No {requiredPoolType.toLowerCase()} produced today. Record production first.
+                        </p>
+                    )}
+
+                    {selectedPool && (
+                        <p className="text-xs text-blue-800 mt-2 font-medium">
+                            Available in this pool: {formatNumber(selectedPool.available, requiredPoolType === 'MILK' ? 1 : 0)}
+                        </p>
+                    )}
+                </div>
+            )}
 
             {/* Unit + Quantity + Price */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -280,9 +309,9 @@ export function SaleForm({ initial, onSubmit, mode, cancelTo }: Props) {
                     customNameBn={customUnitNameBn}
                     customAbbreviation={customUnitAbbreviation}
                     saveCustom={saveCustomUnit}
-                    onChange={(id, isOther, name, nameBn, abbrev, save) => {
+                    onChange={(id, other, name, nameBn, abbrev, save) => {
                         setUnitId(id);
-                        setIsCustomUnit(isOther);
+                        setIsCustomUnit(other);
                         setCustomUnitName(name);
                         setCustomUnitNameBn(nameBn);
                         setCustomUnitAbbreviation(abbrev);
@@ -347,12 +376,7 @@ export function SaleForm({ initial, onSubmit, mode, cancelTo }: Props) {
                     </p>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <Field
-                            label="Paid Now"
-                            htmlFor="initialPayment"
-                            error={errors.initialPayment}
-                            help="Leave empty if unpaid"
-                        >
+                        <Field label="Paid Now" htmlFor="initialPayment" error={errors.initialPayment} help="Leave empty if unpaid">
                             <Input
                                 id="initialPayment"
                                 type="number"
@@ -386,14 +410,14 @@ export function SaleForm({ initial, onSubmit, mode, cancelTo }: Props) {
                         <div className="mt-3 bg-amber-50 border border-amber-100 rounded-xl p-3 flex items-center justify-between">
                             <span className="text-sm text-amber-900">Remaining due</span>
                             <span className="text-lg font-bold text-amber-900">
-                                {formatCurrency(due)}
+                                {formatCurrency(remainingDue)}
                             </span>
                         </div>
                     )}
                 </div>
             )}
 
-            {/* Notes */}
+            {/* Notes (Restored to fix unused variable) */}
             <Field label="Notes" htmlFor="notes" help="Optional">
                 <textarea
                     id="notes"

@@ -21,6 +21,7 @@ interface Props {
         customAbbreviation: string,
         saveCustom: boolean
     ) => void;
+    customValue?: string;
     required?: boolean;
     hasError?: boolean;
     error?: string;

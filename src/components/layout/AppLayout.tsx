@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import {
   Egg,
   Milk,
+  Layers,
   Bird,
   Ham,
   Users,
@@ -21,6 +22,7 @@ import {
 const navItems = [
   { to: '/animals',   label: 'Animals',  icon: Ham },
   { to: '/milk',      label: 'Milk',     icon: Milk },
+  { to: '/pools', label: 'Pools', icon: Layers },
   { to: '/eggs',      label: 'Eggs',     icon: Egg },
   { to: '/flocks',    label: 'Batches',  icon: Bird },
   { to: '/customers', label: 'Customers', icon: Users },
