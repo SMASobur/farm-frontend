@@ -17,6 +17,7 @@ import {
   LogOut,
   Menu,
   X,
+  LayoutDashboard,
 } from 'lucide-react';
 
 const navItems = [
@@ -32,6 +33,7 @@ const navItems = [
   { to: '/reports',   label: 'Reports',  icon: BarChart3 },
   { to: '/settings',  label: 'Settings', icon: Settings },
   { to: '/team',      label: 'Team',     icon: UserPlus },
+  { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
 ];
 
 // First 4 items always shown on mobile bottom nav
