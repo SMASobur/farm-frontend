@@ -20,18 +20,18 @@ import {
 } from 'lucide-react';
 
 const navItems = [
-  { to: '/animals',   label: 'Animals',  icon: Ham },
   { to: '/milk',      label: 'Milk',     icon: Milk },
-  { to: '/pools', label: 'Pools', icon: Layers },
   { to: '/eggs',      label: 'Eggs',     icon: Egg },
-  { to: '/flocks',    label: 'Batches',  icon: Bird },
-  { to: '/customers', label: 'Customers', icon: Users },
-  { to: '/workers',   label: 'Workers',  icon: HardHat },
   { to: '/sales',     label: 'Sales',    icon: ShoppingCart },
   { to: '/expenses',  label: 'Expenses', icon: Receipt },
+  { to: '/pools', label: 'Pools', icon: Layers },
+  { to: '/flocks',    label: 'Batches',  icon: Bird },
+  { to: '/animals',   label: 'Animals',  icon: Ham },
+  { to: '/customers', label: 'Customers', icon: Users },
+  { to: '/workers',   label: 'Workers',  icon: HardHat },
   { to: '/reports',   label: 'Reports',  icon: BarChart3 },
-  { to: '/team',      label: 'Team',     icon: UserPlus },
   { to: '/settings',  label: 'Settings', icon: Settings },
+  { to: '/team',      label: 'Team',     icon: UserPlus },
 ];
 
 // First 4 items always shown on mobile bottom nav
