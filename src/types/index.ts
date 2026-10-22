@@ -120,6 +120,7 @@ export interface AnimalRequest {
     customSpeciesNameBn?: string;
     customSpeciesMilkProducer?: boolean;
     customSpeciesEggProducer?: boolean;
+    customMaxDailyYield?: number;
     saveCustomSpecies?: boolean;
     lifecycleStatus?: LifecycleStatus;
     gender?: Gender;

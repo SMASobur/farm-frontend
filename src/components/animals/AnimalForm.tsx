@@ -32,6 +32,9 @@ export function AnimalForm({ initial, onSubmit, onDelete, mode, cancelTo = '/ani
     const [customSpeciesNameBn, setCustomSpeciesNameBn] = useState('');
     const [customSpeciesMilkProducer, setCustomSpeciesMilkProducer] = useState(false);
     const [customSpeciesEggProducer, setCustomSpeciesEggProducer] = useState(false);
+
+    const [customMaxDailyYield, setCustomMaxDailyYield] = useState<string>('');
+
     const [saveCustomSpecies, setSaveCustomSpecies] = useState(false);
     const [lifecycleStatus, setLifecycleStatus] = useState<LifecycleStatus>(
         initial?.lifecycleStatus ?? 'ACTIVE'
@@ -91,13 +94,20 @@ export function AnimalForm({ initial, onSubmit, onDelete, mode, cancelTo = '/ani
                 customSpeciesNameBn: isOtherSpecies ? customSpeciesNameBn.trim() || undefined : undefined,
                 customSpeciesMilkProducer: isOtherSpecies ? customSpeciesMilkProducer : undefined,
                 customSpeciesEggProducer: isOtherSpecies ? customSpeciesEggProducer : undefined,
+
+                // NEW: Add the custom max yield to the payload
+                customMaxDailyYield: isOtherSpecies && customMaxDailyYield
+                    ? parseFloat(customMaxDailyYield)
+                    : undefined,
+
                 saveCustomSpecies: isOtherSpecies && customSpeciesName.trim() ? saveCustomSpecies : undefined,
                 gender,
                 dateOfBirth: dateOfBirth || undefined,
             };
             await onSubmit(payload);
-        } catch (err: any) {
-            setSubmitError(err.response?.data?.message || 'Something went wrong');
+        } catch (err: unknown) {
+            const error = err as { response?: { data?: { message?: string } } };
+            setSubmitError(error.response?.data?.message || 'Something went wrong');
             throw err;
         } finally {
             setSaving(false);
@@ -109,11 +119,12 @@ export function AnimalForm({ initial, onSubmit, onDelete, mode, cancelTo = '/ani
         setDeleting(true);
         try {
             await onDelete();
-        } catch (err: any) {
-            setSubmitError(err.response?.data?.message || 'Failed to delete');
-            setDeleting(false);
-            setConfirmDelete(false);
+        } catch (err: unknown) {
+            const error = err as { response?: { data?: { message?: string } } };
+            setSubmitError(error.response?.data?.message || 'Faild to delete. Something went wrong');
             throw err;
+        } finally {
+            setSaving(false);
         }
     };
 
@@ -167,6 +178,11 @@ export function AnimalForm({ initial, onSubmit, onDelete, mode, cancelTo = '/ani
                 customNameBn={customSpeciesNameBn}
                 customMilkProducer={customSpeciesMilkProducer}
                 customEggProducer={customSpeciesEggProducer}
+
+                // NEW: Pass the custom max yield state
+                customMaxDailyYield={customMaxDailyYield}
+                setCustomMaxDailyYield={setCustomMaxDailyYield}
+
                 saveCustom={saveCustomSpecies}
                 onChange={(id, nameEn, nameBn, milkProd, eggProd, save) => {
                     setSpeciesId(id);

@@ -13,6 +13,11 @@ interface Props {
     customNameBn: string;
     customMilkProducer: boolean;
     customEggProducer: boolean;
+
+    // NEW: Props for the max yield
+    customMaxDailyYield: string;
+    setCustomMaxDailyYield: (val: string) => void;
+
     saveCustom: boolean;
     onChange: (
         speciesId: number | null,
@@ -34,6 +39,8 @@ export function SpeciesSelect({
                                   customNameBn,
                                   customMilkProducer,
                                   customEggProducer,
+                                  customMaxDailyYield,
+                                  setCustomMaxDailyYield,
                                   saveCustom,
                                   onChange,
                                   required,
@@ -48,6 +55,7 @@ export function SpeciesSelect({
         const sp = species.find((s) => s.id === id);
         if (sp?.code !== OTHER_CODE) {
             onChange(id, '', '', false, false, saveCustom);
+            setCustomMaxDailyYield(''); // Clear when selecting a standard species
         } else {
             onChange(
                 id,
@@ -155,6 +163,27 @@ export function SpeciesSelect({
                             <Milk size={14} className="text-blue-600" />
                             <span className="text-sm text-gray-700">Milk</span>
                         </label>
+
+                        {/* NEW: Custom Limit Input (Only shows if Milk is selected) */}
+                        {customMilkProducer && !customEggProducer && (
+                            <div className="pl-6 pb-2">
+                                <Field
+                                    label="Max Milk per Day (Liters)"
+                                    htmlFor="customMaxDailyYield"
+                                    help="Optional. Leave blank for default limits (e.g., 35 for a Camel)"
+                                >
+                                    <Input
+                                        id="customMaxDailyYield"
+                                        type="number"
+                                        step="0.1"
+                                        min="0"
+                                        value={customMaxDailyYield}
+                                        onChange={(e) => setCustomMaxDailyYield(e.target.value)}
+                                        placeholder="e.g., 35"
+                                    />
+                                </Field>
+                            </div>
+                        )}
 
                         <label className="flex items-center gap-2 cursor-pointer">
                             <input
