@@ -43,6 +43,8 @@ export function FlockForm({ initial, onSubmit, onDelete, mode, cancelTo }: Props
     const [deleting, setDeleting] = useState(false);
     const [confirmDelete, setConfirmDelete] = useState(false);
 
+    const [customMaxDailyYield, setCustomMaxDailyYield] = useState<string>('');
+
     const speciesQuery = useQuery({
         queryKey: ['species'],
         queryFn: () => listSpecies(true),
@@ -166,6 +168,8 @@ export function FlockForm({ initial, onSubmit, onDelete, mode, cancelTo }: Props
                 customNameBn={customSpeciesNameBn}
                 customMilkProducer={customSpeciesMilkProducer}
                 customEggProducer={customSpeciesEggProducer}
+                customMaxDailyYield={customMaxDailyYield}
+                setCustomMaxDailyYield={setCustomMaxDailyYield}
                 saveCustom={saveCustomSpecies}
                 onChange={(id, nameEn, nameBn, milkProd, eggProd, save) => {
                     setSpeciesId(id);
