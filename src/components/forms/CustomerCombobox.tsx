@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
-import { Search, X, ChevronDown, Check } from 'lucide-react';
+import { Search, X, ChevronDown, Check, UserPlus } from 'lucide-react';
 import type { Customer } from '@/types';
 
 interface Props {
@@ -52,7 +52,6 @@ export function CustomerCombobox({
     useEffect(() => {
         if (open) {
             setTimeout(() => inputRef.current?.focus(), 0);
-            setQuery('');
         }
     }, [open]);
 
@@ -79,8 +78,12 @@ export function CustomerCombobox({
         <div ref={containerRef} className="relative">
             <button
                 type="button"
-                onClick={() => !disabled && setOpen((v) => !v)}
-                disabled={disabled}
+                onClick={() => {
+                    if (!disabled) {
+                        if (!open) setQuery('');
+                        setOpen((v) => !v);
+                    }
+                }}                disabled={disabled}
                 className={`w-full px-3 py-2.5 border rounded-lg text-left text-base transition flex items-center justify-between gap-2 ${
                     hasError ? 'border-red-300 focus:ring-red-500' : 'border-gray-300'
                 } ${
@@ -163,6 +166,21 @@ export function CustomerCombobox({
                                     </button>
                                 );
                             })
+                        )}
+
+                        {/* Guest mode button */}
+                        {query.trim() !== '' && (
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    onChange(-1); // Trigger guest mode in SaleForm
+                                    setOpen(false);
+                                }}
+                                className="w-full text-left px-3 py-2 text-sm text-blue-600 hover:bg-blue-50 flex items-center gap-2 border-t border-gray-100"
+                            >
+                                <UserPlus size={14} />
+                                Use "{query}" as a guest buyer
+                            </button>
                         )}
                     </div>
                 </div>

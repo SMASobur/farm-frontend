@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Loader2, Save, AlertTriangle } from 'lucide-react';
+import { Loader2, Save, AlertTriangle, UserPlus } from 'lucide-react';
 import { listCustomers } from '@/api/customers';
 import { listCategories } from '@/api/categories';
 import { listUnits } from '@/api/units';
@@ -34,9 +34,11 @@ export function SaleForm({ initial, onSubmit, mode, cancelTo }: Props) {
 
     // ============ Form State ============
     const [customerId, setCustomerId] = useState<number | null>(initial?.customerId ?? null);
+    const [guestName, setGuestName] = useState('');
+    const [isGuest, setIsGuest] = useState(false);
     const [date, setDate] = useState(initial?.date ?? todayISO());
 
-    // Category State (Fixing the missing fields from Image 2)
+    // Category State
     const [categoryId, setCategoryId] = useState<number | null>(initial?.categoryId ?? null);
     const [customProductName, setCustomProductName] = useState(initial?.customProductName ?? '');
     const [customProductNameBn, setCustomProductNameBn] = useState('');
@@ -108,7 +110,14 @@ export function SaleForm({ initial, onSubmit, mode, cancelTo }: Props) {
     // ============ Validation ============
     const validate = (): boolean => {
         const next: Record<string, string> = {};
-        if (customerId === null) next.customerId = 'Customer is required';
+
+        if (!isGuest && customerId === null) {
+            next.customerId = 'Customer is required';
+        }
+        if (isGuest && !guestName.trim()) {
+            next.guestName = 'Guest name is required';
+        }
+
         if (categoryId === null) next.categoryId = 'Category is required';
         if (unitId === null && !customUnitName.trim()) next.unitId = 'Unit is required';
         if (!qty || qty <= 0) next.quantity = 'Quantity must be positive';
@@ -147,7 +156,8 @@ export function SaleForm({ initial, onSubmit, mode, cancelTo }: Props) {
         setSaving(true);
         try {
             const payload: SaleRequest = {
-                customerId: customerId!,
+                customerId: !isGuest ? customerId! : undefined,
+                guestCustomerName: isGuest ? guestName.trim() : undefined,
                 date,
                 categoryId: categoryId!,
                 unitId: unitId ?? undefined,
@@ -155,8 +165,6 @@ export function SaleForm({ initial, onSubmit, mode, cancelTo }: Props) {
                 customUnitNameBn: isCustomUnit ? customUnitNameBn.trim() : undefined,
                 customUnitAbbreviation: isCustomUnit ? customUnitAbbreviation.trim() : undefined,
                 saveCustomUnitToUnits: isCustomUnit ? saveCustomUnit : undefined,
-                //customUnitName: customUnitName.trim() || undefined,
-                //saveCustomUnitToUnits: saveCustomUnit,
                 quantity: qty,
                 unitPrice: price,
                 customProductName: isOtherCategory ? customProductName.trim() : undefined,
@@ -170,9 +178,11 @@ export function SaleForm({ initial, onSubmit, mode, cancelTo }: Props) {
                 poolProductType: requiresPool ? requiredPoolType : undefined,
             };
             await onSubmit(payload);
-        } catch (err: unknown) {
-            const error = err as { response?: { data?: { message?: string } } };
-            setSubmitError(error.response?.data?.message || 'Something went wrong');
+        } catch (err: any) {
+            const msg = err.response?.data?.message
+                || Object.values(err.response?.data?.errors || {})[0]
+                || 'Something went wrong';
+            setSubmitError(String(msg));
             throw err;
         } finally {
             setSaving(false);
@@ -204,14 +214,62 @@ export function SaleForm({ initial, onSubmit, mode, cancelTo }: Props) {
 
             {/* Customer + Date */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Field label="Customer" htmlFor="customerId" required error={errors.customerId} help={isEdit ? 'Cannot be changed' : undefined}>
-                    <CustomerCombobox
-                        customers={customers}
-                        value={customerId}
-                        onChange={(id) => { setCustomerId(id); clearError('customerId'); }}
-                        disabled={isEdit}
-                        hasError={!!errors.customerId}
-                    />
+                <Field label="Customer" htmlFor="customer" required error={errors.customerId || errors.guestName}>
+                    {isGuest ? (
+                        <div className="space-y-2">
+                            <div className="flex items-center gap-2">
+                                <Input
+                                    value={guestName}
+                                    onChange={(e) => { setGuestName(e.target.value); clearError('guestName'); }}
+                                    placeholder="Type guest name..."
+                                    autoFocus
+                                    hasError={!!errors.guestName}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setIsGuest(false);
+                                        setGuestName('');
+                                    }}
+                                    className="text-sm text-gray-500 hover:text-gray-700 whitespace-nowrap"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                            <p className="text-xs text-blue-600 flex items-center gap-1">
+                                <UserPlus size={12} />
+                                Saved as guest (not added to Customers list).
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="space-y-2">
+                            <CustomerCombobox
+                                customers={customers}
+                                value={customerId}
+                                onChange={(id) => {
+                                    if (id === -1) {
+                                        setIsGuest(true);
+                                        setCustomerId(null);
+                                    } else {
+                                        setCustomerId(id);
+                                        clearError('customerId');
+                                    }
+                                }}
+                                disabled={isEdit}
+                                hasError={!!errors.customerId}
+                            />
+                            {!isEdit && (
+                                <button
+                                    type="button"
+                                    onClick={() => setIsGuest(true)}
+                                    className="text-xs text-blue-600 hover:underline flex items-center gap-1"
+                                >
+                                    <UserPlus size={12} />
+                                    Or add a one-time guest buyer
+                                </button>
+                            )}
+                        </div>
+                    )}
                 </Field>
 
                 <Field label="Date" htmlFor="date" required>
@@ -417,7 +475,7 @@ export function SaleForm({ initial, onSubmit, mode, cancelTo }: Props) {
                 </div>
             )}
 
-            {/* Notes (Restored to fix unused variable) */}
+            {/* Notes */}
             <Field label="Notes" htmlFor="notes" help="Optional">
                 <textarea
                     id="notes"

@@ -128,8 +128,9 @@ function PoolCard({ pool, onRecordUsage }: { pool: PoolStatus; onRecordUsage: ()
                 </div>
                 <div className="flex justify-between">
                     <span className="text-gray-500">Sold</span>
+
                     <span className="font-medium text-blue-700">
-                        {pool.sold > 0 ? `-${formatNumber(pool.sold, isMilk ? 1 : 0)}` : '0'} {unit}
+                        {pool.sold > 0 ? formatNumber(pool.sold, isMilk ? 1 : 0) : '0'} {unit}
                     </span>
 
                 </div>

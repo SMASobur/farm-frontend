@@ -318,7 +318,9 @@ export interface Sale {
 }
 
 export interface SaleRequest {
-    customerId: number;
+    customerId?: number;
+    guestCustomerName?: string;
+    guestCustomerPhone?: string;
     date: string;
     categoryId: number;
     unitId?: number;
@@ -328,12 +330,9 @@ export interface SaleRequest {
     saveCustomUnitToUnits?: boolean;
     quantity: number;
     unitPrice: number;
-
-    // Add these missing fields:
     customProductName?: string;
     customProductNameBn?: string;
     customProductDefaultUnitId?: number;
-
     saveCustomProductAsCategory?: boolean;
     notes?: string;
     initialPayment?: number;
