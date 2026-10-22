@@ -41,6 +41,7 @@ export function formatDateShort(dateStr: string): string {
     const opts: Intl.DateTimeFormatOptions = {
         day: 'numeric',
         month: 'short',
+        year: 'numeric',
     };
     if (date.getFullYear() !== now.getFullYear()) {
         opts.year = 'numeric';

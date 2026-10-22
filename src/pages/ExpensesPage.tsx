@@ -99,6 +99,7 @@ export function ExpensesPage() {
                 onCategoryChange={setCategoryId}
             />
 
+
             {expensesQuery.isFetching && !expensesQuery.isLoading && (
                 <div className="bg-blue-50 border border-blue-100 rounded-xl px-3 py-2 flex items-center gap-2 text-xs text-blue-800">
                     <RefreshCw size={12} className="animate-spin shrink-0" />
@@ -135,7 +136,7 @@ export function ExpensesPage() {
                     </Link>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 fade-in">
+                <div className="space-y-3 fade-in">
                     {expenses.map((expense) => (
                         <ExpenseCard key={expense.id} expense={expense} />
                     ))}

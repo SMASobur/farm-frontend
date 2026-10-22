@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import type { Sale } from '@/types';
 import { formatCurrency, formatDateShort } from '@/lib/format';
-import { Calendar } from 'lucide-react';
+import {Calendar, User} from 'lucide-react';
 
 export function SaleCard({ sale }: { sale: Sale }) {
     const hasDue = sale.dueAmount > 0;
@@ -17,9 +17,18 @@ export function SaleCard({ sale }: { sale: Sale }) {
                     <div className="font-semibold text-gray-900 truncate">
                         {sale.customerName}
                     </div>
-                    <div className="text-xs text-gray-500 flex items-center gap-1.5 mt-0.5">
-                        <Calendar size={12} />
-                        {formatDateShort(sale.date)}
+                    <div className="flex items-center gap-4 mt-3 text-xs text-gray-500">
+                        <span className="flex items-center gap-1">
+                            <Calendar size={12} />
+                            {formatDateShort(sale.date)}
+                        </span>
+
+                        {sale.enteredByName && (
+                            <span className="flex items-center gap-1">
+                                <User size={12} />
+                                {sale.enteredByName}
+                            </span>
+                        )}
                     </div>
                 </div>
                 <div className="text-right shrink-0">
