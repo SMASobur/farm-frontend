@@ -14,6 +14,9 @@ export function AnimalCard({ animal }: { animal: Animal }) {
         animal.currentlyMilking && { label: 'Milking', emoji: '🥛', color: 'bg-blue-100 text-blue-700' },
     ].filter(Boolean) as { label: string; emoji: string; color: string }[];
 
+    // Only females can produce milk/eggs
+    const isFemale = animal.gender === 'FEMALE';
+
     return (
         <Link
             to={`/animals/${animal.id}`}
@@ -44,7 +47,7 @@ export function AnimalCard({ animal }: { animal: Animal }) {
                 </span>
             </div>
 
-            {/* Species + gender + milk producer */}
+            {/* Species + gender + milk/egg producer */}
             <div className="flex items-center gap-2 mt-3 text-xs text-gray-500">
                 <span>{animal.speciesName}</span>
                 {animal.gender && (
@@ -53,7 +56,7 @@ export function AnimalCard({ animal }: { animal: Animal }) {
                         <span>{GENDER_LABELS[animal.gender]}</span>
                     </>
                 )}
-                {animal.milkProducer && (
+                {animal.milkProducer && isFemale && (
                     <>
                         <span className="text-gray-300">·</span>
                         <span className="inline-flex items-center gap-1 text-blue-600">
@@ -61,7 +64,7 @@ export function AnimalCard({ animal }: { animal: Animal }) {
                         </span>
                     </>
                 )}
-                {animal.eggProducer && (
+                {animal.eggProducer && isFemale && (
                     <>
                         <span className="text-gray-300">·</span>
                         <span className="inline-flex items-center gap-1 text-blue-600">

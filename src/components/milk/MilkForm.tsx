@@ -59,8 +59,9 @@ export function MilkForm({ initial, onSubmit, onDelete, mode, cancelTo, prefille
         queryFn: () => listAnimals(),
     });
 
+    // Only active FEMALE milk-producing animals
     const animals: Animal[] = (animalsQuery.data?.data ?? []).filter(
-        (a) => a.milkProducer && a.lifecycleStatus === 'ACTIVE'
+        (a) => a.milkProducer && a.lifecycleStatus === 'ACTIVE' && a.gender === 'FEMALE'
     );
 
     const clearError = (field: string) => {

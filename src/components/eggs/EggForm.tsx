@@ -65,9 +65,9 @@ export function EggForm({ initial, onSubmit, onDelete, mode, cancelTo }: Props) 
         queryFn: () => listFlocks({ status: 'ACTIVE' }),
     });
 
-    // Only egg-producing active animals
+    // Only egg-producing active FEMALE animals
     const animals: Animal[] = (animalsQuery.data?.data ?? []).filter(
-        (a) => a.eggProducer && a.lifecycleStatus === 'ACTIVE'
+        (a) => a.eggProducer && a.lifecycleStatus === 'ACTIVE' && a.gender === 'FEMALE'
     );
 
     const flocks: Flock[] = flocksQuery.data?.data ?? [];
