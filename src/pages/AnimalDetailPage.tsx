@@ -1,30 +1,29 @@
-import {useParams, Link, useNavigate} from 'react-router-dom';
-import {useQuery, useMutation, useQueryClient} from '@tanstack/react-query';
-import {useState} from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
 import {
     ArrowLeft, Pencil, Trash2, AlertCircle, Loader2, Egg,
 } from 'lucide-react';
-import {getAnimal, deleteAnimal} from '@/api/animals';
+import { getAnimal, deleteAnimal } from '@/api/animals';
 import {
     LIFECYCLE_STATUS_LABELS,
     LIFECYCLE_STATUS_COLORS,
     GENDER_LABELS,
     getSpeciesEmoji,
 } from '@/types';
-import {AnimalProductionHistory} from "@/components/animals/AnimalProductionHistory.tsx";
-import {useToast} from "@/contexts/ToastContext.tsx";
-import {AnimalEventList} from "@/components/animals/AnimalEventList.tsx";
+import { AnimalProductionHistory } from '@/components/animals/AnimalProductionHistory';
+import { useToast } from '@/contexts/ToastContext';
+import { AnimalEventList } from '@/components/animals/AnimalEventList';
 
 export function AnimalDetailPage() {
-    const {id} = useParams<{ id: string }>();
+    const { id } = useParams<{ id: string }>();
     const animalId = Number(id);
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     const [confirmDelete, setConfirmDelete] = useState(false);
     const toast = useToast();
 
-
-    const {data, isLoading, isError} = useQuery({
+    const { data, isLoading, isError } = useQuery({
         queryKey: ['animal', animalId],
         queryFn: () => getAnimal(animalId),
         enabled: Number.isFinite(animalId),
@@ -88,36 +87,34 @@ export function AnimalDetailPage() {
                     <div className="min-w-0 flex-1">
                         <h1 className="text-2xl font-bold text-gray-900 truncate">{animal.tagNumber}</h1>
                         {animal.name && <p className="text-gray-500 mt-0.5">{animal.name}</p>}
+
+                        {/* FIXED: Badges section */}
                         <div className="flex flex-wrap items-center gap-2 mt-2">
-                            <div className="flex flex-wrap items-center gap-2 mt-2">
-                                {/* Lifecycle status */}
-                                <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${LIFECYCLE_STATUS_COLORS[animal.lifecycleStatus]}`}>
-        {LIFECYCLE_STATUS_LABELS[animal.lifecycleStatus]}
-    </span>
+                            {/* Lifecycle status */}
+                            <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${LIFECYCLE_STATUS_COLORS[animal.lifecycleStatus]}`}>
+                                {LIFECYCLE_STATUS_LABELS[animal.lifecycleStatus]}
+                            </span>
 
+                            {/* Derived conditions */}
+                            {animal.currentlyPregnant && (
+                                <span className="text-xs px-2.5 py-1 rounded-full bg-pink-100 text-pink-700 font-medium">
+                                    🤰 Pregnant
+                                </span>
+                            )}
+                            {animal.currentlySick && (
+                                <span className="text-xs px-2.5 py-1 rounded-full bg-amber-100 text-amber-700 font-medium">
+                                    💊 Sick
+                                </span>
+                            )}
+                            {animal.currentlyMilking && (
+                                <span className="text-xs px-2.5 py-1 rounded-full bg-blue-100 text-blue-700 font-medium">
+                                    🥛 Milking
+                                </span>
+                            )}
 
-                                {/* Derived conditions */}
-                                {animal.currentlyPregnant && (
-                                    <span className="text-xs px-2.5 py-1 rounded-full bg-pink-100 text-pink-700 font-medium">
-            🤰 Pregnant
-        </span>
-                                )}
-                                {animal.currentlySick && (
-                                    <span className="text-xs px-2.5 py-1 rounded-full bg-amber-100 text-amber-700 font-medium">
-            💊 Sick
-        </span>
-                                )}
-                                {animal.currentlyMilking && (
-                                    <span className="text-xs px-2.5 py-1 rounded-full bg-blue-100 text-blue-700 font-medium">
-            🥛 Milking
-        </span>
-                                )}
-                            </div>
-
-
-                            {animal.eggProducer && (
-                                <span
-                                    className="text-xs px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 font-medium inline-flex items-center gap-1">
+                            {/* FIXED: Only show Egg Producer if Female */}
+                            {animal.eggProducer && animal.gender === 'FEMALE' && (
+                                <span className="text-xs px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 font-medium inline-flex items-center gap-1">
                                     <Egg size={12}/> Egg Producer
                                 </span>
                             )}
@@ -183,22 +180,28 @@ export function AnimalDetailPage() {
                         </div>
                     </div>
                 )}
-
-
             </div>
-            {/* Animal history */}
-            <AnimalProductionHistory animal={animal}/>
 
-            <AnimalEventList
-                animalId={animal.id}
-                animalTagNumber={animal.tagNumber}
-            />
-
+            {/* Animal history - Only show if active, otherwise show a message */}
+            {animal.lifecycleStatus === 'ACTIVE' ? (
+                <>
+                    <AnimalProductionHistory animal={animal}/>
+                    <AnimalEventList
+                        animalId={animal.id}
+                        animalTagNumber={animal.tagNumber}
+                    />
+                </>
+            ) : (
+                <div className="bg-gray-50 border border-gray-200 rounded-2xl p-6 text-center text-gray-600">
+                    <p>This animal is currently marked as <strong>{LIFECYCLE_STATUS_LABELS[animal.lifecycleStatus]}</strong>.</p>
+                    <p className="text-sm mt-1">Change the status to Active in the Edit page to view and record production or health events.</p>
+                </div>
+            )}
         </div>
     );
 }
 
-function InfoItem({label, value}: { label: string; value: string }) {
+function InfoItem({ label, value }: { label: string; value: string }) {
     return (
         <div>
             <div className="text-xs text-gray-500 uppercase tracking-wider font-medium">{label}</div>

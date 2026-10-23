@@ -94,14 +94,14 @@ export function AnimalForm({ initial, onSubmit, onDelete, mode, cancelTo = '/ani
                 customSpeciesNameBn: isOtherSpecies ? customSpeciesNameBn.trim() || undefined : undefined,
                 customSpeciesMilkProducer: isOtherSpecies ? customSpeciesMilkProducer : undefined,
                 customSpeciesEggProducer: isOtherSpecies ? customSpeciesEggProducer : undefined,
-
-                // NEW: Add the custom max yield to the payload
                 customMaxDailyYield: isOtherSpecies && customMaxDailyYield
                     ? parseFloat(customMaxDailyYield)
                     : undefined,
-
                 saveCustomSpecies: isOtherSpecies && customSpeciesName.trim() ? saveCustomSpecies : undefined,
                 gender,
+
+                lifecycleStatus,
+
                 dateOfBirth: dateOfBirth || undefined,
             };
             await onSubmit(payload);
@@ -121,10 +121,11 @@ export function AnimalForm({ initial, onSubmit, onDelete, mode, cancelTo = '/ani
             await onDelete();
         } catch (err: unknown) {
             const error = err as { response?: { data?: { message?: string } } };
-            setSubmitError(error.response?.data?.message || 'Faild to delete. Something went wrong');
+            setSubmitError(error.response?.data?.message || 'Failed to delete. Something went wrong');
             throw err;
         } finally {
-            setSaving(false);
+            // FIXED: Was previously setting saving to false
+            setDeleting(false);
         }
     };
 
@@ -178,11 +179,8 @@ export function AnimalForm({ initial, onSubmit, onDelete, mode, cancelTo = '/ani
                 customNameBn={customSpeciesNameBn}
                 customMilkProducer={customSpeciesMilkProducer}
                 customEggProducer={customSpeciesEggProducer}
-
-                // NEW: Pass the custom max yield state
                 customMaxDailyYield={customMaxDailyYield}
                 setCustomMaxDailyYield={setCustomMaxDailyYield}
-
                 saveCustom={saveCustomSpecies}
                 onChange={(id, nameEn, nameBn, milkProd, eggProd, save) => {
                     setSpeciesId(id);
