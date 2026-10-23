@@ -1,20 +1,22 @@
 import { useState, type FormEvent } from 'react';
 import { Milk, Egg } from 'lucide-react';
-import { EntityManager, type ColumnDef } from '@/components/settings/EntityManager.tsx';
-import { listSpeciesAll, createSpecies, updateSpecies, toggleSpeciesActive } from '@/api/settings.ts';
+import { EntityManager, type ColumnDef } from '@/components/settings/EntityManager';
+import { listSpeciesAll, createSpecies, updateSpecies, toggleSpeciesActive } from '@/api/settings';
 import type { Species } from '@/types';
-import { getSpeciesEmoji } from '@/types';
-import { Field } from '@/components/forms/Field.tsx';
-import { Input } from '@/components/forms/Input.tsx';
+import { Field } from '@/components/forms/Field';
+import { Input } from '@/components/forms/Input';
 
 const localGenerateCode = (name: string) =>
     name.trim().toUpperCase().replace(/[^A-Z0-9]/g, '_');
 
-// Define the exact payload shape to fix the "any" error
+// Common farm emojis for quick selection
+const EMOJI_OPTIONS = ['🐄', '🐐', '🐑', '🐃', '🐓', '🦆', '🦢', '🦃', '🐇', '🐫', '🐎', '🐦', '🐝', '🐟', '🐾'];
+
 interface SpeciesPayload {
     name: string;
     nameBn?: string;
     code: string;
+    emoji?: string;
     milkProducer: boolean;
     eggProducer: boolean;
     active: boolean;
@@ -27,7 +29,7 @@ export function SpeciesSettingsPage() {
             header: 'Species',
             render: (item) => (
                 <div className="flex items-center gap-3">
-                    <span className="text-xl">{getSpeciesEmoji(item.code) || '🐾'}</span>
+                    <span className="text-xl">{item.emoji || '🐾'}</span>
                     <div>
                         <div className="font-medium text-gray-900">{item.name}</div>
                         {item.nameBn && <div className="text-xs text-gray-500">{item.nameBn}</div>}
@@ -91,6 +93,7 @@ function SpeciesForm({
 }) {
     const [name, setName] = useState(initial?.name ?? '');
     const [nameBn, setNameBn] = useState(initial?.nameBn ?? '');
+    const [emoji, setEmoji] = useState(initial?.emoji ?? '');
     const [milk, setMilk] = useState(initial?.milkProducer ?? false);
     const [egg, setEgg] = useState(initial?.eggProducer ?? false);
     const [error, setError] = useState('');
@@ -108,6 +111,7 @@ function SpeciesForm({
             name: name.trim(),
             nameBn: nameBn.trim() || undefined,
             code: initial?.code || localGenerateCode(name),
+            emoji: emoji.trim() || undefined,
             milkProducer: milk,
             eggProducer: egg,
             active: initial?.active ?? true,
@@ -123,7 +127,6 @@ function SpeciesForm({
                 </div>
             )}
 
-            {/* Added htmlFor to fix TS2741 */}
             <Field label="Species Name" htmlFor="speciesName" required>
                 <Input
                     id="speciesName"
@@ -134,7 +137,6 @@ function SpeciesForm({
                 />
             </Field>
 
-            {/* Added htmlFor to fix TS2741 */}
             <Field label="Name (Bengali)" htmlFor="speciesNameBn" help="Optional">
                 <Input
                     id="speciesNameBn"
@@ -144,6 +146,39 @@ function SpeciesForm({
                 />
             </Field>
 
+            {/* Emoji Picker + Custom Input */}
+            <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">Icon (Emoji)</label>
+                <div className="flex flex-wrap gap-2 p-3 bg-gray-50 border border-gray-200 rounded-lg items-center">
+                    {/* Quick Select Picker */}
+                    {EMOJI_OPTIONS.map((e) => (
+                        <button
+                            key={e}
+                            type="button"
+                            onClick={() => setEmoji(e)}
+                            className={`text-2xl p-1.5 rounded-md transition hover:bg-white hover:shadow-sm ${
+                                emoji === e ? 'bg-white shadow-sm ring-2 ring-green-500' : ''
+                            }`}
+                        >
+                            {e}
+                        </button>
+                    ))}
+
+                    {/* Custom Paste Input */}
+                    <div className="flex items-center ml-auto pl-2 border-l border-gray-300">
+                        <input
+                            type="text"
+                            value={emoji}
+                            onChange={(e) => setEmoji(e.target.value)}
+                            placeholder="Paste custom"
+                            className="w-24 text-center text-xl bg-white border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 p-1"
+                            maxLength={5}
+                            title="Copy and paste a custom emoji here"
+                        />
+                    </div>
+                </div>
+            </div>
+
             <Field label="System Code" htmlFor="speciesCode" help="Auto-generated, cannot be changed on edit">
                 <Input
                     id="speciesCode"
@@ -152,7 +187,6 @@ function SpeciesForm({
                     className="bg-gray-100 text-gray-500 cursor-not-allowed"
                 />
             </Field>
-
 
             <div className="space-y-2">
                 <label className="block text-sm font-medium text-gray-700">Produces</label>

@@ -25,7 +25,7 @@ export function AnimalCard({ animal }: { animal: Animal }) {
             <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-2 min-w-0 flex-1">
                     <span className="text-2xl shrink-0" aria-hidden>
-                        {getSpeciesEmoji(animal.speciesCode)}
+                        {animal.speciesEmoji || getSpeciesEmoji(animal.speciesCode)}
                     </span>
                     <div className="min-w-0 flex-1">
                         <div className="font-semibold text-gray-900 truncate">

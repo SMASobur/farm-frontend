@@ -68,6 +68,7 @@ export interface Species {
     code: string;
     name: string;
     nameBn: string | null;
+    emoji: string | null;
     milkProducer: boolean;
     eggProducer: boolean;
     active: boolean;
@@ -94,6 +95,7 @@ export interface Animal {
     speciesCode: string;
     speciesName: string;
     speciesNameBn: string | null;
+    speciesEmoji: string | null;
 
     // Lifecycle — manual, terminal states only
     lifecycleStatus: LifecycleStatus;

@@ -83,7 +83,9 @@ export function AnimalDetailPage() {
 
             <div className="bg-white border border-gray-100 rounded-2xl p-6">
                 <div className="flex items-center gap-4 mb-6">
-                    <div className="text-5xl">{getSpeciesEmoji(animal.speciesCode)}</div>
+                    <div className="w-24 h-24 sm:w-36 sm:h-36 bg-gray-50 border border-gray-100 rounded-2xl flex items-center justify-center text-7xl sm:text-8xl shrink-0 shadow-sm">
+                        {animal.speciesEmoji || getSpeciesEmoji(animal.speciesCode)}
+                    </div>
                     <div className="min-w-0 flex-1">
                         <h1 className="text-2xl font-bold text-gray-900 truncate">{animal.tagNumber}</h1>
                         {animal.name && <p className="text-gray-500 mt-0.5">{animal.name}</p>}
