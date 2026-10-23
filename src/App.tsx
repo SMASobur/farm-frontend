@@ -40,6 +40,8 @@ import { NewEggPage } from '@/pages/NewEggPage';
 import { EditEggPage } from '@/pages/EditEggPage';
 import { PoolsPage } from '@/pages/PoolsPage';
 import {SpeciesSettingsPage} from "@/pages/SpeciesSettingsPage";
+import { UnitSettingsPage } from '@/pages/UnitSettingsPage';
+import { CustomerTypeSettingsPage } from '@/pages/CustomerTypeSettingsPage';
 
 
 
@@ -125,6 +127,8 @@ export default function App() {
 
                                 <Route path="/settings/species" element={<SpeciesSettingsPage />} />
                                 <Route path="/settings/categories" element={<CategorySettingsPage />} />
+                                <Route path="/settings/units" element={<UnitSettingsPage />} />
+                                <Route path="/settings/customer-types" element={<CustomerTypeSettingsPage />} />
 
 
                                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
