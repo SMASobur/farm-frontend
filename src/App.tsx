@@ -39,10 +39,13 @@ import { EggsPage } from '@/pages/EggsPage';
 import { NewEggPage } from '@/pages/NewEggPage';
 import { EditEggPage } from '@/pages/EditEggPage';
 import { PoolsPage } from '@/pages/PoolsPage';
+import {SpeciesSettingsPage} from "@/pages/SpeciesSettingsPage";
+
 
 
 import { TeamPage } from '@/pages/TeamPage';
 import { JoinFarmPage } from '@/pages/JoinFarmPage';
+import {CategorySettingsPage} from "@/pages/CategorySettingsPage.tsx";
 
 const queryClient = new QueryClient({
     defaultOptions: {
@@ -119,6 +122,10 @@ export default function App() {
                                 <Route path="/eggs" element={<EggsPage />} />
                                 <Route path="/eggs/new" element={<NewEggPage />} />
                                 <Route path="/eggs/:id/edit" element={<EditEggPage />} />
+
+                                <Route path="/settings/species" element={<SpeciesSettingsPage />} />
+                                <Route path="/settings/categories" element={<CategorySettingsPage />} />
+
 
                                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
                                 <Route path="*" element={<Navigate to="/dashboard" replace />} />
