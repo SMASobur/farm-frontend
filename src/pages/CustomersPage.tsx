@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { Plus, Search, AlertCircle, RefreshCw, Users } from 'lucide-react';
+import { Plus, Search, AlertCircle, RefreshCw, Users, Wallet } from 'lucide-react';
 import { listCustomers } from '@/api/customers';
 import { listCustomerTypes } from '@/api/customerTypes';
 import type { Customer, CustomerType } from '@/types';
@@ -12,6 +12,7 @@ import { CustomerCard } from '@/components/customers/CustomerCard';
 export function CustomersPage() {
     const [customerTypeId, setCustomerTypeId] = useState<number | null>(null);
     const [searchInput, setSearchInput] = useState('');
+    const [hasDues, setHasDues] = useState(false); // NEW: Filter state
     const search = useDebounce(searchInput, 300);
     const searchRef = useRef<HTMLInputElement>(null);
 
@@ -28,6 +29,8 @@ export function CustomersPage() {
     });
     const customerTypes: CustomerType[] = customerTypesQuery.data?.data ?? [];
 
+    // Note: If backend allows filtering by dues via API, you can add "hasDues" to the query params.
+    // For now, we will filter it on the client side.
     const { data, isLoading, isError, refetch, isFetching } = useQuery({
         queryKey: ['customers', customerTypeId, search],
         queryFn: () => listCustomers({
@@ -36,12 +39,20 @@ export function CustomersPage() {
         }),
     });
 
-    const customers: Customer[] = data?.data ?? [];
-    const hasActiveFilters = customerTypeId !== null || search !== '';
+    const allCustomers: Customer[] = data?.data ?? [];
+
+    // Apply the dues filter on the client side
+    const customers = allCustomers.filter(c => !hasDues || (c.totalDue && c.totalDue > 0));
+
+    const totalDues = allCustomers.reduce((sum, c) => sum + (c.totalDue || 0), 0);
+    const customersWithDuesCount = allCustomers.filter(c => c.totalDue && c.totalDue > 0).length;
+
+    const hasActiveFilters = customerTypeId !== null || search !== '' || hasDues;
 
     const clearFilters = () => {
         setCustomerTypeId(null);
         setSearchInput('');
+        setHasDues(false);
     };
 
     return (
@@ -63,6 +74,27 @@ export function CustomersPage() {
                 </Link>
             </div>
 
+            {/* Dues Summary Banner */}
+            {!isLoading && customersWithDuesCount > 0 && (
+                <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 text-amber-800">
+                        <Wallet size={20} className="text-amber-600 shrink-0" />
+                        <div>
+                            <span className="font-bold">{customersWithDuesCount} customer(s)</span> currently have dues.
+                            <span className="ml-2 font-bold">৳{totalDues.toLocaleString('en-IN')}</span> total outstanding.
+                        </div>
+                    </div>
+                    <button
+                        onClick={() => setHasDues(!hasDues)}
+                        className={`text-sm font-medium px-3 py-1.5 rounded-lg transition shrink-0 ${
+                            hasDues ? 'bg-amber-600 text-white' : 'bg-white text-amber-700 border border-amber-200 hover:bg-amber-50'
+                        }`}
+                    >
+                        {hasDues ? 'Showing Only Dues' : 'Show Only Dues'}
+                    </button>
+                </div>
+            )}
+
             <div className="relative">
                 <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input
@@ -81,7 +113,7 @@ export function CustomersPage() {
                     Type
                 </div>
                 <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4">
-                    <FilterChip label="All" active={customerTypeId === null} onClick={() => setCustomerTypeId(null)} />
+                    <FilterChip label="All" active={customerTypeId === null && !hasDues} onClick={() => { setCustomerTypeId(null); setHasDues(false); }} />
                     {customerTypes.filter((t) => t.code !== 'OTHER').map((t) => (
                         <FilterChip
                             key={t.id}

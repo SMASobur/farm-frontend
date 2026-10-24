@@ -22,22 +22,21 @@ export function ProfileSettingsPage() {
 
     const [isEditing, setIsEditing] = useState(false);
 
-    // Fetch fresh data
+    // 1. Fetch data properly
     const { data, isLoading } = useQuery({
         queryKey: ['auth-me'],
         queryFn: async () => {
             const res = await apiClient.get<{ data: UserProfile }>('/api/auth/me');
             return res.data.data;
         },
-        initialData: { data: user } as any,
     });
 
-    // Form State
-    const [fullName, setFullName] = useState(data?.fullName ?? '');
-    const [email, setEmail] = useState(data?.email ?? '');
-    const [phone, setPhone] = useState(data?.phone ?? '');
+    // 2. Form State
+    const [fullName, setFullName] = useState('');
+    const [email, setEmail] = useState('');
+    const [phone, setPhone] = useState('');
 
-    // Sync state when data loads
+    // 3. Populate form state when data arrives
     useEffect(() => {
         if (data) {
             setFullName(data.fullName ?? '');
@@ -46,13 +45,13 @@ export function ProfileSettingsPage() {
         }
     }, [data]);
 
-    // Update Mutation
+    // 4. Update Mutation
     const mutation = useMutation({
         mutationFn: updateProfile,
         onSuccess: () => {
             toast.success('Profile updated');
             queryClient.invalidateQueries({ queryKey: ['auth-me'] });
-            setIsEditing(false); // Close modal on success
+            setIsEditing(false);
         },
         onError: (err: unknown) => {
             const error = err as { response?: { data?: { message?: string } } };
@@ -70,7 +69,6 @@ export function ProfileSettingsPage() {
     };
 
     const handleCancel = () => {
-        // Reset form state to original data
         setFullName(data?.fullName ?? '');
         setEmail(data?.email ?? '');
         setPhone(data?.phone ?? '');
@@ -86,7 +84,9 @@ export function ProfileSettingsPage() {
             {/* Header with Edit Button */}
             <div className="flex items-center justify-between mb-6 pb-6 border-b border-gray-100">
                 <div>
-                    <h2 className="text-lg font-bold text-gray-900">{data?.fullName || 'Not set'}'s Profile</h2>
+                    <h2 className="text-lg font-bold text-gray-900">
+                        {data?.fullName ? `${data.fullName}'s Profile` : 'My Profile'}
+                    </h2>
                     <p className="text-sm text-gray-500">Manage your personal information.</p>
                 </div>
                 <button
@@ -106,7 +106,7 @@ export function ProfileSettingsPage() {
                     </div>
                     <div>
                         <div className="text-sm font-medium text-gray-500">Username</div>
-                        <div className="text-base text-gray-900 font-medium">{data?.username}</div>
+                        <div className="text-base text-gray-900 font-medium">{data?.username || user?.username || 'Not set'}</div>
                     </div>
                 </div>
 
@@ -156,7 +156,7 @@ export function ProfileSettingsPage() {
                         </div>
                         <form onSubmit={handleSubmit} className="p-5 space-y-5">
                             <Field label="Username" htmlFor="username" help="Cannot be changed">
-                                <Input id="username" value={data?.username ?? ''} disabled className="bg-gray-100 text-gray-500" />
+                                <Input id="username" value={data?.username ?? user?.username ?? ''} disabled className="bg-gray-100 text-gray-500" />
                             </Field>
 
                             <Field label="Full Name" htmlFor="fullName">

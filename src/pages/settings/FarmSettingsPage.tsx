@@ -118,7 +118,9 @@ export function FarmSettingsPage() {
                     </div>
                     <div>
                         <div className="text-sm font-medium text-gray-500">Farm Logo</div>
+                        {isOwner && (
                         <div className="text-xs text-gray-400 mt-1">Click edit to change logo</div>
+                        )}
                     </div>
                 </div>
 
