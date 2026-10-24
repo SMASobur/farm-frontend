@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { ShoppingCart, Receipt } from 'lucide-react';
-import { EntityManager, type ColumnDef } from '@/components/settings/EntityManager';
+import { EntityManager, type ColumnDef } from '@/components/settings/EntityManager.tsx';
 import {
     listCategoriesAll,
     createCategory,
@@ -8,11 +8,11 @@ import {
     toggleCategoryActive,
     deleteCategory,
     type CategoryRequest
-} from '@/api/settings';
+} from '@/api/settings.ts';
 import type { Category } from '@/types';
-import { Field } from '@/components/forms/Field';
-import { Input } from '@/components/forms/Input';
-import { Select } from '@/components/forms/Select';
+import { Field } from '@/components/forms/Field.tsx';
+import { Input } from '@/components/forms/Input.tsx';
+import { Select } from '@/components/forms/Select.tsx';
 
 const localGenerateCode = (name: string) =>
     name.trim().toUpperCase().replace(/[^A-Z0-9]/g, '_');

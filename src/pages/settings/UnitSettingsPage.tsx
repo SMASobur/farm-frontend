@@ -1,10 +1,10 @@
 import { useState, type FormEvent } from 'react';
 import { Ruler } from 'lucide-react';
-import { EntityManager, type ColumnDef } from '@/components/settings/EntityManager';
-import { listUnitsAll, createUnit, updateUnit, toggleUnitActive, deleteUnit,  type UnitRequest } from '@/api/settings';
+import { EntityManager, type ColumnDef } from '@/components/settings/EntityManager.tsx';
+import { listUnitsAll, createUnit, updateUnit, toggleUnitActive, deleteUnit,  type UnitRequest } from '@/api/settings.ts';
 import type { Unit } from '@/types';
-import { Field } from '@/components/forms/Field';
-import { Input } from '@/components/forms/Input';
+import { Field } from '@/components/forms/Field.tsx';
+import { Input } from '@/components/forms/Input.tsx';
 
 const localGenerateCode = (name: string) =>
     name.trim().toUpperCase().replace(/[^A-Z0-9]/g, '_');

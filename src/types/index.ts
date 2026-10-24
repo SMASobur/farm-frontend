@@ -815,3 +815,19 @@ export const FLOCK_STATUS_COLORS: Record<FlockStatus, string> = {
     SOLD: 'bg-blue-100 text-blue-700',
     DISEASED: 'bg-red-100 text-red-700',
 };
+
+
+// ============================================================
+// Farm (Settings)
+// ============================================================
+
+export interface CurrentFarm {
+    id: number;
+    code: string;
+    name: string;
+    location: string;
+    ownerName: string;
+    plan: string;
+    active: boolean;
+    logoUrl?: string | null;
+}

@@ -1,10 +1,10 @@
 import { useState, type FormEvent } from 'react';
 import { Milk, Egg } from 'lucide-react';
-import { EntityManager, type ColumnDef } from '@/components/settings/EntityManager';
-import { listSpeciesAll, createSpecies, updateSpecies, toggleSpeciesActive, deleteSpecies } from '@/api/settings';
+import { EntityManager, type ColumnDef } from '@/components/settings/EntityManager.tsx';
+import { listSpeciesAll, createSpecies, updateSpecies, toggleSpeciesActive, deleteSpecies } from '@/api/settings.ts';
 import type { Species } from '@/types';
-import { Field } from '@/components/forms/Field';
-import { Input } from '@/components/forms/Input';
+import { Field } from '@/components/forms/Field.tsx';
+import { Input } from '@/components/forms/Input.tsx';
 
 const localGenerateCode = (name: string) =>
     name.trim().toUpperCase().replace(/[^A-Z0-9]/g, '_');

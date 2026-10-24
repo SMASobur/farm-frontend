@@ -39,15 +39,18 @@ import { EggsPage } from '@/pages/EggsPage';
 import { NewEggPage } from '@/pages/NewEggPage';
 import { EditEggPage } from '@/pages/EditEggPage';
 import { PoolsPage } from '@/pages/PoolsPage';
-import {SpeciesSettingsPage} from "@/pages/SpeciesSettingsPage";
-import { UnitSettingsPage } from '@/pages/UnitSettingsPage';
-import { CustomerTypeSettingsPage } from '@/pages/CustomerTypeSettingsPage';
-
+import {SpeciesSettingsPage} from "@/pages/settings/SpeciesSettingsPage.tsx";
+import { UnitSettingsPage } from '@/pages/settings/UnitSettingsPage.tsx';
+import { CustomerTypeSettingsPage } from '@/pages/settings/CustomerTypeSettingsPage.tsx';
+import {CategorySettingsPage} from "@/pages/settings/CategorySettingsPage.tsx";
 
 
 import { TeamPage } from '@/pages/TeamPage';
 import { JoinFarmPage } from '@/pages/JoinFarmPage';
-import {CategorySettingsPage} from "@/pages/CategorySettingsPage.tsx";
+import {SettingsLayout} from "@/pages/settings/SettingsLayout.tsx";
+import {ProfileSettingsPage} from "@/pages/settings/ProfilePage.tsx";
+import {FarmSettingsPage} from "@/pages/settings/FarmSettingsPage.tsx";
+import {SecuritySettingsPage} from "@/pages/settings/SecurityPage.tsx";
 
 const queryClient = new QueryClient({
     defaultOptions: {
@@ -125,10 +128,18 @@ export default function App() {
                                 <Route path="/eggs/new" element={<NewEggPage />} />
                                 <Route path="/eggs/:id/edit" element={<EditEggPage />} />
 
-                                <Route path="/settings/species" element={<SpeciesSettingsPage />} />
-                                <Route path="/settings/categories" element={<CategorySettingsPage />} />
-                                <Route path="/settings/units" element={<UnitSettingsPage />} />
-                                <Route path="/settings/customer-types" element={<CustomerTypeSettingsPage />} />
+                                <Route path="/settings" element={<SettingsLayout />}>
+
+                                    <Route index element={<Navigate to="profile" replace />} />
+                                    <Route path="profile" element={<ProfileSettingsPage />} />
+                                    <Route path="farm" element={<FarmSettingsPage />} />
+                                    <Route path="security" element={<SecuritySettingsPage />} />
+
+                                    <Route path="species" element={<SpeciesSettingsPage />} />
+                                    <Route path="categories" element={<CategorySettingsPage />} />
+                                    <Route path="units" element={<UnitSettingsPage />} />
+                                    <Route path="customer-types" element={<CustomerTypeSettingsPage />} />
+                                </Route>
 
 
                                 <Route path="/" element={<Navigate to="/dashboard" replace />} />

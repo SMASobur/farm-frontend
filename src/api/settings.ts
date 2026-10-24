@@ -1,5 +1,45 @@
 import { apiClient } from './client';
-import type { ApiResponse, Species, Category, Unit, CustomerType } from '@/types';
+import type { ApiResponse, Species, Category, Unit, CustomerType, CurrentFarm } from '@/types';
+
+// ============================================================
+// Profile, Farm & Security (MISSING FROM YOUR FILE)
+// ============================================================
+
+export interface UpdateProfileRequest {
+    fullName?: string;
+    email?: string;
+    phone?: string;
+}
+
+export async function updateProfile(request: UpdateProfileRequest) {
+    const response = await apiClient.put('/api/auth/profile', request);
+    return response.data;
+}
+
+export async function getCurrentFarm(): Promise<ApiResponse<CurrentFarm>> {
+    const response = await apiClient.get<ApiResponse<CurrentFarm>>('/api/farms/current');
+    return response.data;
+}
+
+export interface UpdateFarmRequest {
+    name: string;
+    location?: string;
+}
+
+export async function updateCurrentFarm(request: UpdateFarmRequest) {
+    const response = await apiClient.put('/api/farms/current', request);
+    return response.data;
+}
+
+export interface ChangePasswordRequest {
+    currentPassword: string;
+    newPassword: string;
+}
+
+export async function changePassword(request: ChangePasswordRequest) {
+    const response = await apiClient.post('/api/auth/change-password', request);
+    return response.data;
+}
 
 // ============================================================
 // Species
@@ -30,7 +70,6 @@ export async function updateSpecies(id: number, request: SpeciesRequest): Promis
 }
 
 export async function toggleSpeciesActive(id: number, active: boolean): Promise<ApiResponse<Species>> {
-    // Assuming the backend has a PATCH endpoint, otherwise do a full PUT
     const response = await apiClient.patch<ApiResponse<Species>>(`/api/species/${id}/active?active=${active}`);
     return response.data;
 }
@@ -61,6 +100,11 @@ export async function updateCategory(id: number, request: CategoryRequest): Prom
     return response.data;
 }
 
+export async function toggleCategoryActive(id: number, active: boolean): Promise<ApiResponse<Category>> {
+    const response = await apiClient.patch<ApiResponse<Category>>(`/api/categories/${id}/active?active=${active}`);
+    return response.data;
+}
+
 // ============================================================
 // Units
 // ============================================================
@@ -84,6 +128,11 @@ export async function createUnit(request: UnitRequest): Promise<ApiResponse<Unit
 
 export async function updateUnit(id: number, request: UnitRequest): Promise<ApiResponse<Unit>> {
     const response = await apiClient.put<ApiResponse<Unit>>(`/api/units/${id}`, request);
+    return response.data;
+}
+
+export async function toggleUnitActive(id: number, active: boolean): Promise<ApiResponse<Unit>> {
+    const response = await apiClient.patch<ApiResponse<Unit>>(`/api/units/${id}/active?active=${active}`);
     return response.data;
 }
 
@@ -112,21 +161,14 @@ export async function updateCustomerType(id: number, request: CustomerTypeReques
     return response.data;
 }
 
-export async function toggleCategoryActive(id: number, active: boolean): Promise<ApiResponse<Category>> {
-    const response = await apiClient.patch<ApiResponse<Category>>(`/api/categories/${id}/active?active=${active}`);
-    return response.data;
-}
-
-export async function toggleUnitActive(id: number, active: boolean): Promise<ApiResponse<Unit>> {
-    const response = await apiClient.patch<ApiResponse<Unit>>(`/api/units/${id}/active?active=${active}`);
-    return response.data;
-}
-
 export async function toggleCustomerTypeActive(id: number, active: boolean): Promise<ApiResponse<CustomerType>> {
     const response = await apiClient.patch<ApiResponse<CustomerType>>(`/api/customer-types/${id}/active?active=${active}`);
     return response.data;
 }
 
+// ============================================================
+// Delete Methods
+// ============================================================
 export async function deleteSpecies(id: number) { await apiClient.delete(`/api/species/${id}`); }
 export async function deleteCategory(id: number) { await apiClient.delete(`/api/categories/${id}`); }
 export async function deleteUnit(id: number) { await apiClient.delete(`/api/units/${id}`); }

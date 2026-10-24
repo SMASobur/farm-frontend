@@ -1,13 +1,13 @@
 import { useState, type FormEvent } from 'react';
 import { Users } from 'lucide-react';
-import { EntityManager, type ColumnDef } from '@/components/settings/EntityManager';
+import { EntityManager, type ColumnDef } from '@/components/settings/EntityManager.tsx';
 import {
     listCustomerTypesAll, createCustomerType, updateCustomerType, toggleCustomerTypeActive, type CustomerTypeRequest,
     deleteCustomerType
-} from '@/api/settings';
+} from '@/api/settings.ts';
 import type { CustomerType } from '@/types';
-import { Field } from '@/components/forms/Field';
-import { Input } from '@/components/forms/Input';
+import { Field } from '@/components/forms/Field.tsx';
+import { Input } from '@/components/forms/Input.tsx';
 
 const localGenerateCode = (name: string) =>
     name.trim().toUpperCase().replace(/[^A-Z0-9]/g, '_');
