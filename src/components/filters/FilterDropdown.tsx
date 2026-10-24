@@ -12,6 +12,7 @@ interface FilterDropdownProps<T extends string | number> {
     value: T | null;
     options: FilterOption<T>[];
     onChange: (value: T | null) => void;
+    variant?: 'dropdown' | 'pills';
 }
 
 export function FilterDropdown<T extends string | number>({
@@ -19,11 +20,51 @@ export function FilterDropdown<T extends string | number>({
                                                               value,
                                                               options,
                                                               onChange,
+                                                              variant = 'dropdown',
                                                           }: FilterDropdownProps<T>) {
     const [open, setOpen] = useState(false);
     const ref = useRef<HTMLDivElement>(null);
     useClickOutside(ref, () => setOpen(false));
 
+    // ==========================================
+    // PILLS VARIANT (For small fixed lists)
+    // ==========================================
+    if (variant === 'pills') {
+        return (
+            <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider mr-1">
+                    {label}
+                </span>
+                <button
+                    onClick={() => onChange(null)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition ${
+                        value === null
+                            ? 'bg-green-600 text-white'
+                            : 'bg-white border border-gray-200 text-gray-700 hover:border-gray-300'
+                    }`}
+                >
+                    All
+                </button>
+                {options.map((o) => (
+                    <button
+                        key={String(o.value)}
+                        onClick={() => onChange(value === o.value ? null : o.value)}
+                        className={`px-3 py-1.5 rounded-full text-xs font-medium transition ${
+                            value === o.value
+                                ? 'bg-green-600 text-white'
+                                : 'bg-white border border-gray-200 text-gray-700 hover:border-gray-300'
+                        }`}
+                    >
+                        {o.label}
+                    </button>
+                ))}
+            </div>
+        );
+    }
+
+    // ==========================================
+    // DROPDOWN VARIANT (Default)
+    // ==========================================
     const selected = options.find((o) => o.value === value);
     const isActive = value !== null;
 

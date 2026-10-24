@@ -10,7 +10,7 @@ import { FLOCK_STATUS_LABELS } from '@/types';
 const STATUS_OPTIONS: FlockStatus[] = ['ACTIVE', 'RETIRED', 'SOLD', 'DISEASED'];
 
 export function FlocksPage() {
-    const [status, setStatus] = useState<FlockStatus | null>(null);
+    const [status, setStatus] = useState<FlockStatus | null>("ACTIVE");
 
     const { data, isLoading, isError, refetch, isFetching } = useQuery({
         queryKey: ['flocks', status],

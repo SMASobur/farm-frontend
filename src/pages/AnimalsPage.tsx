@@ -24,7 +24,7 @@ const CONDITION_OPTIONS: { value: AnimalCondition; label: string }[] = [
 
 export function AnimalsPage() {
     const [speciesId, setSpeciesId] = useState<number | null>(null);
-    const [lifecycle, setLifecycle] = useState<LifecycleStatus | null>(null);
+    const [lifecycle, setLifecycle] = useState<LifecycleStatus | null>("ACTIVE");
     const [condition, setCondition] = useState<AnimalCondition | null>(null);
     const [searchInput, setSearchInput] = useState('');
     const search = useDebounce(searchInput, 300);
@@ -108,7 +108,18 @@ export function AnimalsPage() {
                 />
             </div>
 
-            {/* Filter bar */}
+            <FilterDropdown
+                label="Lifecycle"
+                value={lifecycle}
+                options={LIFECYCLE_OPTIONS.map((s) => ({
+                    value: s,
+                    label: LIFECYCLE_STATUS_LABELS[s],
+                }))}
+                onChange={setLifecycle}
+                variant="pills"
+            />
+
+            {/* Filter bar (Species & Condition) */}
             <div className="flex items-center gap-2 flex-wrap">
                 <FilterDropdown
                     label="Species"
@@ -117,15 +128,6 @@ export function AnimalsPage() {
                         .filter((s) => s.code !== 'OTHER')
                         .map((s) => ({ value: s.id, label: s.name }))}
                     onChange={setSpeciesId}
-                />
-                <FilterDropdown
-                    label="Lifecycle"
-                    value={lifecycle}
-                    options={LIFECYCLE_OPTIONS.map((s) => ({
-                        value: s,
-                        label: LIFECYCLE_STATUS_LABELS[s],
-                    }))}
-                    onChange={setLifecycle}
                 />
                 <FilterDropdown
                     label="Condition"
