@@ -10,7 +10,7 @@ const localGenerateCode = (name: string) =>
     name.trim().toUpperCase().replace(/[^A-Z0-9]/g, '_');
 
 // Common farm emojis for quick selection
-const EMOJI_OPTIONS = ['🐄', '🐐', '🐑', '🐃', '🐓', '🐔', '🦆', '🦢', '🦃', '🐇', '🐫', '🐎', '🐦', '🐝', '🐟', '🐾'];
+const EMOJI_OPTIONS = ['🐄','🐂', '🐐', '🐑', '🐃', '🐓', '🐔', '🦆', '🦢', '🦃', '🐇', '🐫', '🐎', '🐦', '🐝', '🐟', '🐾'];
 
 interface SpeciesPayload {
     name: string;
