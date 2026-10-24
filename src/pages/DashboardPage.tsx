@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { getSummary } from '@/api/dashboard';
+import { getPoolsStatus } from '@/api/pools';
 import { formatCurrency, formatNumber, formatDateLong } from '@/lib/format';
 import { AlertsSection } from '@/components/dashboard/AlertsSection';
 import {
@@ -25,7 +26,8 @@ function useElapsedSeconds(active: boolean): number {
 
     useEffect(() => {
         if (!active) {
-            setSeconds(0);
+            // Wrap in a microtask to avoid synchronous setState warning
+            Promise.resolve().then(() => setSeconds(0));
             return;
         }
         const start = Date.now();
@@ -44,26 +46,35 @@ function useElapsedSeconds(active: boolean): number {
 export function DashboardPage() {
     const { user } = useAuth();
 
+    // Fetch Dashboard Summary
     const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
         queryKey: ['dashboard-summary'],
         queryFn: getSummary,
         refetchInterval: 60_000,
     });
 
+    // Fetch Pools to calculate available to sell
+    const { data: poolsData } = useQuery({
+        queryKey: ['pools', 'dashboard'],
+        queryFn: () => getPoolsStatus(),
+    });
+
     const elapsed = useElapsedSeconds(isLoading);
 
-    // ============ First-time Loading ============
-    if (isLoading) {
-        return <DashboardSkeleton elapsedSeconds={elapsed} />;
-    }
+    if (isLoading) return <DashboardSkeleton elapsedSeconds={elapsed} />;
+    if (isError) return <DashboardError error={error} onRetry={() => refetch()} />;
 
-    // ============ Error ============
-    if (isError) {
-        return <DashboardError error={error} onRetry={() => refetch()} />;
-    }
-
-    // ============ Loaded ============
     const summary = data!.data;
+    const pools = poolsData?.data ?? [];
+
+    // Calculate total available across all species
+    const availableMilk = pools
+        .filter(p => p.poolProductType === 'MILK')
+        .reduce((sum, p) => sum + p.available, 0);
+
+    const availableEggs = pools
+        .filter(p => p.poolProductType === 'EGG')
+        .reduce((sum, p) => sum + p.available, 0);
 
     return (
         <div className="p-4 md:p-6 space-y-6 fade-in">
@@ -95,30 +106,53 @@ export function DashboardPage() {
                 </button>
             </div>
 
-            {/* Today */}
+            {/* TODAY */}
             <section>
                 <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
                     Today
                 </h2>
                 <div className="grid grid-cols-2 gap-3">
-                    <StatCard
-                        icon={<Milk size={20} />}
-                        label="Milk"
-                        value={`${formatNumber(summary.today.milkLiters, 1)} L`}
-                        color="blue"
-                    />
-                    <StatCard
-                        icon={<Egg size={20} />}
-                        label="Eggs"
-                        value={`${summary.today.eggs} pcs`}
-                        color="amber"
-                    />
+                    {/* Milk Card */}
+                    <div className="bg-white border border-gray-100 rounded-2xl p-4">
+                        <div className="w-9 h-9 rounded-full flex items-center justify-center bg-blue-50 text-blue-600">
+                            <Milk size={20} />
+                        </div>
+                        <div className="text-xs text-gray-500 mt-3">Milk</div>
+                        <div className="text-lg font-bold text-gray-900 mt-0.5">
+                            {formatNumber(summary.today.milkLiters, 1)} L <span className="text-xs font-normal text-gray-500">produced</span>
+                        </div>
+                        {availableMilk > 0 && (
+                            <div className="text-sm font-medium text-green-600 mt-1">
+                                {formatNumber(availableMilk, 1)} L available to sell
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Eggs Card */}
+                    <div className="bg-white border border-gray-100 rounded-2xl p-4">
+                        <div className="w-9 h-9 rounded-full flex items-center justify-center bg-amber-50 text-amber-600">
+                            <Egg size={20} />
+                        </div>
+                        <div className="text-xs text-gray-500 mt-3">Eggs</div>
+                        <div className="text-lg font-bold text-gray-900 mt-0.5">
+                            {summary.today.eggs} pcs <span className="text-xs font-normal text-gray-500">produced</span>
+                        </div>
+                        {availableEggs > 0 && (
+                            <div className="text-sm font-medium text-green-600 mt-1">
+                                {availableEggs} pcs available to sell
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Sales Card */}
                     <StatCard
                         icon={<TrendingUp size={20} />}
                         label="Sales"
                         value={formatCurrency(summary.today.salesRevenue)}
                         color="green"
                     />
+
+                    {/* Expenses Card */}
                     <StatCard
                         icon={<Receipt size={20} />}
                         label="Expenses"
@@ -128,7 +162,7 @@ export function DashboardPage() {
                 </div>
             </section>
 
-            {/* This Month */}
+            {/* THIS MONTH */}
             <section>
                 <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
                     This Month
@@ -147,8 +181,8 @@ export function DashboardPage() {
                             <TrendingDown size={18} />
                         )}
                         <span className="text-sm font-medium opacity-90">
-              {summary.thisMonth.netProfit >= 0 ? 'Net Profit' : 'Net Loss'}
-            </span>
+                            {summary.thisMonth.netProfit >= 0 ? 'Net Profit' : 'Net Loss'}
+                        </span>
                     </div>
                     <div className="text-3xl font-bold">
                         {formatCurrency(Math.abs(summary.thisMonth.netProfit))}
@@ -173,11 +207,8 @@ export function DashboardPage() {
                 </div>
             </section>
 
-
-            {/* Alerts — new */}
+            {/* Alerts */}
             <AlertsSection />
-
-
 
             {/* Outstanding */}
             <section>
@@ -208,23 +239,53 @@ export function DashboardPage() {
                     Livestock
                 </h2>
                 <div className="bg-white border border-gray-100 rounded-2xl p-4">
-                    <div className="grid grid-cols-3 gap-3 text-center">
-                        <LivestockCount label="Cows" count={summary.counts.cows} />
-                        <LivestockCount label="Goats" count={summary.counts.goats} />
-                        <LivestockCount label="Chickens" count={summary.counts.chickens} />
-                        <LivestockCount label="Ducks" count={summary.counts.ducks} />
-                        <LivestockCount label="Sheep" count={summary.counts.sheep} />
-                        <LivestockCount label="Buffaloes" count={summary.counts.buffaloes} />
-                    </div>
-                    {summary.counts.activeFlocks > 0 && (
-                        <div className="border-t mt-4 pt-3 text-sm text-gray-500 text-center">
-                            + {summary.counts.activeFlocks} active{' '}
-                            {summary.counts.activeFlocks === 1 ? 'flock' : 'flocks'}
+
+                    {/* Animals Grid */}
+                    {summary.counts.livestock && summary.counts.livestock.length > 0 ? (
+                        <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 text-center">
+                            {summary.counts.livestock.map((item: { speciesCode: string; count: number; speciesName: string }) => (
+                                <div key={item.speciesCode}>
+                                    <div className={`text-2xl font-bold ${item.count > 0 ? 'text-gray-900' : 'text-gray-300'}`}>
+                                        {item.count}
+                                    </div>
+                                    <div className="text-xs text-gray-500 mt-0.5 truncate px-1" title={item.speciesName}>
+                                        {item.speciesName}s
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="text-center text-sm text-gray-500 py-2">
+                            No active animals found.
+                        </div>
+                    )}
+
+                    {/* NEW: Flocks List */}
+                    {summary.counts.flockDetails && summary.counts.flockDetails.length > 0 && (
+                        <div className="mt-5 pt-4 border-t border-gray-100">
+                            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                                Active Batches
+                            </div>
+                            <div className="space-y-2">
+                                {summary.counts.flockDetails.map((flock) => (
+                                    <div key={flock.flockCode} className="flex items-center justify-between text-sm">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-2 h-2 rounded-full bg-indigo-400"></div>
+                                            <span className="font-medium text-gray-900">
+                                                {flock.flockCode}
+                                                {flock.name && <span className="text-gray-500 font-normal"> · {flock.name}</span>}
+                                            </span>
+                                        </div>
+                                        <span className="text-gray-600 font-medium bg-gray-50 px-2 py-0.5 rounded text-xs">
+                                            {flock.birdCount} birds
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     )}
                 </div>
             </section>
-
             <div className="text-center text-xs text-gray-400 py-2">
                 Auto-refreshes every 60 seconds
             </div>
@@ -236,7 +297,6 @@ export function DashboardPage() {
 // Skeleton Component with shimmer + time-aware messaging
 // ============================================================
 function DashboardSkeleton({ elapsedSeconds }: { elapsedSeconds: number }) {
-    // Time-aware message
     let title = 'Loading your dashboard…';
     let subtitle = 'Fetching today\u2019s milk, sales, and expenses';
 
@@ -250,7 +310,6 @@ function DashboardSkeleton({ elapsedSeconds }: { elapsedSeconds: number }) {
 
     return (
         <div className="p-4 md:p-6 space-y-6">
-            {/* Info banner */}
             <div className="bg-green-50 border border-green-100 rounded-2xl p-4 flex items-start gap-3">
                 <Loader2 size={20} className="text-green-600 animate-spin shrink-0 mt-0.5" />
                 <div className="flex-1 min-w-0">
@@ -258,13 +317,11 @@ function DashboardSkeleton({ elapsedSeconds }: { elapsedSeconds: number }) {
                         {title}
                         {elapsedSeconds > 0 && (
                             <span className="text-xs font-normal text-green-700">
-                {elapsedSeconds}s
-              </span>
+                                {elapsedSeconds}s
+                            </span>
                         )}
                     </div>
                     <div className="text-xs text-green-700 mt-0.5">{subtitle}</div>
-
-                    {/* Wake-up icon appears after 15 seconds */}
                     {elapsedSeconds >= 15 && (
                         <div className="flex items-center gap-1.5 text-xs text-green-700 mt-2 fade-in">
                             <Wifi size={12} />
@@ -274,15 +331,12 @@ function DashboardSkeleton({ elapsedSeconds }: { elapsedSeconds: number }) {
                 </div>
             </div>
 
-            {/* Skeleton */}
             <div className="space-y-6">
-                {/* Header */}
                 <div className="space-y-2">
                     <div className="h-7 shimmer rounded w-2/3"></div>
                     <div className="h-4 shimmer rounded w-1/3"></div>
                 </div>
 
-                {/* Today */}
                 <div className="space-y-3">
                     <div className="h-3 shimmer rounded w-16"></div>
                     <div className="grid grid-cols-2 gap-3">
@@ -296,13 +350,11 @@ function DashboardSkeleton({ elapsedSeconds }: { elapsedSeconds: number }) {
                     </div>
                 </div>
 
-                {/* This month */}
                 <div className="space-y-3">
                     <div className="h-3 shimmer rounded w-24"></div>
                     <div className="shimmer rounded-2xl h-40"></div>
                 </div>
 
-                {/* Outstanding */}
                 <div className="space-y-3">
                     <div className="h-3 shimmer rounded w-24"></div>
                     <div className="bg-white border border-gray-100 rounded-2xl p-4">
@@ -316,7 +368,6 @@ function DashboardSkeleton({ elapsedSeconds }: { elapsedSeconds: number }) {
                     </div>
                 </div>
 
-                {/* Livestock */}
                 <div className="space-y-3">
                     <div className="h-3 shimmer rounded w-20"></div>
                     <div className="bg-white border border-gray-100 rounded-2xl p-4">
@@ -408,17 +459,6 @@ function StatCard({ icon, label, value, color }: StatCardProps) {
             </div>
             <div className="text-xs text-gray-500 mt-3">{label}</div>
             <div className="text-lg font-bold text-gray-900 mt-0.5">{value}</div>
-        </div>
-    );
-}
-
-function LivestockCount({ label, count }: { label: string; count: number }) {
-    return (
-        <div>
-            <div className={`text-2xl font-bold ${count > 0 ? 'text-gray-900' : 'text-gray-300'}`}>
-                {count}
-            </div>
-            <div className="text-xs text-gray-500 mt-0.5">{label}</div>
         </div>
     );
 }

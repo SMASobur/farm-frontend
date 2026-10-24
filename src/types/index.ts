@@ -48,14 +48,18 @@ export interface DashboardSummary {
     };
     counts: {
         totalAnimals: number;
-        cows: number;
-        goats: number;
-        sheep: number;
-        chickens: number;
-        ducks: number;
-        buffaloes: number;
         activeFlocks: number;
         totalCustomers: number;
+        livestock: {
+            speciesName: string;
+            speciesCode: string;
+            count: number;
+        }[];
+        flockDetails: {
+            flockCode: string;
+            name: string | null;
+            birdCount: number;
+        }[];
     };
 }
 
