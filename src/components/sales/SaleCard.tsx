@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import type { Sale } from '@/types';
 import { formatCurrency, formatDateShort } from '@/lib/format';
-import {Calendar, User} from 'lucide-react';
+import { Calendar, User, AlertCircle, CheckCircle2 } from 'lucide-react';
 
 export function SaleCard({ sale }: { sale: Sale }) {
     const hasDue = sale.dueAmount > 0;
@@ -58,15 +58,20 @@ export function SaleCard({ sale }: { sale: Sale }) {
                     </span>
                 </div>
                 {hasDue ? (
-                    <div>
-                        <span className="text-gray-500">Due</span>{' '}
-                        <span className="font-semibold text-amber-700">
-                            {formatCurrency(sale.dueAmount)}
+                    <>
+                        <div>
+                            <span className="text-gray-500">Due</span>{' '}
+                            <span className="font-semibold text-amber-700">
+                                {formatCurrency(sale.dueAmount)}
+                            </span>
+                        </div>
+                        <span className="ml-auto inline-flex items-center gap-1 text-xs font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full">
+                            <AlertCircle size={10} /> Payment Due
                         </span>
-                    </div>
+                    </>
                 ) : (
-                    <span className="ml-auto text-xs font-medium text-green-700 bg-green-50 px-2 py-0.5 rounded-full">
-                        Paid in full
+                    <span className="ml-auto inline-flex items-center gap-1 text-xs font-medium text-green-700 bg-green-50 px-2 py-0.5 rounded-full">
+                        <CheckCircle2 size={10} /> Paid in full
                     </span>
                 )}
             </div>

@@ -1,4 +1,5 @@
 import type { Customer, Category } from '@/types';
+import { Receipt } from 'lucide-react';
 
 export type DateRangePreset = 'today' | 'week' | 'month' | 'all' | 'custom';
 
@@ -8,6 +9,7 @@ interface Props {
     to: string;
     customerId: number | null;
     categoryId: number | null;
+    showDuesOnly: boolean;
     customers: Customer[];
     categories: Category[];
     onPresetChange: (preset: DateRangePreset) => void;
@@ -15,6 +17,7 @@ interface Props {
     onToChange: (date: string) => void;
     onCustomerChange: (id: number | null) => void;
     onCategoryChange: (id: number | null) => void;
+    onDuesChange: (show: boolean) => void;
 }
 
 const PRESETS: { value: DateRangePreset; label: string }[] = [
@@ -31,6 +34,7 @@ export function SalesFilters({
                                  to,
                                  customerId,
                                  categoryId,
+                                 showDuesOnly,
                                  customers,
                                  categories,
                                  onPresetChange,
@@ -38,10 +42,11 @@ export function SalesFilters({
                                  onToChange,
                                  onCustomerChange,
                                  onCategoryChange,
+                                 onDuesChange,
                              }: Props) {
     return (
-        <div className="space-y-3">
-            {/* Date presets */}
+        <div className="space-y-4">
+            {/* Date presets + Dues Toggle */}
             <div>
                 <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
                     Period
@@ -61,6 +66,21 @@ export function SalesFilters({
                             {p.label}
                         </button>
                     ))}
+
+                    {/* Dues Only Divider & Toggle */}
+                    <div className="w-px h-6 bg-gray-200 mx-1 shrink-0 self-center"></div>
+                    <button
+                        type="button"
+                        onClick={() => onDuesChange(!showDuesOnly)}
+                        className={`shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition border ${
+                            showDuesOnly
+                                ? 'bg-amber-100 border-amber-300 text-amber-800'
+                                : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
+                        }`}
+                    >
+                        <Receipt size={14} />
+                        Dues Only
+                    </button>
                 </div>
             </div>
 

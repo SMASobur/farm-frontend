@@ -21,8 +21,8 @@ function todayISO(): string {
 
 function startOfWeekISO(): string {
     const d = new Date();
-    const day = d.getDay(); // 0 = Sunday
-    const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Monday as start
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
     d.setDate(diff);
     return d.toISOString().split('T')[0];
 }
@@ -43,6 +43,9 @@ export function SalesPage() {
     const [customTo, setCustomTo] = useState('');
     const [customerId, setCustomerId] = useState<number | null>(null);
     const [categoryId, setCategoryId] = useState<number | null>(null);
+
+    // NEW: State for Dues Only toggle
+    const [showDuesOnly, setShowDuesOnly] = useState(false);
 
     // Compute effective date range from preset
     const dateRange = useMemo(() => {
@@ -84,9 +87,15 @@ export function SalesPage() {
         staleTime: 60_000,
     });
 
-    const sales: Sale[] = salesQuery.data?.data ?? [];
+    const allSales: Sale[] = salesQuery.data?.data ?? [];
     const customers = customersQuery.data?.data ?? [];
     const categories = categoriesQuery.data?.data ?? [];
+
+    // NEW: Filter by dues in memory
+    const sales = useMemo(() => {
+        if (!showDuesOnly) return allSales;
+        return allSales.filter(sale => sale.dueAmount > 0);
+    }, [allSales, showDuesOnly]);
 
     // Total of visible sales
     const totalRevenue = sales.reduce((sum, s) => sum + s.totalAmount, 0);
@@ -128,6 +137,7 @@ export function SalesPage() {
                 to={customTo}
                 customerId={customerId}
                 categoryId={categoryId}
+                showDuesOnly={showDuesOnly}
                 customers={customers}
                 categories={categories}
                 onPresetChange={setPreset}
@@ -135,6 +145,7 @@ export function SalesPage() {
                 onToChange={setCustomTo}
                 onCustomerChange={setCustomerId}
                 onCategoryChange={setCategoryId}
+                onDuesChange={setShowDuesOnly}
             />
 
             {/* Refreshing indicator */}
@@ -151,7 +162,7 @@ export function SalesPage() {
             ) : salesQuery.isError ? (
                 <ErrorState error={salesQuery.error} onRetry={() => salesQuery.refetch()} />
             ) : sales.length === 0 ? (
-                <EmptyState />
+                <EmptyState showDuesOnly={showDuesOnly} />
             ) : (
                 <div className="space-y-3 fade-in">
                     {sales.map((sale) => (
@@ -167,21 +178,27 @@ export function SalesPage() {
 // Empty State
 // ============================================================
 
-function EmptyState() {
+function EmptyState({ showDuesOnly }: { showDuesOnly: boolean }) {
     return (
         <div className="bg-white border border-gray-100 rounded-2xl p-8 text-center">
             <ShoppingCart className="mx-auto text-gray-300 mb-3" size={48} />
-            <p className="text-gray-700 font-medium text-lg">No sales yet</p>
-            <p className="text-sm text-gray-500 mt-2 max-w-xs mx-auto">
-                Record your first sale to start tracking revenue and customer dues.
+            <p className="text-gray-700 font-medium text-lg">
+                {showDuesOnly ? 'No unpaid sales found' : 'No sales yet'}
             </p>
-            <Link
-                to="/sales/new"
-                className="inline-flex items-center gap-1.5 mt-5 bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition"
-            >
-                <Plus size={18} />
-                Record Your First Sale
-            </Link>
+            <p className="text-sm text-gray-500 mt-2 max-w-xs mx-auto">
+                {showDuesOnly
+                    ? 'All your sales in this period are fully paid.'
+                    : 'Record your first sale to start tracking revenue and customer dues.'}
+            </p>
+            {!showDuesOnly && (
+                <Link
+                    to="/sales/new"
+                    className="inline-flex items-center gap-1.5 mt-5 bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition"
+                >
+                    <Plus size={18} />
+                    Record Your First Sale
+                </Link>
+            )}
         </div>
     );
 }
