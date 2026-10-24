@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { Milk, Egg } from 'lucide-react';
 import { EntityManager, type ColumnDef } from '@/components/settings/EntityManager';
-import { listSpeciesAll, createSpecies, updateSpecies, toggleSpeciesActive } from '@/api/settings';
+import { listSpeciesAll, createSpecies, updateSpecies, toggleSpeciesActive, deleteSpecies } from '@/api/settings';
 import type { Species } from '@/types';
 import { Field } from '@/components/forms/Field';
 import { Input } from '@/components/forms/Input';
@@ -69,6 +69,7 @@ export function SpeciesSettingsPage() {
             createFn={createSpecies}
             updateFn={updateSpecies}
             toggleActiveFn={toggleSpeciesActive}
+            deleteFn={deleteSpecies}
             columns={columns}
             renderForm={(initial, onSubmit, onCancel) => (
                 <SpeciesForm

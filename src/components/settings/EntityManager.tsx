@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Search, Edit2, CheckCircle2, XCircle } from 'lucide-react';
+import { Plus, Search, Edit2, CheckCircle2, XCircle, Trash2, AlertTriangle, Loader2 } from 'lucide-react';
 import { useToast } from '@/contexts/ToastContext';
 
 export interface ColumnDef<T> {
@@ -17,6 +17,7 @@ interface Props<T> {
     createFn: (data: any) => Promise<any>;
     updateFn: (id: number, data: any) => Promise<any>;
     toggleActiveFn?: (id: number, active: boolean) => Promise<any>;
+    deleteFn?: (id: number) => Promise<any>;
     columns: ColumnDef<T>[];
     renderForm: (initialData: T | null, onSubmit: (data: any) => void, onCancel: () => void) => ReactNode;
     searchPlaceholder?: string;
@@ -31,6 +32,7 @@ export function EntityManager<T extends { id: number; name: string; active: bool
                                                                                            createFn,
                                                                                            updateFn,
                                                                                            toggleActiveFn,
+                                                                                           deleteFn,
                                                                                            columns,
                                                                                            renderForm,
                                                                                            searchPlaceholder = 'Search...',
@@ -41,6 +43,9 @@ export function EntityManager<T extends { id: number; name: string; active: bool
     const [search, setSearch] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingItem, setEditingItem] = useState<T | null>(null);
+
+    // NEW: State for delete confirmation
+    const [deleteTarget, setDeleteTarget] = useState<T | null>(null);
 
     // Fetch Data
     const { data, isLoading } = useQuery({
@@ -86,6 +91,20 @@ export function EntityManager<T extends { id: number; name: string; active: bool
             toast.success('Status updated');
         },
         onError: (err: any) => toast.error(err.response?.data?.message || 'Failed to update status'),
+    });
+
+    // Delete Mutation
+    const deleteMutation = useMutation({
+        mutationFn: deleteFn!,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: [queryKey] });
+            toast.success('Deleted permanently');
+            setDeleteTarget(null); // Close modal
+        },
+        onError: (err: any) => {
+            toast.error(err.response?.data?.message || 'Failed to delete');
+            setDeleteTarget(null); // Close modal on error too
+        },
     });
 
     const handleSubmit = (formData: any) => {
@@ -177,13 +196,22 @@ export function EntityManager<T extends { id: number; name: string; active: bool
                                         {item.active ? <XCircle size={16} /> : <CheckCircle2 size={16} />}
                                     </button>
                                 )}
+                                {deleteFn && (
+                                    <button
+                                        onClick={() => setDeleteTarget(item)}
+                                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
+                                        title="Delete Permanently"
+                                    >
+                                        <Trash2 size={16} />
+                                    </button>
+                                )}
                             </div>
                         </div>
                     ))}
                 </div>
             )}
 
-            {/* Modal */}
+            {/* Add/Edit Modal */}
             {isModalOpen && (
                 <div
                     className="fixed inset-0 z-50 bg-black/40 flex items-end sm:items-center justify-center p-0 sm:p-4"
@@ -207,6 +235,46 @@ export function EntityManager<T extends { id: number; name: string; active: bool
                                 handleSubmit,
                                 () => { setIsModalOpen(false); setEditingItem(null); }
                             )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* NEW: Delete Confirmation Modal */}
+            {deleteTarget && (
+                <div
+                    className="fixed inset-0 z-[60] bg-black/40 flex items-center justify-center p-4"
+                    onClick={(e) => { if (e.target === e.currentTarget) setDeleteTarget(null); }}
+                >
+                    <div className="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-xl animate-in zoom-in-95 duration-200">
+                        <div className="p-6 text-center">
+                            <div className="w-12 h-12 rounded-full bg-red-50 text-red-600 flex items-center justify-center mx-auto mb-4">
+                                <AlertTriangle size={24} />
+                            </div>
+                            <h3 className="text-lg font-bold text-gray-900 mb-2">Delete {title}?</h3>
+                            <p className="text-sm text-gray-500 mb-6">
+                                Are you sure you want to permanently delete <strong>"{deleteTarget.name}"</strong>? This action cannot be undone.
+                            </p>
+                            <div className="flex items-center gap-3">
+                                <button
+                                    onClick={() => setDeleteTarget(null)}
+                                    disabled={deleteMutation.isPending}
+                                    className="flex-1 px-4 py-2.5 rounded-lg font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 transition disabled:opacity-50"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={() => deleteMutation.mutate(deleteTarget.id)}
+                                    disabled={deleteMutation.isPending}
+                                    className="flex-1 px-4 py-2.5 rounded-lg font-medium text-white bg-red-600 hover:bg-red-700 transition disabled:opacity-50 inline-flex items-center justify-center gap-2"
+                                >
+                                    {deleteMutation.isPending ? (
+                                        <><Loader2 size={16} className="animate-spin" /> Deleting...</>
+                                    ) : (
+                                        'Yes, Delete'
+                                    )}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

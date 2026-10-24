@@ -1,7 +1,10 @@
 import { useState, type FormEvent } from 'react';
 import { Users } from 'lucide-react';
 import { EntityManager, type ColumnDef } from '@/components/settings/EntityManager';
-import { listCustomerTypesAll, createCustomerType, updateCustomerType, toggleCustomerTypeActive, type CustomerTypeRequest } from '@/api/settings';
+import {
+    listCustomerTypesAll, createCustomerType, updateCustomerType, toggleCustomerTypeActive, type CustomerTypeRequest,
+    deleteCustomerType
+} from '@/api/settings';
 import type { CustomerType } from '@/types';
 import { Field } from '@/components/forms/Field';
 import { Input } from '@/components/forms/Input';
@@ -37,6 +40,7 @@ export function CustomerTypeSettingsPage() {
             createFn={createCustomerType}
             updateFn={updateCustomerType}
             toggleActiveFn={toggleCustomerTypeActive}
+            deleteFn={deleteCustomerType}
             columns={columns}
             renderForm={(initial, onSubmit, onCancel) => (
                 <CustomerTypeForm

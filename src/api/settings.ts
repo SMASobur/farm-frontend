@@ -126,3 +126,8 @@ export async function toggleCustomerTypeActive(id: number, active: boolean): Pro
     const response = await apiClient.patch<ApiResponse<CustomerType>>(`/api/customer-types/${id}/active?active=${active}`);
     return response.data;
 }
+
+export async function deleteSpecies(id: number) { await apiClient.delete(`/api/species/${id}`); }
+export async function deleteCategory(id: number) { await apiClient.delete(`/api/categories/${id}`); }
+export async function deleteUnit(id: number) { await apiClient.delete(`/api/units/${id}`); }
+export async function deleteCustomerType(id: number) { await apiClient.delete(`/api/customer-types/${id}`); }

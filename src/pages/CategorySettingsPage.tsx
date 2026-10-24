@@ -1,7 +1,14 @@
 import { useState, type FormEvent } from 'react';
 import { ShoppingCart, Receipt } from 'lucide-react';
 import { EntityManager, type ColumnDef } from '@/components/settings/EntityManager';
-import { listCategoriesAll, createCategory, updateCategory, type CategoryRequest } from '@/api/settings';
+import {
+    listCategoriesAll,
+    createCategory,
+    updateCategory,
+    toggleCategoryActive,
+    deleteCategory,
+    type CategoryRequest
+} from '@/api/settings';
 import type { Category } from '@/types';
 import { Field } from '@/components/forms/Field';
 import { Input } from '@/components/forms/Input';
@@ -52,9 +59,8 @@ export function CategorySettingsPage() {
             queryFn={() => listCategoriesAll(true)}
             createFn={createCategory}
             updateFn={updateCategory}
-            // Note: If your backend doesn't have a toggleActive for categories yet,
-            // you can remove the toggleActiveFn prop for now.
-            // toggleActiveFn={toggleCategoryActive}
+            toggleActiveFn={toggleCategoryActive}
+            deleteFn={deleteCategory} // <-- ADDED THIS LINE
             columns={columns}
             renderForm={(initial, onSubmit, onCancel) => (
                 <CategoryForm

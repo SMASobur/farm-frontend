@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { Ruler } from 'lucide-react';
 import { EntityManager, type ColumnDef } from '@/components/settings/EntityManager';
-import { listUnitsAll, createUnit, updateUnit, toggleUnitActive, type UnitRequest } from '@/api/settings';
+import { listUnitsAll, createUnit, updateUnit, toggleUnitActive, deleteUnit,  type UnitRequest } from '@/api/settings';
 import type { Unit } from '@/types';
 import { Field } from '@/components/forms/Field';
 import { Input } from '@/components/forms/Input';
@@ -48,6 +48,7 @@ export function UnitSettingsPage() {
             createFn={createUnit}
             updateFn={updateUnit}
             toggleActiveFn={toggleUnitActive}
+            deleteFn={deleteUnit}
             columns={columns}
             renderForm={(initial, onSubmit, onCancel) => (
                 <UnitForm
