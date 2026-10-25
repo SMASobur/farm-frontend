@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
     ArrowLeft, AlertCircle, Loader2, Plus, Pencil, Trash2,
-    Calendar, User as UserIcon, Wallet,
+    Calendar, User as UserIcon, Wallet, Download,
 } from 'lucide-react';
 import { getSale, deleteSale } from '@/api/sales';
 import { listPaymentsBySale } from '@/api/payments';
@@ -13,6 +13,7 @@ import { RecordPaymentModal } from '@/components/payments/RecordPaymentModal';
 import { PaymentRow } from '@/components/payments/PaymentRow';
 import { SaleStatusBadge } from '@/components/sales/SaleStatusBadge';
 import { EnteredByLine } from '@/components/common/EnteredByLine';
+import { apiClient } from '@/api/client';
 
 
 export function SaleDetailPage() {
@@ -51,6 +52,24 @@ export function SaleDetailPage() {
             toast.error(err.response?.data?.message || 'Failed to delete sale');
         },
     });
+
+    const handleDownloadReceipt = async () => {
+        try {
+            const response = await apiClient.get(`/api/sales/${id}/receipt`, {
+                responseType: 'blob',
+            });
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `receipt-${id}.pdf`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+        } catch (error) {
+            toast.error('Failed to download receipt');
+        }
+    };
 
     // ============ Loading ============
     if (saleQuery.isLoading) {
@@ -91,6 +110,8 @@ export function SaleDetailPage() {
     return (
         <div className="p-4 md:p-6 max-w-3xl mx-auto space-y-5">
             {/* Back */}
+            <div className="flex items-center gap-3 pt-4 border-t border-gray-100" >
+
             <Link
                 to="/sales"
                 className="inline-flex items-center gap-1.5 text-sm text-gray-600 hover:text-green-600 transition"
@@ -98,6 +119,15 @@ export function SaleDetailPage() {
                 <ArrowLeft size={16} />
                 Back to Sales
             </Link>
+
+            <button
+                onClick={handleDownloadReceipt}
+                className="inline-flex items-center gap-2 ml-auto bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-50 transition"
+            >
+                <Download size={16} />
+                Receipt PDF
+            </button>
+            </div>
 
             {/* ============ Hero Card ============ */}
             <div className="bg-white border border-gray-100 rounded-2xl p-6">
@@ -192,17 +222,23 @@ export function SaleDetailPage() {
                             <Plus size={16} />
                             Record Payment
                         </button>
+
+
                     )}
 
                     <Link
                         to={`/sales/${sale.id}/edit`}
-                        className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg font-medium text-gray-700 hover:bg-gray-100 transition"
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium bg-white border border-gray-300 text-gray-700 hover:bg-gray-100 transition"
                     >
                         <Pencil size={16} />
                         Edit
                     </Link>
 
                     {!confirmDeleteSale && (
+                        <>
+
+
+
                         <button
                             onClick={() => setConfirmDeleteSale(true)}
                             className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg font-medium text-red-600 hover:bg-red-50 transition ml-auto"
@@ -210,6 +246,10 @@ export function SaleDetailPage() {
                             <Trash2 size={16} />
                             Delete
                         </button>
+
+                        </>
+
+
                     )}
                 </div>
 
