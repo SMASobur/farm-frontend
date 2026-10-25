@@ -15,7 +15,6 @@ import { SaleStatusBadge } from '@/components/sales/SaleStatusBadge';
 import { EnteredByLine } from '@/components/common/EnteredByLine';
 import { apiClient } from '@/api/client';
 
-
 export function SaleDetailPage() {
     const { id } = useParams<{ id: string }>();
     const saleId = Number(id);
@@ -25,6 +24,8 @@ export function SaleDetailPage() {
 
     const [showPaymentModal, setShowPaymentModal] = useState(false);
     const [confirmDeleteSale, setConfirmDeleteSale] = useState(false);
+
+    const [isGeneratingReceipt, setIsGeneratingReceipt] = useState(false);
 
     // Sale data
     const saleQuery = useQuery({
@@ -54,6 +55,7 @@ export function SaleDetailPage() {
     });
 
     const handleDownloadReceipt = async () => {
+        setIsGeneratingReceipt(true);
         try {
             const response = await apiClient.get(`/api/sales/${id}/receipt`, {
                 responseType: 'blob',
@@ -68,6 +70,8 @@ export function SaleDetailPage() {
             window.URL.revokeObjectURL(url);
         } catch (error) {
             toast.error('Failed to download receipt');
+        } finally {
+            setIsGeneratingReceipt(false);
         }
     };
 
@@ -110,23 +114,33 @@ export function SaleDetailPage() {
     return (
         <div className="p-4 md:p-6 max-w-3xl mx-auto space-y-5">
             {/* Back */}
-            <div className="flex items-center gap-3 pt-4 border-t border-gray-100" >
+            <div className="flex items-center gap-3 pt-4 border-t border-gray-100">
+                <Link
+                    to="/sales"
+                    className="inline-flex items-center gap-1.5 text-sm text-gray-600 hover:text-green-600 transition"
+                >
+                    <ArrowLeft size={16} />
+                    Back to Sales
+                </Link>
 
-            <Link
-                to="/sales"
-                className="inline-flex items-center gap-1.5 text-sm text-gray-600 hover:text-green-600 transition"
-            >
-                <ArrowLeft size={16} />
-                Back to Sales
-            </Link>
-
-            <button
-                onClick={handleDownloadReceipt}
-                className="inline-flex items-center gap-2 ml-auto bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-50 transition"
-            >
-                <Download size={16} />
-                Receipt PDF
-            </button>
+                {/* Receipt PDF Button with Loading State */}
+                <button
+                    onClick={handleDownloadReceipt}
+                    disabled={isGeneratingReceipt}
+                    className="inline-flex items-center gap-2 ml-auto bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    {isGeneratingReceipt ? (
+                        <>
+                            <Loader2 size={16} className="animate-spin" />
+                            Generating...
+                        </>
+                    ) : (
+                        <>
+                            <Download size={16} />
+                            Receipt PDF
+                        </>
+                    )}
+                </button>
             </div>
 
             {/* ============ Hero Card ============ */}
