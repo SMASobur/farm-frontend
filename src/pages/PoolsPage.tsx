@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Droplets, Egg, AlertCircle, RefreshCw, Settings2 } from 'lucide-react';
+import { Droplets, Egg, AlertCircle, RefreshCw, Settings2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { getPoolsStatus } from '@/api/pools';
 import type { PoolStatus } from '@/types';
 import { formatNumber } from '@/lib/format';
@@ -20,6 +20,30 @@ export function PoolsPage() {
     });
 
     const pools: PoolStatus[] = data?.data ?? [];
+    const isToday = date === todayISO();
+
+    // --- Date Navigation Helpers ---
+    const handlePrevDay = () => {
+        const d = new Date(date);
+        d.setDate(d.getDate() - 1);
+        setDate(d.toISOString().split('T')[0]);
+    };
+
+    const handleNextDay = () => {
+        const d = new Date(date);
+        d.setDate(d.getDate() + 1);
+        const nextDate = d.toISOString().split('T')[0];
+        if (nextDate <= todayISO()) {
+            setDate(nextDate);
+        }
+    };
+
+    // Format date for display
+    const displayDate = new Date(date).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+    });
 
     return (
         <div className="p-4 md:p-6 space-y-6">
@@ -30,14 +54,35 @@ export function PoolsPage() {
                         Track inventory, usage, and availability
                     </p>
                 </div>
-                <div>
-                    <input
-                        type="date"
-                        value={date}
-                        onChange={(e) => setDate(e.target.value)}
-                        max={todayISO()}
-                        className="px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm font-medium"
-                    />
+
+                {/* UPDATED: Date Navigation Bar */}
+                <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-lg p-1">
+                    <button
+                        onClick={handlePrevDay}
+                        className="p-1.5 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded transition"
+                        title="Previous day"
+                    >
+                        <ChevronLeft size={20} />
+                    </button>
+
+                    <div className="relative flex items-center">
+                        <input
+                            type="date"
+                            value={date}
+                            onChange={(e) => setDate(e.target.value)}
+                            max={todayISO()}
+                            className="px-2 py-1 text-sm font-medium text-gray-900 bg-transparent focus:outline-none cursor-pointer"
+                        />
+                    </div>
+
+                    <button
+                        onClick={handleNextDay}
+                        disabled={isToday}
+                        className="p-1.5 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded transition disabled:opacity-30 disabled:cursor-not-allowed"
+                        title="Next day"
+                    >
+                        <ChevronRight size={20} />
+                    </button>
                 </div>
             </div>
 
@@ -68,7 +113,7 @@ export function PoolsPage() {
             ) : pools.length === 0 ? (
                 <div className="bg-white border border-gray-100 rounded-2xl p-12 text-center">
                     <Droplets className="mx-auto text-gray-300 mb-3" size={48} />
-                    <p className="text-gray-700 font-medium text-lg">No pool activity today</p>
+                    <p className="text-gray-700 font-medium text-lg">No pool activity on {displayDate}</p>
                     <p className="text-sm text-gray-500 mt-2 max-w-sm mx-auto">
                         Once you record milk or eggs, they will appear here.
                     </p>
