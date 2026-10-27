@@ -494,6 +494,7 @@ export interface PoolStatus {
     internalUse: number;
     fedToAnimals: number;
     wasted: number;
+    donated: number;
     available: number;
 }
 
@@ -504,9 +505,25 @@ export interface PoolUsageRequest {
     internalUse?: number;
     fedToAnimals?: number;
     wasted?: number;
+    donated?: number;
     notes?: string;
 }
 
+export interface PoolUsageResponse {
+    id: number;
+    poolSpeciesId: number;
+    poolSpeciesName: string;
+    poolProductType: PoolProductType;
+    date: string;
+    internalUse: number;
+    fedToAnimals: number;
+    wasted: number;
+    donated: number;
+    notes: string | null;
+    createdAt: string;
+    enteredByUserId?: number;
+    enteredByName?: string;
+}
 // ============================================================
 // Production & Sales Updates
 // ============================================================

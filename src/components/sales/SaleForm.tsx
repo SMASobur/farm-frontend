@@ -15,6 +15,7 @@ import { Select } from '@/components/forms/Select';
 import { CustomerCombobox } from '@/components/forms/CustomerCombobox';
 import { CategorySelect } from '@/components/forms/CategorySelect';
 import { UnitSelect } from '@/components/forms/UnitSelect';
+import { NewCustomerModal } from '@/components/customers/NewCustomerModal';
 
 const PAYMENT_METHODS: PaymentMethod[] = ['CASH', 'BKASH', 'NAGAD', 'ROCKET', 'BANK', 'OTHER'];
 
@@ -37,6 +38,8 @@ export function SaleForm({ initial, onSubmit, mode, cancelTo }: Props) {
     const [guestName, setGuestName] = useState('');
     const [isGuest, setIsGuest] = useState(false);
     const [date, setDate] = useState(initial?.date ?? todayISO());
+    const [showNewCustomerModal, setShowNewCustomerModal] = useState(false);
+
 
     // Category State
     const [categoryId, setCategoryId] = useState<number | null>(initial?.categoryId ?? null);
@@ -259,14 +262,24 @@ export function SaleForm({ initial, onSubmit, mode, cancelTo }: Props) {
                                 hasError={!!errors.customerId}
                             />
                             {!isEdit && (
-                                <button
-                                    type="button"
-                                    onClick={() => setIsGuest(true)}
-                                    className="text-xs text-blue-600 hover:underline flex items-center gap-1"
-                                >
-                                    <UserPlus size={12} />
-                                    Or add a one-time guest buyer
-                                </button>
+                                <div className="flex items-center justify-between">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsGuest(true)}
+                                        className="text-xs text-blue-600 hover:underline flex items-center gap-1"
+                                    >
+                                        <UserPlus size={12} />
+                                        Or add a one-time guest buyer
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowNewCustomerModal(true)}
+                                        className="text-xs text-green-600 hover:underline font-medium"
+                                    >
+                                        + Create new customer
+                                    </button>
+                                </div>
                             )}
                         </div>
                     )}
@@ -473,6 +486,16 @@ export function SaleForm({ initial, onSubmit, mode, cancelTo }: Props) {
                         </div>
                     )}
                 </div>
+            )}
+
+            {showNewCustomerModal && (
+                <NewCustomerModal
+                    onClose={() => setShowNewCustomerModal(false)}
+                    onSuccess={(newCustomerId) => {
+                        setCustomerId(newCustomerId);
+                        setShowNewCustomerModal(false);
+                    }}
+                />
             )}
 
             {/* Notes */}

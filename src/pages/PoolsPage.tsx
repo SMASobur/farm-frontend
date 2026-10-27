@@ -134,13 +134,14 @@ function PoolCard({ pool, onRecordUsage }: { pool: PoolStatus; onRecordUsage: ()
                     </span>
 
                 </div>
-                {(pool.internalUse > 0 || pool.fedToAnimals > 0 || pool.wasted > 0) && (
+
+                {(pool.internalUse > 0 || pool.fedToAnimals > 0 || pool.wasted > 0 || pool.donated > 0) && (
                     <div className="pt-2 mt-2 border-t border-dashed border-gray-200">
                         <div className="text-xs text-gray-400 mb-1">Usage</div>
                         <div className="flex justify-between text-xs text-amber-700">
-                            <span>Internal use / Fed / Wasted</span>
+                            <span>Internal / Fed / Wasted / Donated</span>
                             <span className="font-medium">
-                                {formatNumber(pool.internalUse, isMilk ? 1 : 0)} / {formatNumber(pool.fedToAnimals, isMilk ? 1 : 0)} / {formatNumber(pool.wasted, isMilk ? 1 : 0)} {unit}
+                                {formatNumber(pool.internalUse, isMilk ? 1 : 0)} / {formatNumber(pool.fedToAnimals, isMilk ? 1 : 0)} / {formatNumber(pool.wasted, isMilk ? 1 : 0)} / {formatNumber(pool.donated, isMilk ? 1 : 0)} {unit}
                             </span>
                         </div>
                     </div>
