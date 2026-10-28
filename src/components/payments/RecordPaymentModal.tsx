@@ -49,7 +49,7 @@ export function RecordPaymentModal({ sale, onClose }: Props) {
     }, []);
 
     const mutation = useMutation({
-        mutationFn: (data: PaymentRequest) => createPayment(data),
+        mutationFn: (data: PaymentRequest) => createPayment(sale.id, data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['sale', sale.id] });
             queryClient.invalidateQueries({ queryKey: ['sales'] });

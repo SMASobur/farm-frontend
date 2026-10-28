@@ -11,8 +11,8 @@ export async function getPayment(id: number): Promise<ApiResponse<Payment>> {
     return response.data;
 }
 
-export async function createPayment(request: PaymentRequest): Promise<ApiResponse<Payment>> {
-    const response = await apiClient.post<ApiResponse<Payment>>('/api/payments', request);
+export async function createPayment(saleId: number, request: PaymentRequest): Promise<ApiResponse<Payment>> {
+    const response = await apiClient.post<ApiResponse<Payment>>(`/api/payments/sale/${saleId}`, request);
     return response.data;
 }
 

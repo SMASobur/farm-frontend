@@ -39,6 +39,8 @@ export function SaleForm({ initial, onSubmit, mode, cancelTo }: Props) {
     const [isGuest, setIsGuest] = useState(false);
     const [date, setDate] = useState(initial?.date ?? todayISO());
     const [showNewCustomerModal, setShowNewCustomerModal] = useState(false);
+    const [markAsPaid, setMarkAsPaid] = useState(false);
+
 
 
     // Category State
@@ -110,6 +112,10 @@ export function SaleForm({ initial, onSubmit, mode, cancelTo }: Props) {
         });
     };
 
+    const handleAutoFillTotal = () => {
+        setInitialPayment(String(total));
+    };
+
     // ============ Validation ============
     const validate = (): boolean => {
         const next: Record<string, string> = {};
@@ -151,6 +157,7 @@ export function SaleForm({ initial, onSubmit, mode, cancelTo }: Props) {
         return Object.keys(next).length === 0;
     };
 
+
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
         setSubmitError('');
@@ -158,6 +165,9 @@ export function SaleForm({ initial, onSubmit, mode, cancelTo }: Props) {
 
         setSaving(true);
         try {
+            // 1. Calculate the discount correctly
+            const discount = markAsPaid ? (total - paid) : 0;
+
             const payload: SaleRequest = {
                 customerId: !isGuest ? customerId! : undefined,
                 guestCustomerName: isGuest ? guestName.trim() : undefined,
@@ -175,8 +185,12 @@ export function SaleForm({ initial, onSubmit, mode, cancelTo }: Props) {
                 customProductDefaultUnitId: isOtherCategory ? (customProductDefaultUnitId ?? undefined) : undefined,
                 saveCustomProductAsCategory: saveCustomCategory,
                 notes: notes.trim() || undefined,
+
+                // 2. Send actual payment and discount separately
                 initialPayment: canAddInitialPayment && paid > 0 ? paid : undefined,
                 initialPaymentMethod: canAddInitialPayment && paid > 0 ? paymentMethod : undefined,
+                discountAmount: discount > 0 ? discount : undefined,
+
                 poolSpeciesId: requiresPool ? poolSpeciesId! : undefined,
                 poolProductType: requiresPool ? requiredPoolType : undefined,
             };
@@ -448,16 +462,27 @@ export function SaleForm({ initial, onSubmit, mode, cancelTo }: Props) {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <Field label="Paid Now" htmlFor="initialPayment" error={errors.initialPayment} help="Leave empty if unpaid">
-                            <Input
-                                id="initialPayment"
-                                type="number"
-                                step="0.01"
-                                min="0"
-                                value={initialPayment}
-                                onChange={(e) => { setInitialPayment(e.target.value); clearError('initialPayment'); }}
-                                placeholder="0.00"
-                                hasError={!!errors.initialPayment}
-                            />
+                            <div className="relative">
+                                <Input
+                                    id="initialPayment"
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    value={initialPayment}
+                                    onChange={(e) => { setInitialPayment(e.target.value); clearError('initialPayment'); setMarkAsPaid(false); }}
+                                    placeholder="0.00"
+                                    hasError={!!errors.initialPayment}
+                                    className="pr-24"
+                                />
+                                {/* NEW: Auto-fill button */}
+                                <button
+                                    type="button"
+                                    onClick={handleAutoFillTotal}
+                                    className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-medium text-green-700 bg-green-50 hover:bg-green-100 px-2 py-1 rounded transition"
+                                >
+                                    Full Total
+                                </button>
+                            </div>
                         </Field>
 
                         {paid > 0 && (
@@ -477,12 +502,26 @@ export function SaleForm({ initial, onSubmit, mode, cancelTo }: Props) {
                         )}
                     </div>
 
-                    {total > 0 && paid > 0 && (
-                        <div className="mt-3 bg-amber-50 border border-amber-100 rounded-xl p-3 flex items-center justify-between">
-                            <span className="text-sm text-amber-900">Remaining due</span>
-                            <span className="text-lg font-bold text-amber-900">
-                                {formatCurrency(remainingDue)}
-                            </span>
+                    {/* NEW: Rounding / Discount handling */}
+                    {total > 0 && paid > 0 && paid < total && (
+                        <div className="mt-3 bg-amber-50 border border-amber-100 rounded-xl p-3">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <span className="text-sm text-amber-900">Remaining due</span>
+                                    <span className="text-lg font-bold text-amber-900 ml-2">
+                            {formatCurrency(remainingDue)}
+                        </span>
+                                </div>
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={markAsPaid}
+                                        onChange={(e) => setMarkAsPaid(e.target.checked)}
+                                        className="rounded text-green-600 focus:ring-green-500 w-4 h-4"
+                                    />
+                                    <span className="text-xs font-medium text-amber-900">Waive remaining (discount)</span>
+                                </label>
+                            </div>
                         </div>
                     )}
                 </div>

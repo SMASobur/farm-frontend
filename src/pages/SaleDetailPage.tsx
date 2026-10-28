@@ -195,22 +195,24 @@ export function SaleDetailPage() {
                 {/* Payment summary */}
                 <div className="grid grid-cols-2 gap-3 mt-4">
                     <div className="bg-green-50 rounded-xl p-3">
-                        <div className="text-xs text-gray-500 uppercase tracking-wider font-medium">
-                            Paid
-                        </div>
+                        <div className="text-xs text-gray-500 uppercase tracking-wider font-medium">Paid</div>
                         <div className="text-lg font-bold text-green-700 mt-0.5">
                             {formatCurrency(sale.paidAmount)}
                         </div>
                     </div>
                     <div className={`rounded-xl p-3 ${hasDue ? 'bg-amber-50' : 'bg-gray-50'}`}>
-                        <div className="text-xs text-gray-500 uppercase tracking-wider font-medium">
-                            Due
-                        </div>
+                        <div className="text-xs text-gray-500 uppercase tracking-wider font-medium">Due</div>
                         <div className={`text-lg font-bold mt-0.5 ${hasDue ? 'text-amber-700' : 'text-gray-400'}`}>
                             {formatCurrency(sale.dueAmount)}
                         </div>
                     </div>
                 </div>
+                {sale.discountAmount > 0 && (
+                    <div className="mt-3 bg-purple-50 border border-purple-100 rounded-xl p-3 text-sm text-purple-900 flex items-center justify-between">
+                        <span>Discount / Waived amount</span>
+                        <span className="font-bold">{formatCurrency(sale.discountAmount)}</span>
+                    </div>
+                )}
 
                 <EnteredByLine enteredByName={sale.enteredByName} createdAt={sale.createdAt} />
 

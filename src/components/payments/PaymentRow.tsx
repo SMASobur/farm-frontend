@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Loader2, Trash2 } from 'lucide-react';
+import { Loader2, Trash2, User } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { deletePayment } from '@/api/payments';
 import { useToast } from '@/contexts/ToastContext';
@@ -51,6 +51,14 @@ export function PaymentRow({ payment, saleId }: Props) {
                     {PAYMENT_METHOD_LABELS[payment.method]}
                     {payment.notes && ` · ${payment.notes}`}
                 </div>
+
+                {/* NEW: Received By Info */}
+                {payment.enteredByName && (
+                    <div className="text-[11px] text-gray-400 mt-1 flex items-center gap-1">
+                        <User size={10} />
+                        <span>Received by {payment.enteredByName}</span>
+                    </div>
+                )}
             </div>
 
             {/* Delete */}

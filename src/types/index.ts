@@ -315,6 +315,7 @@ export interface Sale {
     unitPrice: number;
     totalAmount: number;
     paidAmount: number;
+    discountAmount: number;
     dueAmount: number;
     customProductName: string | null;
     notes: string | null;
@@ -336,6 +337,7 @@ export interface SaleRequest {
     saveCustomUnitToUnits?: boolean;
     quantity: number;
     unitPrice: number;
+    discountAmount?: number;
     customProductName?: string;
     customProductNameBn?: string;
     customProductDefaultUnitId?: number;
@@ -359,6 +361,8 @@ export interface Payment {
     method: PaymentMethod;
     notes: string | null;
     createdAt: string;
+    enteredByUserId?: number;
+    enteredByName?: string;
 }
 
 export interface PaymentRequest {
