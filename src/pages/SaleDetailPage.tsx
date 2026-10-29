@@ -5,7 +5,7 @@ import {
     ArrowLeft, AlertCircle, Loader2, Plus, Pencil, Trash2,
     Calendar, User as UserIcon, Wallet, Download,
 } from 'lucide-react';
-import { getSale, deleteSale } from '@/api/sales';
+import { getSale, deleteSale, waiveSaleDue } from '@/api/sales';
 import { listPaymentsBySale } from '@/api/payments';
 import { useToast } from '@/contexts/ToastContext';
 import { formatCurrency, formatDateLong } from '@/lib/format';
@@ -24,8 +24,23 @@ export function SaleDetailPage() {
 
     const [showPaymentModal, setShowPaymentModal] = useState(false);
     const [confirmDeleteSale, setConfirmDeleteSale] = useState(false);
+    const [confirmWaiveDue, setConfirmWaiveDue] = useState(false);
 
     const [isGeneratingReceipt, setIsGeneratingReceipt] = useState(false);
+
+    const waiveMutation = useMutation({
+        mutationFn: () => waiveSaleDue(saleId),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['sale', saleId] });
+            queryClient.invalidateQueries({ queryKey: ['sales'] });
+            queryClient.invalidateQueries({ queryKey: ['dashboard-summary'] });
+            toast.success('Due waived as discount');
+            setConfirmWaiveDue(false);
+        },
+        onError: (err: any) => {
+            toast.error(err.response?.data?.message || 'Failed to waive due');
+        },
+    });
 
     // Sale data
     const saleQuery = useQuery({
@@ -229,17 +244,26 @@ export function SaleDetailPage() {
                 )}
 
                 {/* Actions */}
+
                 <div className="flex flex-wrap items-center gap-3 mt-5 pt-5 border-t border-gray-100">
-                    {hasDue && (
-                        <button
-                            onClick={() => setShowPaymentModal(true)}
-                            className="inline-flex items-center gap-1.5 bg-green-600 text-white px-4 py-2.5 rounded-lg font-medium hover:bg-green-700 transition"
-                        >
-                            <Plus size={16} />
-                            Record Payment
-                        </button>
+                    {hasDue && !confirmWaiveDue && (
+                        <>
+                            <button
+                                onClick={() => setShowPaymentModal(true)}
+                                className="inline-flex items-center gap-1.5 bg-green-600 text-white px-4 py-2.5 rounded-lg font-medium hover:bg-green-700 transition"
+                            >
+                                <Plus size={16} />
+                                Record Payment
+                            </button>
 
-
+                            <button
+                                onClick={() => setConfirmWaiveDue(true)}
+                                className="inline-flex items-center gap-1.5 bg-amber-50 border border-amber-200 text-amber-800 px-4 py-2.5 rounded-lg font-medium hover:bg-amber-100 transition"
+                            >
+                                <AlertCircle size={16} />
+                                Waive Due as Discount
+                            </button>
+                        </>
                     )}
 
                     <Link
@@ -250,11 +274,7 @@ export function SaleDetailPage() {
                         Edit
                     </Link>
 
-                    {!confirmDeleteSale && (
-                        <>
-
-
-
+                    {!confirmDeleteSale && !confirmWaiveDue && (
                         <button
                             onClick={() => setConfirmDeleteSale(true)}
                             className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg font-medium text-red-600 hover:bg-red-50 transition ml-auto"
@@ -262,12 +282,40 @@ export function SaleDetailPage() {
                             <Trash2 size={16} />
                             Delete
                         </button>
-
-                        </>
-
-
                     )}
                 </div>
+
+                {/* NEW: Waive Due Confirmation */}
+                {confirmWaiveDue && hasDue && (
+                    <div className="mt-4 bg-amber-50 border border-amber-200 rounded-lg p-4">
+                        <p className="text-sm text-amber-900 font-medium">
+                            Waive {formatCurrency(sale.dueAmount)} as a discount?
+                        </p>
+                        <p className="text-xs text-amber-700 mt-1">
+                            This will clear the outstanding due and record it as a discount.
+                        </p>
+                        <div className="flex items-center gap-2 mt-3">
+                            <button
+                                onClick={() => waiveMutation.mutate()}
+                                disabled={waiveMutation.isPending}
+                                className="bg-amber-600 text-white text-sm px-3 py-1.5 rounded-lg hover:bg-amber-700 disabled:opacity-50 inline-flex items-center gap-1.5"
+                            >
+                                {waiveMutation.isPending ? (
+                                    <><Loader2 size={14} className="animate-spin" />Waiving…</>
+                                ) : (
+                                    <><AlertCircle size={14} />Yes, waive it</>
+                                )}
+                            </button>
+                            <button
+                                onClick={() => setConfirmWaiveDue(false)}
+                                disabled={waiveMutation.isPending}
+                                className="text-sm px-3 py-1.5 rounded-lg text-gray-700 hover:bg-white disabled:opacity-50"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                )}
 
                 {/* Delete confirmation */}
                 {confirmDeleteSale && (

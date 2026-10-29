@@ -56,7 +56,7 @@ export function PaymentRow({ payment, saleId }: Props) {
                 {payment.enteredByName && (
                     <div className="text-[11px] text-gray-400 mt-1 flex items-center gap-1">
                         <User size={10} />
-                        <span>Received by {payment.enteredByName}</span>
+                        <span>Recored by {payment.enteredByName}</span>
                     </div>
                 )}
             </div>

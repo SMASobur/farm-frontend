@@ -63,3 +63,8 @@ export async function getTotalDues(): Promise<ApiResponse<number>> {
     const response = await apiClient.get<ApiResponse<number>>('/api/sales/dues/total');
     return response.data;
 }
+
+export async function waiveSaleDue(id: number): Promise<ApiResponse<Sale>> {
+    const response = await apiClient.patch<ApiResponse<Sale>>(`/api/sales/${id}/waive-due`);
+    return response.data;
+}
