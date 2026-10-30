@@ -1,7 +1,7 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { Plus, AlertCircle, RefreshCw, ShoppingCart } from 'lucide-react';
+import { Plus, AlertCircle, RefreshCw, ShoppingCart, ChevronLeft, ChevronRight } from 'lucide-react';
 import { listSales } from '@/api/sales';
 import { listCustomers } from '@/api/customers';
 import { listCategories } from '@/api/categories';
@@ -11,14 +11,9 @@ import { SalesSkeleton } from '@/components/sales/SalesSkeleton';
 import { formatCurrency } from '@/lib/format';
 import type { Sale } from '@/types';
 
-// ============================================================
-// Date helpers for presets
-// ============================================================
+const PAGE_SIZE = 50;
 
-function todayISO(): string {
-    return new Date().toISOString().split('T')[0];
-}
-
+function todayISO(): string { return new Date().toISOString().split('T')[0]; }
 function startOfWeekISO(): string {
     const d = new Date();
     const day = d.getDay();
@@ -26,16 +21,11 @@ function startOfWeekISO(): string {
     d.setDate(diff);
     return d.toISOString().split('T')[0];
 }
-
 function startOfMonthISO(): string {
     const d = new Date();
     d.setDate(1);
     return d.toISOString().split('T')[0];
 }
-
-// ============================================================
-// Page
-// ============================================================
 
 export function SalesPage() {
     const [preset, setPreset] = useState<DateRangePreset>('month');
@@ -43,35 +33,35 @@ export function SalesPage() {
     const [customTo, setCustomTo] = useState('');
     const [customerId, setCustomerId] = useState<number | null>(null);
     const [categoryId, setCategoryId] = useState<number | null>(null);
-
-    // NEW: State for Dues Only toggle
     const [showDuesOnly, setShowDuesOnly] = useState(false);
+    const [page, setPage] = useState(0);
 
-    // Compute effective date range from preset
     const dateRange = useMemo(() => {
         const today = todayISO();
         switch (preset) {
-            case 'today':
-                return { from: today, to: today };
-            case 'week':
-                return { from: startOfWeekISO(), to: today };
-            case 'month':
-                return { from: startOfMonthISO(), to: today };
-            case 'all':
-                return { from: undefined, to: undefined };
-            case 'custom':
-                return { from: customFrom || undefined, to: customTo || undefined };
+            case 'today':  return { from: today, to: today };
+            case 'week':   return { from: startOfWeekISO(), to: today };
+            case 'month':  return { from: startOfMonthISO(), to: today };
+            case 'all':    return { from: undefined, to: undefined };
+            case 'custom': return { from: customFrom || undefined, to: customTo || undefined };
         }
     }, [preset, customFrom, customTo]);
 
-    // Data queries
+    // Reset page when filters change
+    useEffect(() => {
+        setPage(0);
+    }, [preset, customFrom, customTo, customerId, categoryId, showDuesOnly]);
+
     const salesQuery = useQuery({
-        queryKey: ['sales', dateRange.from, dateRange.to, customerId, categoryId],
+        queryKey: ['sales', dateRange.from, dateRange.to, customerId, categoryId, showDuesOnly, page],
         queryFn: () => listSales({
             from: dateRange.from,
             to: dateRange.to,
             customerId: customerId || undefined,
             categoryId: categoryId || undefined,
+            duesOnly: showDuesOnly,
+            page,
+            size: PAGE_SIZE,
         }),
     });
 
@@ -87,19 +77,17 @@ export function SalesPage() {
         staleTime: 60_000,
     });
 
-    const allSales: Sale[] = salesQuery.data?.data ?? [];
+    const sales: Sale[] = salesQuery.data?.data.content ?? [];
+    const totalElements = salesQuery.data?.data.totalElements ?? 0;
+    const totalPages = salesQuery.data?.data.totalPages ?? 1;
+    const hasNext = salesQuery.data?.data.last === false;
+    const hasPrev = page > 0;
+
     const customers = customersQuery.data?.data ?? [];
     const categories = categoriesQuery.data?.data ?? [];
 
-    // NEW: Filter by dues in memory
-    const sales = useMemo(() => {
-        if (!showDuesOnly) return allSales;
-        return allSales.filter(sale => sale.dueAmount > 0);
-    }, [allSales, showDuesOnly]);
-
-    // Total of visible sales
-    const totalRevenue = sales.reduce((sum, s) => sum + s.totalAmount, 0);
-    const totalDue = sales.reduce((sum, s) => sum + s.dueAmount, 0);
+    const pageRevenue = sales.reduce((sum, s) => sum + s.totalAmount, 0);
+    const pageDue = sales.reduce((sum, s) => sum + s.dueAmount, 0);
 
     return (
         <div className="p-4 md:p-6 space-y-6">
@@ -110,12 +98,12 @@ export function SalesPage() {
                     <p className="text-sm text-gray-500 mt-1">
                         {salesQuery.isLoading
                             ? 'Loading…'
-                            : sales.length === 0
+                            : totalElements === 0
                                 ? 'No sales found'
-                                : `${sales.length} sale${sales.length === 1 ? '' : 's'} · ${formatCurrency(totalRevenue)}`}
-                        {!salesQuery.isLoading && totalDue > 0 && (
+                                : `${totalElements} sale${totalElements === 1 ? '' : 's'} · ${formatCurrency(pageRevenue)} on this page`}
+                        {!salesQuery.isLoading && pageDue > 0 && (
                             <span className="ml-2 text-amber-700 font-semibold">
-                                · {formatCurrency(totalDue)} due
+                                · {formatCurrency(pageDue)} due on this page
                             </span>
                         )}
                     </p>
@@ -148,7 +136,7 @@ export function SalesPage() {
                 onDuesChange={setShowDuesOnly}
             />
 
-            {/* Refreshing indicator */}
+            {/* Refreshing */}
             {salesQuery.isFetching && !salesQuery.isLoading && (
                 <div className="bg-blue-50 border border-blue-100 rounded-xl px-3 py-2 flex items-center gap-2 text-xs text-blue-800">
                     <RefreshCw size={12} className="animate-spin shrink-0" />
@@ -161,22 +149,46 @@ export function SalesPage() {
                 <SalesSkeleton />
             ) : salesQuery.isError ? (
                 <ErrorState error={salesQuery.error} onRetry={() => salesQuery.refetch()} />
-            ) : sales.length === 0 ? (
+            ) : totalElements === 0 ? (
                 <EmptyState showDuesOnly={showDuesOnly} />
             ) : (
-                <div className="space-y-3 fade-in">
-                    {sales.map((sale) => (
-                        <SaleCard key={sale.id} sale={sale} />
-                    ))}
-                </div>
+                <>
+                    <div className="space-y-3 fade-in">
+                        {sales.map((sale) => (
+                            <SaleCard key={sale.id} sale={sale} />
+                        ))}
+                    </div>
+
+                    {/* Pagination Footer */}
+                    <div className="flex items-center justify-center gap-3 pt-4 border-t border-gray-100">
+                        <button
+                            onClick={() => setPage(p => Math.max(0, p - 1))}
+                            disabled={!hasPrev}
+                            className="inline-flex items-center gap-1 px-4 py-2 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                        >
+                            <ChevronLeft size={16} />
+                            Previous
+                        </button>
+
+                        <span className="text-sm text-gray-600">
+                            Page <span className="font-semibold">{page + 1}</span> of <span className="font-semibold">{totalPages}</span>
+                            {' '}({totalElements} total)
+                        </span>
+
+                        <button
+                            onClick={() => setPage(p => p + 1)}
+                            disabled={!hasNext}
+                            className="inline-flex items-center gap-1 px-4 py-2 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                        >
+                            Next
+                            <ChevronRight size={16} />
+                        </button>
+                    </div>
+                </>
             )}
         </div>
     );
 }
-
-// ============================================================
-// Empty State
-// ============================================================
 
 function EmptyState({ showDuesOnly }: { showDuesOnly: boolean }) {
     return (
@@ -202,10 +214,6 @@ function EmptyState({ showDuesOnly }: { showDuesOnly: boolean }) {
         </div>
     );
 }
-
-// ============================================================
-// Error State
-// ============================================================
 
 function ErrorState({ error, onRetry }: { error: any; onRetry: () => void }) {
     return (

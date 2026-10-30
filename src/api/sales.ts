@@ -1,24 +1,31 @@
 import { apiClient } from './client';
-import type { ApiResponse, Sale, SaleRequest } from '@/types';
+import type { ApiResponse, Sale, Page, SaleRequest } from '@/types';
 
 export interface SaleFilters {
     from?: string;
     to?: string;
     customerId?: number;
     categoryId?: number;
+    duesOnly?: boolean;
+    page?: number;
+    size?: number;
 }
 
-export async function listSales(filters?: SaleFilters): Promise<ApiResponse<Sale[]>> {
+
+export async function listSales(filters?: SaleFilters): Promise<ApiResponse<Page<Sale>>> {
     const params = new URLSearchParams();
     if (filters?.from) params.set('from', filters.from);
     if (filters?.to) params.set('to', filters.to);
     if (filters?.customerId) params.set('customerId', String(filters.customerId));
     if (filters?.categoryId) params.set('categoryId', String(filters.categoryId));
+    if (filters?.duesOnly) params.set('duesOnly', 'true');
+    if (filters?.page !== undefined) params.set('page', String(filters.page));
+    if (filters?.size !== undefined) params.set('size', String(filters.size));
 
     const qs = params.toString();
     const url = qs ? `/api/sales?${qs}` : '/api/sales';
 
-    const response = await apiClient.get<ApiResponse<Sale[]>>(url);
+    const response = await apiClient.get<ApiResponse<Page<Sale>>>(url);
     return response.data;
 }
 
