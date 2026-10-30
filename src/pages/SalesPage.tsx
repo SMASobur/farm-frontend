@@ -47,11 +47,11 @@ export function SalesPage() {
         }
     }, [preset, customFrom, customTo]);
 
-    // Reset page when filters change
     useEffect(() => {
         setPage(0);
     }, [preset, customFrom, customTo, customerId, categoryId, showDuesOnly]);
 
+    // Sales (paginated)
     const salesQuery = useQuery({
         queryKey: ['sales', dateRange.from, dateRange.to, customerId, categoryId, showDuesOnly, page],
         queryFn: () => listSales({
@@ -65,25 +65,28 @@ export function SalesPage() {
         }),
     });
 
+    // Customers (paginated — extract .content for the dropdown)
     const customersQuery = useQuery({
         queryKey: ['customers', 'all'],
-        queryFn: () => listCustomers(),
+        queryFn: () => listCustomers({ size: 1000 }),
         staleTime: 60_000,
     });
 
+    // Categories (not paginated — returns array)
     const categoriesQuery = useQuery({
         queryKey: ['categories', 'PRODUCT'],
         queryFn: () => listCategories('PRODUCT', true),
         staleTime: 60_000,
     });
 
+    // === SINGLE declaration of each derived variable ===
     const sales: Sale[] = salesQuery.data?.data.content ?? [];
     const totalElements = salesQuery.data?.data.totalElements ?? 0;
     const totalPages = salesQuery.data?.data.totalPages ?? 1;
     const hasNext = salesQuery.data?.data.last === false;
     const hasPrev = page > 0;
 
-    const customers = customersQuery.data?.data ?? [];
+    const customers = customersQuery.data?.data.content ?? [];
     const categories = categoriesQuery.data?.data ?? [];
 
     const pageRevenue = sales.reduce((sum, s) => sum + s.totalAmount, 0);
