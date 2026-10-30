@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Stethoscope, Plus, Pencil } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Stethoscope, Plus, Pencil, ChevronRight } from 'lucide-react';
 import { listAnimalEvents } from '@/api/animalEvents';
 import { formatCurrency, formatDateShort } from '@/lib/format';
 import type { AnimalEvent, AnimalEventType } from '@/types';
@@ -14,13 +15,15 @@ import { AnimalEventModal } from './AnimalEventModal';
 interface Props {
     animalId: number;
     animalTagNumber: string;
+    limit?: number;
+    showViewAllLink?: boolean;
 }
 
 const FILTER_OPTIONS: (AnimalEventType | 'ALL')[] = [
     'ALL', 'ILLNESS', 'TREATMENT', 'RECOVERY', 'VACCINATION', 'PREGNANCY', 'WEIGHT',
 ];
 
-export function AnimalEventList({ animalId, animalTagNumber }: Props) {
+export function AnimalEventList({ animalId, animalTagNumber, limit, showViewAllLink }: Props) {
     const [filter, setFilter] = useState<AnimalEventType | 'ALL'>('ALL');
     const [showAddModal, setShowAddModal] = useState(false);
     const [editingEvent, setEditingEvent] = useState<AnimalEvent | null>(null);
@@ -30,7 +33,9 @@ export function AnimalEventList({ animalId, animalTagNumber }: Props) {
         queryFn: () => listAnimalEvents(animalId, filter === 'ALL' ? undefined : filter),
     });
 
-    const events: AnimalEvent[] = data?.data ?? [];
+    const allEvents: AnimalEvent[] = data?.data ?? [];
+    const totalCount = allEvents.length;
+    const events = limit ? allEvents.slice(0, limit) : allEvents;
 
     return (
         <div className="bg-white border border-gray-100 rounded-2xl p-5">
@@ -69,9 +74,7 @@ export function AnimalEventList({ animalId, animalTagNumber }: Props) {
             {/* List */}
             {isLoading ? (
                 <div className="space-y-2">
-                    {[1, 2, 3].map((i) => (
-                        <div key={i} className="h-14 shimmer rounded"></div>
-                    ))}
+                    {[1, 2, 3].map((i) => <div key={i} className="h-14 shimmer rounded"></div>)}
                 </div>
             ) : events.length === 0 ? (
                 <div className="text-center py-6">
@@ -88,16 +91,23 @@ export function AnimalEventList({ animalId, animalTagNumber }: Props) {
                     </button>
                 </div>
             ) : (
-                <div className="space-y-1.5">
-                    {events.slice(0, 20).map((event) => (
-                        <EventRow key={event.id} event={event} onEdit={() => setEditingEvent(event)} />
-                    ))}
-                    {events.length > 20 && (
-                        <p className="text-xs text-gray-400 text-center pt-2">
-                            Showing 20 of {events.length} events
-                        </p>
+                <>
+                    <div className="space-y-1.5">
+                        {events.map((event) => (
+                            <EventRow key={event.id} event={event} onEdit={() => setEditingEvent(event)} />
+                        ))}
+                    </div>
+
+                    {/* View All link */}
+                    {showViewAllLink && totalCount > (limit ?? 0) && (
+                        <Link
+                            to={`/animals/${animalId}/events`}
+                            className="mt-4 flex items-center justify-center gap-1 text-sm font-medium text-green-700 hover:text-green-800 hover:underline"
+                        >
+                            View all {totalCount} events <ChevronRight size={14} />
+                        </Link>
                     )}
-                </div>
+                </>
             )}
 
             {/* Modals */}
@@ -120,10 +130,7 @@ export function AnimalEventList({ animalId, animalTagNumber }: Props) {
     );
 }
 
-// ============================================================
-// Event Row
-// ============================================================
-
+// EventRow unchanged from your version
 function EventRow({ event, onEdit }: { event: AnimalEvent; onEdit: () => void }) {
     return (
         <button
@@ -131,36 +138,24 @@ function EventRow({ event, onEdit }: { event: AnimalEvent; onEdit: () => void })
             className="w-full text-left bg-gray-50 hover:bg-gray-100 border border-gray-100 rounded-xl p-3 transition group"
         >
             <div className="flex items-start gap-3">
-                <div className="text-xl shrink-0">
-                    {ANIMAL_EVENT_EMOJI[event.eventType]}
-                </div>
+                <div className="text-xl shrink-0">{ANIMAL_EVENT_EMOJI[event.eventType]}</div>
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-medium text-gray-900 text-sm">
-                            {event.title}
-                        </span>
+                        <span className="font-medium text-gray-900 text-sm">{event.title}</span>
                         <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${ANIMAL_EVENT_COLORS[event.eventType]}`}>
                             {ANIMAL_EVENT_LABELS[event.eventType]}
                         </span>
                     </div>
                     {event.description && (
-                        <p className="text-xs text-gray-500 mt-1 line-clamp-2">
-                            {event.description}
-                        </p>
+                        <p className="text-xs text-gray-500 mt-1 line-clamp-2">{event.description}</p>
                     )}
                     <div className="text-xs text-gray-400 mt-1 flex items-center gap-2">
                         <span>{formatDateShort(event.date)}</span>
                         {event.cost != null && event.cost > 0 && (
-                            <>
-                                <span className="text-gray-300">·</span>
-                                <span className="text-gray-600 font-medium">{formatCurrency(event.cost)}</span>
-                            </>
+                            <><span className="text-gray-300">·</span><span className="text-gray-600 font-medium">{formatCurrency(event.cost)}</span></>
                         )}
                         {event.enteredByName && (
-                            <>
-                                <span className="text-gray-300">·</span>
-                                <span>{event.enteredByName}</span>
-                            </>
+                            <><span className="text-gray-300">·</span><span>{event.enteredByName}</span></>
                         )}
                     </div>
                 </div>

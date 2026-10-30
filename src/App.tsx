@@ -43,6 +43,9 @@ import {SpeciesSettingsPage} from "@/pages/settings/SpeciesSettingsPage.tsx";
 import { UnitSettingsPage } from '@/pages/settings/UnitSettingsPage.tsx';
 import { CustomerTypeSettingsPage } from '@/pages/settings/CustomerTypeSettingsPage.tsx';
 import {CategorySettingsPage} from "@/pages/settings/CategorySettingsPage.tsx";
+import { AnimalMilkHistoryPage } from '@/pages/AnimalMilkHistoryPage';
+import { AnimalEventHistoryPage } from '@/pages/AnimalEventHistoryPage';
+
 
 
 import { TeamPage } from '@/pages/TeamPage';
@@ -88,6 +91,8 @@ export default function App() {
                                 <Route path="/animals/new" element={<NewAnimalPage />} />
                                 <Route path="/animals/:id" element={<AnimalDetailPage />} />
                                 <Route path="/animals/:id/edit" element={<EditAnimalPage />} />
+                                <Route path="/animals/:id/events" element={<AnimalEventHistoryPage />} />
+
 
                                 <Route path="/customers" element={<CustomersPage />} />
                                 <Route path="/customers/new" element={<NewCustomerPage />} />
@@ -113,6 +118,7 @@ export default function App() {
 
                                 <Route path="/milk" element={<MilkPage />} />
                                 <Route path="/milk/new" element={<NewMilkPage />} />
+                                <Route path="/animals/:id/milk-history" element={<AnimalMilkHistoryPage />} />
                                 <Route path="/milk/:id/edit" element={<EditMilkPage />} />
 
                                 <Route path="/team" element={<TeamPage />} />

@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { Milk, Egg } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Milk, Egg, ChevronRight } from 'lucide-react';
 import { listMilkByAnimal } from '@/api/milk';
 import { listEggsByAnimal } from '@/api/eggs';
 import { formatDateShort, formatNumber } from '@/lib/format';
@@ -7,13 +8,16 @@ import type { Animal, MilkProduction, EggProduction } from '@/types';
 
 interface Props {
     animal: Animal;
+    limit?: number;
+    showViewAllLink?: boolean;
 }
 
-export function AnimalProductionHistory({ animal }: Props) {
+export function AnimalProductionHistory({ animal, limit, showViewAllLink }: Props) {
     const isMilkProducer = animal.milkProducer;
     const isEggLayer = animal.speciesCode === 'CHICKEN'
         || animal.speciesCode === 'DUCK'
-        || animal.speciesCode === 'GOOSE';
+        || animal.speciesCode === 'GOOSE'
+        || animal.eggProducer;
 
     if (!isMilkProducer && !isEggLayer) {
         return (
@@ -30,26 +34,40 @@ export function AnimalProductionHistory({ animal }: Props) {
 
     return (
         <div className="space-y-5">
-            {isMilkProducer && <MilkHistory animalId={animal.id} />}
-            {isEggLayer && <EggHistory animalId={animal.id} />}
+            {isMilkProducer && (
+                <MilkHistory
+                    animalId={animal.id}
+                    limit={limit}
+                    showViewAllLink={showViewAllLink}
+                />
+            )}
+            {isEggLayer && (
+                <EggHistory
+                    animalId={animal.id}
+                    limit={limit}
+                    showViewAllLink={showViewAllLink}
+                />
+            )}
         </div>
     );
 }
 
-// ============================================================
-// Milk
-// ============================================================
-
-function MilkHistory({ animalId }: { animalId: number }) {
+function MilkHistory({ animalId, limit, showViewAllLink }: {
+    animalId: number;
+    limit?: number;
+    showViewAllLink?: boolean;
+}) {
     const { data, isLoading } = useQuery({
         queryKey: ['animal', animalId, 'milk'],
         queryFn: () => listMilkByAnimal(animalId),
     });
 
-    const entries: MilkProduction[] = (data?.data ?? [])
+    const allEntries: MilkProduction[] = (data?.data ?? [])
         .slice()
-        .sort((a, b) => b.date.localeCompare(a.date))
-        .slice(0, 20);
+        .sort((a, b) => b.date.localeCompare(a.date));
+
+    const entries = limit ? allEntries.slice(0, limit) : allEntries;
+    const totalCount = allEntries.length;
 
     return (
         <div className="bg-white border border-gray-100 rounded-2xl p-5">
@@ -59,55 +77,56 @@ function MilkHistory({ animalId }: { animalId: number }) {
                     Milk Production
                 </h2>
                 <span className="text-xs text-gray-400">
-                    {isLoading ? '…' : `${entries.length} record${entries.length === 1 ? '' : 's'}`}
+                    {isLoading ? '…' : `${totalCount} record${totalCount === 1 ? '' : 's'}`}
                 </span>
             </div>
 
             {isLoading ? (
                 <div className="space-y-2">
-                    {[1, 2, 3].map((i) => (
-                        <div key={i} className="h-12 shimmer rounded"></div>
-                    ))}
+                    {[1, 2, 3].map((i) => <div key={i} className="h-12 shimmer rounded"></div>)}
                 </div>
             ) : entries.length === 0 ? (
-                <p className="text-sm text-gray-500 text-center py-6">
-                    No milk production recorded yet.
-                </p>
+                <p className="text-sm text-gray-500 text-center py-6">No milk production recorded yet.</p>
             ) : (
-                <div className="space-y-1.5">
-                    {entries.map((m) => (
-                        <div
-                            key={m.id}
-                            className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-gray-50 transition"
+                <>
+                    <div className="space-y-1.5">
+                        {entries.map((m) => (
+                            <div key={m.id} className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-gray-50 transition">
+                                <div className="text-sm text-gray-500">{formatDateShort(m.date)}</div>
+                                <div className="text-sm font-semibold text-gray-900">{formatNumber(m.totalLiters, 1)} L</div>
+                            </div>
+                        ))}
+                    </div>
+                    {showViewAllLink && totalCount > (limit ?? 0) && (
+                        <Link
+                            to={`/animals/${animalId}/milk-history`}
+                            className="mt-4 flex items-center justify-center gap-1 text-sm font-medium text-green-700 hover:text-green-800 hover:underline"
                         >
-                            <div className="text-sm text-gray-500">
-                                {formatDateShort(m.date)}
-                            </div>
-                            <div className="text-sm font-semibold text-gray-900">
-                                {formatNumber(m.totalLiters, 1)} L
-                            </div>
-                        </div>
-                    ))}
-                </div>
+                            View all {totalCount} records <ChevronRight size={14} />
+                        </Link>
+                    )}
+                </>
             )}
         </div>
     );
 }
 
-// ============================================================
-// Eggs
-// ============================================================
-
-function EggHistory({ animalId }: { animalId: number }) {
+function EggHistory({ animalId, limit, showViewAllLink }: {
+    animalId: number;
+    limit?: number;
+    showViewAllLink?: boolean;
+}) {
     const { data, isLoading } = useQuery({
         queryKey: ['animal', animalId, 'eggs'],
         queryFn: () => listEggsByAnimal(animalId),
     });
 
-    const entries: EggProduction[] = (data?.data ?? [])
+    const allEntries: EggProduction[] = (data?.data ?? [])
         .slice()
-        .sort((a, b) => b.date.localeCompare(a.date))
-        .slice(0, 20);
+        .sort((a, b) => b.date.localeCompare(a.date));
+
+    const entries = limit ? allEntries.slice(0, limit) : allEntries;
+    const totalCount = allEntries.length;
 
     return (
         <div className="bg-white border border-gray-100 rounded-2xl p-5">
@@ -117,46 +136,39 @@ function EggHistory({ animalId }: { animalId: number }) {
                     Egg Production
                 </h2>
                 <span className="text-xs text-gray-400">
-                    {isLoading ? '…' : `${entries.length} record${entries.length === 1 ? '' : 's'}`}
+                    {isLoading ? '…' : `${totalCount} record${totalCount === 1 ? '' : 's'}`}
                 </span>
             </div>
 
             {isLoading ? (
                 <div className="space-y-2">
-                    {[1, 2, 3].map((i) => (
-                        <div key={i} className="h-12 shimmer rounded"></div>
-                    ))}
+                    {[1, 2, 3].map((i) => <div key={i} className="h-12 shimmer rounded"></div>)}
                 </div>
             ) : entries.length === 0 ? (
-                <p className="text-sm text-gray-500 text-center py-6">
-                    No egg production recorded yet.
-                </p>
+                <p className="text-sm text-gray-500 text-center py-6">No egg production recorded yet.</p>
             ) : (
-                <div className="space-y-1.5">
-                    {entries.map((e) => (
-                        <div
-                            key={e.id}
-                            className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-gray-50 transition"
+                <>
+                    <div className="space-y-1.5">
+                        {entries.map((e) => (
+                            <div key={e.id} className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-gray-50 transition">
+                                <div className="text-sm text-gray-500">{formatDateShort(e.date)}</div>
+                                <div className="flex items-center gap-3">
+                                    <span className="text-xs text-gray-500">{e.goodEggs} good</span>
+                                    {e.crackedEggs > 0 && <span className="text-xs text-amber-600">{e.crackedEggs} cracked</span>}
+                                    <span className="text-sm font-semibold text-gray-900">{e.totalEggs} total</span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    {showViewAllLink && totalCount > (limit ?? 0) && (
+                        <Link
+                            to={`/animals/${animalId}/egg-history`}
+                            className="mt-4 flex items-center justify-center gap-1 text-sm font-medium text-amber-700 hover:text-amber-800 hover:underline"
                         >
-                            <div className="text-sm text-gray-500">
-                                {formatDateShort(e.date)}
-                            </div>
-                            <div className="flex items-center gap-3">
-                                <span className="text-xs text-gray-500">
-                                    {e.goodEggs} good
-                                </span>
-                                {e.crackedEggs > 0 && (
-                                    <span className="text-xs text-amber-600">
-                                        {e.crackedEggs} cracked
-                                    </span>
-                                )}
-                                <span className="text-sm font-semibold text-gray-900">
-                                    {e.totalEggs} total
-                                </span>
-                            </div>
-                        </div>
-                    ))}
-                </div>
+                            View all {totalCount} records <ChevronRight size={14} />
+                        </Link>
+                    )}
+                </>
             )}
         </div>
     );

@@ -38,10 +38,7 @@ export function AnimalDetailPage() {
             navigate('/animals');
         },
         onError: (err: any) => {
-            toast.error(
-                'Could not delete animal',
-                err.response?.data?.message || 'Something went wrong'
-            );
+            toast.error('Could not delete animal', err.response?.data?.message || 'Something went wrong');
         },
     });
 
@@ -187,10 +184,16 @@ export function AnimalDetailPage() {
             {/* Animal history - Only show if active, otherwise show a message */}
             {animal.lifecycleStatus === 'ACTIVE' ? (
                 <>
-                    <AnimalProductionHistory animal={animal}/>
+                    <AnimalProductionHistory
+                        animal={animal}
+                        limit={5}
+                        showViewAllLink
+                    />
                     <AnimalEventList
                         animalId={animal.id}
                         animalTagNumber={animal.tagNumber}
+                        limit={5}
+                        showViewAllLink
                     />
                 </>
             ) : (
