@@ -10,6 +10,7 @@ interface Props {
     disabled?: boolean;
     placeholder?: string;
     hasError?: boolean;
+    allowClear?: boolean;
 }
 
 export function AnimalCombobox({
@@ -19,6 +20,7 @@ export function AnimalCombobox({
                                    disabled = false,
                                    placeholder = 'Select animal…',
                                    hasError = false,
+                                   allowClear = false,
                                }: Props) {
     const [open, setOpen] = useState(false);
     const [query, setQuery] = useState('');
@@ -31,37 +33,23 @@ export function AnimalCombobox({
         [animals, value]
     );
 
-    /**
-     * Unique species list derived from the animals array.
-     * Sorted alphabetically for predictable chip order.
-     */
     const availableSpecies = useMemo(() => {
         const map = new Map<string, { code: string; name: string; count: number }>();
         for (const animal of animals) {
             const existing = map.get(animal.speciesCode);
-            if (existing) {
-                existing.count++;
-            } else {
-                map.set(animal.speciesCode, {
-                    code: animal.speciesCode,
-                    name: animal.speciesName,
-                    count: 1,
-                });
-            }
+            if (existing) existing.count++;
+            else map.set(animal.speciesCode, {
+                code: animal.speciesCode,
+                name: animal.speciesName,
+                count: 1,
+            });
         }
         return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
     }, [animals]);
 
-    // Filter by species chip + search query
     const filtered = useMemo(() => {
         let list = animals;
-
-        // 1. Species filter
-        if (selectedSpecies) {
-            list = list.filter((a) => a.speciesCode === selectedSpecies);
-        }
-
-        // 2. Search filter
+        if (selectedSpecies) list = list.filter((a) => a.speciesCode === selectedSpecies);
         if (query.trim()) {
             const q = query.toLowerCase();
             list = list.filter(
@@ -71,11 +59,9 @@ export function AnimalCombobox({
                     a.speciesName.toLowerCase().includes(q)
             );
         }
-
         return list;
     }, [animals, selectedSpecies, query]);
 
-    // Close on outside click
     useEffect(() => {
         const handleClick = (e: MouseEvent) => {
             if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
@@ -86,16 +72,13 @@ export function AnimalCombobox({
         return () => document.removeEventListener('mousedown', handleClick);
     }, []);
 
-    // Focus search when opening; reset filters
     useEffect(() => {
         if (open) {
             setTimeout(() => inputRef.current?.focus(), 0);
             setQuery('');
-            // Don't reset species — user might want to keep the filter
         }
     }, [open]);
 
-    // Close on Escape
     useEffect(() => {
         const handleKey = (e: KeyboardEvent) => {
             if (e.key === 'Escape' && open) setOpen(false);
@@ -107,6 +90,12 @@ export function AnimalCombobox({
     const handleSelect = (animal: Animal | null) => {
         onChange(animal ? animal.id : null);
         setOpen(false);
+    };
+
+    const handleClear = () => {
+        onChange(null);
+        setSelectedSpecies(null);
+        setQuery('');
     };
 
     const displayText = selected
@@ -128,9 +117,33 @@ export function AnimalCombobox({
                         : 'bg-white hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500'
                 }`}
             >
-                <span className={`truncate ${selected ? 'text-gray-900' : 'text-gray-400'}`}>
+                <span className={`truncate flex-1 ${selected ? 'text-gray-900' : 'text-gray-400'}`}>
                     {displayText}
                 </span>
+
+                {/* Option A: Clear X on trigger */}
+                {selected && allowClear && !disabled && (
+                    <span
+                        role="button"
+                        tabIndex={0}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            handleClear();
+                        }}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleClear();
+                            }
+                        }}
+                        className="p-0.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded transition shrink-0"
+                        title="Clear selection"
+                    >
+                        <X size={14} />
+                    </span>
+                )}
+
                 <ChevronDown size={16} className="text-gray-400 shrink-0" />
             </button>
 
@@ -159,9 +172,20 @@ export function AnimalCombobox({
                                 </button>
                             )}
                         </div>
+
+                        {/* Option B: Clear button inside dropdown */}
+                        {allowClear && (selected || selectedSpecies || query) && (
+                            <button
+                                type="button"
+                                onClick={handleClear}
+                                className="mt-2 w-full text-left text-xs font-medium text-green-700 hover:text-green-800 px-1 py-1 hover:bg-green-50 rounded transition"
+                            >
+                                Show all animals (clear filters)
+                            </button>
+                        )}
                     </div>
 
-                    {/* Species filter chips */}
+                    {/* Species chips */}
                     <div className="px-2 py-2 border-b border-gray-100 bg-gray-50">
                         <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-2 px-2">
                             <SpeciesChip
@@ -224,7 +248,7 @@ export function AnimalCombobox({
                         )}
                     </div>
 
-                    {/* Footer with count */}
+                    {/* Footer */}
                     <div className="border-t border-gray-100 px-3 py-2 text-xs text-gray-400 bg-gray-50">
                         {filtered.length} {filtered.length === 1 ? 'animal' : 'animals'}
                         {selectedSpecies && ` · filtered to ${selectedSpecies.toLowerCase()}`}
@@ -234,10 +258,6 @@ export function AnimalCombobox({
         </div>
     );
 }
-
-// ============================================================
-// Chip component
-// ============================================================
 
 function SpeciesChip({
                          label,

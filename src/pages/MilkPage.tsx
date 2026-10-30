@@ -5,15 +5,13 @@ import { Plus, Milk, AlertCircle, RefreshCw } from 'lucide-react';
 import { listMilk } from '@/api/milk';
 import { listAnimals } from '@/api/animals';
 import { MilkCard } from '@/components/milk/MilkCard';
+import { AnimalCombobox } from '@/components/forms/AnimalCombobox';
 import { formatNumber } from '@/lib/format';
 import type { MilkProduction, Animal } from '@/types';
 
 type Preset = 'today' | 'week' | 'month' | 'all';
 
-function todayISO(): string {
-    return new Date().toISOString().split('T')[0];
-}
-
+function todayISO(): string { return new Date().toISOString().split('T')[0]; }
 function startOfWeekISO(): string {
     const d = new Date();
     const day = d.getDay();
@@ -21,7 +19,6 @@ function startOfWeekISO(): string {
     d.setDate(diff);
     return d.toISOString().split('T')[0];
 }
-
 function startOfMonthISO(): string {
     const d = new Date();
     d.setDate(1);
@@ -58,7 +55,7 @@ export function MilkPage() {
     });
 
     const animals: Animal[] = (animalsQuery.data?.data ?? []).filter(
-        (a) => a.milkProducer
+        (a) => a.milkProducer && a.lifecycleStatus === 'ACTIVE' && a.gender === 'FEMALE'
     );
 
     const entries: MilkProduction[] = milkQuery.data?.data ?? [];
@@ -66,6 +63,7 @@ export function MilkPage() {
 
     return (
         <div className="p-4 md:p-6 space-y-6">
+            {/* Header */}
             <div className="flex items-start justify-between gap-3">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">Milk Production</h1>
@@ -115,26 +113,22 @@ export function MilkPage() {
                     </div>
                 </div>
 
+                {/* REPLACED: Now using searchable AnimalCombobox */}
                 <div>
                     <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
                         Animal
                     </label>
-                    <select
-                        value={animalId ?? ''}
-                        onChange={(e) => setAnimalId(e.target.value ? Number(e.target.value) : null)}
-                        className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
-                    >
-                        <option value="">All animals</option>
-                        {animals.map((a) => (
-                            <option key={a.id} value={a.id}>
-                                {a.tagNumber}
-                                {a.name ? ` · ${a.name}` : ''}
-                            </option>
-                        ))}
-                    </select>
+                    <AnimalCombobox
+                        animals={animals}
+                        value={animalId}
+                        onChange={setAnimalId}
+                        placeholder="All animals: search by tag or name"
+                        allowClear
+                    />
                 </div>
             </div>
 
+            {/* Refreshing */}
             {milkQuery.isFetching && !milkQuery.isLoading && (
                 <div className="bg-blue-50 border border-blue-100 rounded-xl px-3 py-2 flex items-center gap-2 text-xs text-blue-800">
                     <RefreshCw size={12} className="animate-spin shrink-0" />
@@ -142,6 +136,7 @@ export function MilkPage() {
                 </div>
             )}
 
+            {/* Content */}
             {milkQuery.isLoading ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     {[1, 2, 3, 4].map((i) => (
