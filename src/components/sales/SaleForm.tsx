@@ -82,7 +82,7 @@ export function SaleForm({ initial, onSubmit, mode, cancelTo }: Props) {
     const unitsQuery = useQuery({ queryKey: ['units'], queryFn: () => listUnits(true) });
     const poolsQuery = useQuery({ queryKey: ['pools', date], queryFn: () => getPoolsStatus(date) });
 
-    const customers = customersQuery.data?.data ?? [];
+    const customers = customersQuery.data?.data.content ?? [];
     const categories = categoriesQuery.data?.data ?? [];
     const units = unitsQuery.data?.data ?? [];
     const allPools = poolsQuery.data?.data ?? [];
