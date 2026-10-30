@@ -11,7 +11,7 @@ import { SalesSkeleton } from '@/components/sales/SalesSkeleton';
 import { formatCurrency } from '@/lib/format';
 import type { Sale } from '@/types';
 
-const PAGE_SIZE = 50;
+const PAGE_SIZE = 20;
 
 function todayISO(): string { return new Date().toISOString().split('T')[0]; }
 function startOfWeekISO(): string {

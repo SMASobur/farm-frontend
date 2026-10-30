@@ -1,20 +1,24 @@
 import { apiClient } from './client';
-import type { ApiResponse, Customer, CustomerRequest } from '@/types';
+import type { ApiResponse, Page, Customer, CustomerRequest } from '@/types';
 
 export interface CustomerFilters {
     customerTypeId?: number;
     search?: string;
+    page?: number;
+    size?: number;
 }
 
-export async function listCustomers(filters?: CustomerFilters): Promise<ApiResponse<Customer[]>> {
+export async function listCustomers(filters?: CustomerFilters): Promise<ApiResponse<Page<Customer>>> {
     const params = new URLSearchParams();
     if (filters?.search) params.set('name', filters.search);
     if (filters?.customerTypeId) params.set('customerTypeId', String(filters.customerTypeId));
+    if (filters?.page !== undefined) params.set('page', String(filters.page));
+    if (filters?.size !== undefined) params.set('size', String(filters.size));
 
     const qs = params.toString();
     const url = qs ? `/api/customers?${qs}` : '/api/customers';
 
-    const response = await apiClient.get<ApiResponse<Customer[]>>(url);
+    const response = await apiClient.get<ApiResponse<Page<Customer>>>(url);
     return response.data;
 }
 
