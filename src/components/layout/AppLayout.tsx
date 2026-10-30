@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import logoUrl from '/favicon.svg';
 import {
   Egg,
   Milk,
@@ -66,9 +67,13 @@ export function AppLayout() {
                 className="flex items-center gap-2 hover:opacity-90 transition"
                 title="Go to Dashboard"
             >
-              <div className="w-8 h-8 bg-green-600 rounded-md flex items-center justify-center text-white font-bold">
-                F
-              </div>
+              <div className="flex items-center gap-3">
+
+              <img
+                  src={logoUrl}
+                  alt="Farm Logo"
+                  className="w-10 h-10 rounded-lg"
+              />
               <div className="hidden sm:block">
                 <div className="font-semibold text-gray-900 leading-tight">
                   {user?.farmName || 'Farm'}
@@ -77,6 +82,8 @@ export function AppLayout() {
                   {user?.fullName || user?.username} · {user?.role}
                 </div>
               </div>
+              </div>
+
             </Link>
             <button
                 onClick={handleLogout}

@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import logoUrl from '/favicon.svg';
 
 export function LoginPage() {
   const { login } = useAuth();
@@ -33,7 +34,11 @@ export function LoginPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-green-600 rounded-2xl mb-3">
-            <span className="text-white text-3xl font-bold">F</span>
+            <img
+                src={logoUrl}
+                alt="Farm Logo"
+                className="w-15 h-15 rounded-lg"
+            />
           </div>
           <h1 className="text-2xl font-bold text-gray-900">Farm Management</h1>
           <p className="text-sm text-gray-500 mt-1">
