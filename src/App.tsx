@@ -54,6 +54,7 @@ import {SettingsLayout} from "@/pages/settings/SettingsLayout.tsx";
 import {ProfileSettingsPage} from "@/pages/settings/ProfilePage.tsx";
 import {FarmSettingsPage} from "@/pages/settings/FarmSettingsPage.tsx";
 import {SecuritySettingsPage} from "@/pages/settings/SecurityPage.tsx";
+import {AnimalEggHistoryPage} from "@/pages/AnimalEggHistoryPage.tsx";
 
 const queryClient = new QueryClient({
     defaultOptions: {
@@ -92,7 +93,7 @@ export default function App() {
                                 <Route path="/animals/:id" element={<AnimalDetailPage />} />
                                 <Route path="/animals/:id/edit" element={<EditAnimalPage />} />
                                 <Route path="/animals/:id/events" element={<AnimalEventHistoryPage />} />
-
+                                <Route path="/animals/:id/egg-history" element={<AnimalEggHistoryPage />} />
 
                                 <Route path="/customers" element={<CustomersPage />} />
                                 <Route path="/customers/new" element={<NewCustomerPage />} />
