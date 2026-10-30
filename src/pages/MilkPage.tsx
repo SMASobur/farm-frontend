@@ -1,7 +1,7 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { Plus, Milk, AlertCircle, RefreshCw } from 'lucide-react';
+import { Plus, Milk, AlertCircle, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
 import { listMilk } from '@/api/milk';
 import { listAnimals } from '@/api/animals';
 import { MilkCard } from '@/components/milk/MilkCard';
@@ -10,6 +10,8 @@ import { formatNumber } from '@/lib/format';
 import type { MilkProduction, Animal } from '@/types';
 
 type Preset = 'today' | 'week' | 'month' | 'all';
+
+const PAGE_SIZE = 50;
 
 function todayISO(): string { return new Date().toISOString().split('T')[0]; }
 function startOfWeekISO(): string {
@@ -28,6 +30,7 @@ function startOfMonthISO(): string {
 export function MilkPage() {
     const [preset, setPreset] = useState<Preset>('month');
     const [animalId, setAnimalId] = useState<number | null>(null);
+    const [page, setPage] = useState(0);
 
     const dateRange = useMemo(() => {
         const today = todayISO();
@@ -39,12 +42,19 @@ export function MilkPage() {
         }
     }, [preset]);
 
+    // Reset page when filters change
+    useEffect(() => {
+        setPage(0);
+    }, [preset, animalId]);
+
     const milkQuery = useQuery({
-        queryKey: ['milk', dateRange.from, dateRange.to, animalId],
+        queryKey: ['milk', dateRange.from, dateRange.to, animalId, page],
         queryFn: () => listMilk({
             from: dateRange.from,
             to: dateRange.to,
             animalId: animalId || undefined,
+            page,
+            size: PAGE_SIZE,
         }),
     });
 
@@ -58,7 +68,13 @@ export function MilkPage() {
         (a) => a.milkProducer && a.lifecycleStatus === 'ACTIVE' && a.gender === 'FEMALE'
     );
 
-    const entries: MilkProduction[] = milkQuery.data?.data ?? [];
+    // Extract from Page<T>
+    const entries: MilkProduction[] = milkQuery.data?.data.content ?? [];
+    const totalElements = milkQuery.data?.data.totalElements ?? 0;
+    const totalPages = milkQuery.data?.data.totalPages ?? 1;
+    const hasNext = milkQuery.data?.data.last === false;
+    const hasPrev = page > 0;
+
     const totalLiters = entries.reduce((sum, e) => sum + e.totalLiters, 0);
 
     return (
@@ -70,9 +86,9 @@ export function MilkPage() {
                     <p className="text-sm text-gray-500 mt-1">
                         {milkQuery.isLoading
                             ? 'Loading…'
-                            : entries.length === 0
+                            : totalElements === 0
                                 ? 'No entries found'
-                                : `${entries.length} entr${entries.length === 1 ? 'y' : 'ies'} · ${formatNumber(totalLiters, 1)} L`}
+                                : `${totalElements} entr${totalElements === 1 ? 'y' : 'ies'} · ${formatNumber(totalLiters, 1)} L`}
                     </p>
                 </div>
                 <Link
@@ -113,7 +129,6 @@ export function MilkPage() {
                     </div>
                 </div>
 
-                {/* REPLACED: Now using searchable AnimalCombobox */}
                 <div>
                     <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
                         Animal
@@ -163,7 +178,7 @@ export function MilkPage() {
                         <RefreshCw size={16} /> Try again
                     </button>
                 </div>
-            ) : entries.length === 0 ? (
+            ) : totalElements === 0 ? (
                 <div className="bg-white border border-gray-100 rounded-2xl p-8 text-center">
                     <Milk className="mx-auto text-gray-300 mb-3" size={48} />
                     <p className="text-gray-700 font-medium text-lg">No milk entries yet</p>
@@ -174,16 +189,43 @@ export function MilkPage() {
                         to="/milk/new"
                         className="inline-flex items-center gap-1.5 mt-5 bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition"
                     >
-                        <Plus size={18} />
-                        Record First Entry
+                        <Plus size={18} /> Record First Entry
                     </Link>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 fade-in">
-                    {entries.map((entry) => (
-                        <MilkCard key={entry.id} entry={entry} />
-                    ))}
-                </div>
+                <>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 fade-in">
+                        {entries.map((entry) => (
+                            <MilkCard key={entry.id} entry={entry} />
+                        ))}
+                    </div>
+
+                    {/* BACKEND PAGINATION FOOTER */}
+                    <div className="flex items-center justify-center gap-3 pt-4 border-t border-gray-100">
+                        <button
+                            onClick={() => setPage(p => Math.max(0, p - 1))}
+                            disabled={!hasPrev}
+                            className="inline-flex items-center gap-1 px-4 py-2 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                        >
+                            <ChevronLeft size={16} />
+                            Previous
+                        </button>
+
+                        <span className="text-sm text-gray-600">
+                            Page <span className="font-semibold">{page + 1}</span> of <span className="font-semibold">{totalPages}</span>
+                            {' '}({totalElements} total)
+                        </span>
+
+                        <button
+                            onClick={() => setPage(p => p + 1)}
+                            disabled={!hasNext}
+                            className="inline-flex items-center gap-1 px-4 py-2 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                        >
+                            Next
+                            <ChevronRight size={16} />
+                        </button>
+                    </div>
+                </>
             )}
         </div>
     );
