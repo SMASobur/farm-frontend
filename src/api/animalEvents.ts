@@ -39,3 +39,33 @@ export async function deleteAnimalEvent(id: number): Promise<ApiResponse<void>> 
     const response = await apiClient.delete<ApiResponse<void>>(`/api/animal-events/${id}`);
     return response.data;
 }
+
+// ============ Flock Events ============
+
+export async function listFlockEvents(flockId: number): Promise<ApiResponse<AnimalEvent[]>> {
+    const response = await apiClient.get<ApiResponse<AnimalEvent[]>>(
+        `/api/animal-events/flock/${flockId}`
+    );
+    return response.data;
+}
+
+export interface CreateFlockEventRequest {
+    flockId: number;
+    eventType: AnimalEventType;
+    title?: string;
+    description?: string;
+    cost?: number;
+    date?: string;
+    birdCountChange?: number;
+}
+
+export async function createFlockEvent(
+    flockId: number,
+    request: CreateFlockEventRequest
+): Promise<ApiResponse<AnimalEvent>> {
+    const response = await apiClient.post<ApiResponse<AnimalEvent>>(
+        `/api/animal-events/flock/${flockId}`,
+        request
+    );
+    return response.data;
+}

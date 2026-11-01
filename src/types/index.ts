@@ -695,14 +695,17 @@ export const WORKER_STATUS_COLORS: Record<WorkerStatus, string> = {
 export type AnimalEventType =
     | 'ILLNESS' | 'TREATMENT' | 'RECOVERY' | 'VACCINATION' | 'DEWORMING'
     | 'CHECKUP' | 'PREGNANCY' | 'CALVING' | 'WEIGHT'
-    | 'PURCHASE' | 'SALE' | 'DEATH' | 'NOTE' | 'OTHER';
+    | 'PURCHASE' | 'SALE' | 'DEATH' | 'NOTE' | 'OTHER'
+    | 'MORTALITY' | 'FEED_CHANGE' | 'EGG_DROP' | 'TRANSFER';
 
 export interface AnimalEvent {
     id: number;
     animalId: number | null;
     animalTagNumber: string | null;
+    flockId: number | null;
     date: string;
     eventType: AnimalEventType;
+    birdCountChange: number | null;
     title: string;
     description: string | null;
     cost: number | null;
@@ -735,6 +738,10 @@ export const ANIMAL_EVENT_LABELS: Record<AnimalEventType, string> = {
     DEATH: 'Death',
     NOTE: 'Note',
     OTHER: 'Other',
+    MORTALITY: 'Mortality',
+    FEED_CHANGE: 'Feed Change',
+    EGG_DROP: 'Egg Drop',
+    TRANSFER: 'Transfer',
 };
 
 export const ANIMAL_EVENT_COLORS: Record<AnimalEventType, string> = {
@@ -752,6 +759,10 @@ export const ANIMAL_EVENT_COLORS: Record<AnimalEventType, string> = {
     DEATH: 'bg-gray-800 text-white',
     NOTE: 'bg-gray-100 text-gray-700',
     OTHER: 'bg-gray-100 text-gray-700',
+    MORTALITY: 'bg-red-100 text-red-800',
+    FEED_CHANGE: 'bg-amber-100 text-amber-700',
+    EGG_DROP: 'bg-orange-100 text-orange-700',
+    TRANSFER: 'bg-blue-100 text-blue-700',
 };
 
 export const ANIMAL_EVENT_EMOJI: Record<AnimalEventType, string> = {
@@ -769,6 +780,10 @@ export const ANIMAL_EVENT_EMOJI: Record<AnimalEventType, string> = {
     DEATH: '⚰️',
     NOTE: '📝',
     OTHER: '📌',
+    MORTALITY: '⚰️',
+    FEED_CHANGE: '🌾',
+    EGG_DROP: '📉',
+    TRANSFER: '🔄',
 };
 
 
