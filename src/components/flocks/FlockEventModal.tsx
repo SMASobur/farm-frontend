@@ -10,8 +10,8 @@ import type { AnimalEvent, AnimalEventType } from '@/types';
 import { ANIMAL_EVENT_LABELS } from '@/types';
 
 const FLOCK_EVENT_TYPES: AnimalEventType[] = [
-    'MORTALITY', 'PURCHASE', 'ILLNESS', 'TREATMENT', 'VACCINATION',
-    'DEWORMING', 'FEED_CHANGE', 'EGG_DROP', 'WEIGHT', 'TRANSFER', 'NOTE', 'OTHER',
+    'NOTE','MORTALITY', 'SALE', 'PURCHASE', 'ILLNESS', 'TREATMENT', 'VACCINATION',
+    'DEWORMING', 'FEED_CHANGE', 'EGG_DROP', 'WEIGHT', 'TRANSFER',  'OTHER',
 ];
 
 function todayISO() {
@@ -63,16 +63,23 @@ export function FlockEventModal({ flockId, flockCode, birdCount, initial, onClos
 
         const change = parseFloat(birdCountChange) || 0;
 
-        if ((eventType === 'MORTALITY' || eventType === 'PURCHASE' || eventType === 'TRANSFER') && change === 0) {
+        // Require a bird count for events that change population
+        if (
+            (eventType === 'MORTALITY' || eventType === 'SALE' ||
+                eventType === 'PURCHASE' || eventType === 'TRANSFER')
+            && change === 0
+        ) {
             setError('Please enter the number of birds for this event');
             return;
         }
 
         let finalChange = change !== 0 ? change : undefined;
-        if (eventType === 'MORTALITY' && finalChange) {
-            finalChange = -Math.abs(finalChange);
-        } else if ((eventType === 'PURCHASE' || eventType === 'TRANSFER') && finalChange) {
-            finalChange = Math.abs(finalChange);
+        if (eventType === 'MORTALITY' || eventType === 'SALE') {
+            // Decrease count
+            if (finalChange) finalChange = -Math.abs(finalChange);
+        } else if (eventType === 'PURCHASE' || eventType === 'TRANSFER') {
+            // Increase count
+            if (finalChange) finalChange = Math.abs(finalChange);
         }
 
         await mutation.mutateAsync({
@@ -87,9 +94,10 @@ export function FlockEventModal({ flockId, flockCode, birdCount, initial, onClos
     };
 
     const changeVal = parseFloat(birdCountChange) || 0;
-    const previewCount = eventType === 'MORTALITY'
-        ? birdCount - Math.abs(changeVal)
-        : birdCount + Math.abs(changeVal);
+    const previewCount =
+        (eventType === 'MORTALITY' || eventType === 'SALE')
+            ? birdCount - Math.abs(changeVal)
+            : birdCount + Math.abs(changeVal);
 
     return (
         <div
@@ -128,10 +136,13 @@ export function FlockEventModal({ flockId, flockCode, birdCount, initial, onClos
                         </Select>
                     </Field>
 
-                    {(eventType === 'MORTALITY' || eventType === 'PURCHASE' || eventType === 'TRANSFER') && (
-                        <div>
+                    {(eventType === 'MORTALITY' || eventType === 'SALE' || eventType === 'PURCHASE' || eventType === 'TRANSFER') && (                        <div>
                             <Field
-                                label={eventType === 'MORTALITY' ? 'Birds Lost' : 'Birds Added'}
+                                label={
+                                    eventType === 'MORTALITY' ? 'Birds Lost' :
+                                        eventType === 'SALE' ? 'Birds Sold' :
+                                            'Birds Added'
+                                }
                                 htmlFor="birdCountChange"
                                 required
                             >
@@ -146,7 +157,9 @@ export function FlockEventModal({ flockId, flockCode, birdCount, initial, onClos
                             </Field>
                             {changeVal > 0 && (
                                 <div className={`mt-2 text-sm p-2 rounded-lg font-medium ${
-                                    eventType === 'MORTALITY' ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'
+                                    (eventType === 'MORTALITY' || eventType === 'SALE')
+                                        ? 'bg-red-50 text-red-700'
+                                        : 'bg-green-50 text-green-700'
                                 }`}>
                                     New bird count: {previewCount}
                                 </div>
@@ -221,3 +234,4 @@ export function FlockEventModal({ flockId, flockCode, birdCount, initial, onClos
         </div>
     );
 }
+
