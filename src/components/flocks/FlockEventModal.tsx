@@ -1,12 +1,12 @@
 import { useState, type FormEvent } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { X, Loader2, Save } from 'lucide-react';
-import { createFlockEvent } from '@/api/animalEvents';
+import { createFlockEvent, updateFlockEvent } from '@/api/animalEvents';
 import { useToast } from '@/contexts/ToastContext';
 import { Field } from '@/components/forms/Field';
 import { Input } from '@/components/forms/Input';
 import { Select } from '@/components/forms/Select';
-import type { AnimalEventType } from '@/types';
+import type { AnimalEvent, AnimalEventType } from '@/types';
 import { ANIMAL_EVENT_LABELS } from '@/types';
 
 const FLOCK_EVENT_TYPES: AnimalEventType[] = [
@@ -22,32 +22,38 @@ interface Props {
     flockId: number;
     flockCode: string;
     birdCount: number;
+    initial?: AnimalEvent;
     onClose: () => void;
 }
 
-export function FlockEventModal({ flockId, flockCode, birdCount, onClose }: Props) {
+export function FlockEventModal({ flockId, flockCode, birdCount, initial, onClose }: Props) {
     const queryClient = useQueryClient();
     const toast = useToast();
+    const isEdit = !!initial;
 
-    const [eventType, setEventType] = useState<AnimalEventType>('MORTALITY');
-    const [birdCountChange, setBirdCountChange] = useState('');
-    const [title, setTitle] = useState('');
-    const [description, setDescription] = useState('');
-    const [cost, setCost] = useState('');
-    const [date, setDate] = useState(todayISO());
+    const [eventType, setEventType] = useState<AnimalEventType>(initial?.eventType ?? 'NOTE');
+    const [birdCountChange, setBirdCountChange] = useState(
+        initial?.birdCountChange != null ? String(Math.abs(initial.birdCountChange)) : ''
+    );
+    const [title, setTitle] = useState(initial?.title ?? '');
+    const [description, setDescription] = useState(initial?.description ?? '');
+    const [cost, setCost] = useState(initial?.cost != null ? String(initial.cost) : '');
+    const [date, setDate] = useState(initial?.date ?? todayISO());
     const [error, setError] = useState('');
 
     const mutation = useMutation({
-        mutationFn: (data: any) => createFlockEvent(flockId, data),
+        mutationFn: (data: any) => isEdit
+            ? updateFlockEvent(initial!.id, data)
+            : createFlockEvent(flockId, data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['flock', flockId] });
             queryClient.invalidateQueries({ queryKey: ['flock', flockId, 'events'] });
             queryClient.invalidateQueries({ queryKey: ['flocks'] });
-            toast.success('Event recorded');
+            toast.success(isEdit ? 'Event updated' : 'Event recorded');
             onClose();
         },
         onError: (err: any) => {
-            setError(err.response?.data?.message || 'Failed to record event');
+            setError(err.response?.data?.message || 'Failed to save event');
         },
     });
 
@@ -62,7 +68,6 @@ export function FlockEventModal({ flockId, flockCode, birdCount, onClose }: Prop
             return;
         }
 
-        // Ensure mortality is always negative
         let finalChange = change !== 0 ? change : undefined;
         if (eventType === 'MORTALITY' && finalChange) {
             finalChange = -Math.abs(finalChange);
@@ -81,7 +86,6 @@ export function FlockEventModal({ flockId, flockCode, birdCount, onClose }: Prop
         });
     };
 
-    // Calculate preview
     const changeVal = parseFloat(birdCountChange) || 0;
     const previewCount = eventType === 'MORTALITY'
         ? birdCount - Math.abs(changeVal)
@@ -95,7 +99,7 @@ export function FlockEventModal({ flockId, flockCode, birdCount, onClose }: Prop
             <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md max-h-[90vh] overflow-y-auto shadow-xl">
                 <div className="p-5 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10">
                     <div>
-                        <h3 className="font-bold text-gray-900">Record Batch Event</h3>
+                        <h3 className="font-bold text-gray-900">{isEdit ? 'Edit' : 'Record'} Batch Event</h3>
                         <p className="text-xs text-gray-500 mt-0.5">{flockCode} · {birdCount} birds</p>
                     </div>
                     <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1">
@@ -124,7 +128,6 @@ export function FlockEventModal({ flockId, flockCode, birdCount, onClose }: Prop
                         </Select>
                     </Field>
 
-                    {/* Bird count change for MORTALITY / PURCHASE / TRANSFER */}
                     {(eventType === 'MORTALITY' || eventType === 'PURCHASE' || eventType === 'TRANSFER') && (
                         <div>
                             <Field
@@ -202,7 +205,7 @@ export function FlockEventModal({ flockId, flockCode, birdCount, onClose }: Prop
                             {mutation.isPending ? (
                                 <><Loader2 size={18} className="animate-spin" />Saving…</>
                             ) : (
-                                <><Save size={18} />Save Event</>
+                                <><Save size={18} />{isEdit ? 'Save Changes' : 'Save Event'}</>
                             )}
                         </button>
                         <button

@@ -69,3 +69,13 @@ export async function createFlockEvent(
     );
     return response.data;
 }
+
+export async function updateFlockEvent(id: number, request: any): Promise<ApiResponse<AnimalEvent>> {
+    const response = await apiClient.put<ApiResponse<AnimalEvent>>(`/api/animal-events/${id}`, request);
+    return response.data;
+}
+
+export async function deleteFlockEvent(id: number): Promise<ApiResponse<void>> {
+    const response = await apiClient.delete<ApiResponse<void>>(`/api/animal-events/${id}`);
+    return response.data;
+}
