@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { Egg } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Egg, ChevronRight } from 'lucide-react';
 import { listEggsByFlock } from '@/api/eggs';
 import { formatDateShort } from '@/lib/format';
 import type { EggProduction } from '@/types';
@@ -7,9 +8,10 @@ import type { EggProduction } from '@/types';
 interface Props {
     flockId: number;
     limit?: number;
+    showViewAllLink?: boolean;
 }
 
-export function FlockProductionHistory({ flockId, limit }: Props) {
+export function FlockProductionHistory({ flockId, limit, showViewAllLink }: Props) {
     const { data, isLoading } = useQuery({
         queryKey: ['flock', flockId, 'eggs'],
         queryFn: () => listEggsByFlock(flockId),
@@ -20,6 +22,7 @@ export function FlockProductionHistory({ flockId, limit }: Props) {
         .sort((a, b) => b.date.localeCompare(a.date));
 
     const entries = limit ? allEntries.slice(0, limit) : allEntries;
+    const totalCount = allEntries.length;
 
     return (
         <div className="bg-white border border-gray-100 rounded-2xl p-5">
@@ -29,7 +32,7 @@ export function FlockProductionHistory({ flockId, limit }: Props) {
                     Egg Production
                 </h2>
                 <span className="text-xs text-gray-400">
-                    {isLoading ? '…' : `${allEntries.length} record${allEntries.length === 1 ? '' : 's'}`}
+                    {isLoading ? '…' : `${totalCount} record${totalCount === 1 ? '' : 's'}`}
                 </span>
             </div>
 
@@ -42,20 +45,30 @@ export function FlockProductionHistory({ flockId, limit }: Props) {
                     No egg production recorded yet.
                 </p>
             ) : (
-                <div className="space-y-1.5">
-                    {entries.map((e) => (
-                        <div key={e.id} className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-gray-50">
-                            <div className="text-sm text-gray-500">{formatDateShort(e.date)}</div>
-                            <div className="flex items-center gap-3">
-                                <span className="text-xs text-gray-500">{e.goodEggs} good</span>
-                                {e.crackedEggs > 0 && (
-                                    <span className="text-xs text-amber-600">{e.crackedEggs} cracked</span>
-                                )}
-                                <span className="text-sm font-semibold text-gray-900">{e.totalEggs} total</span>
+                <>
+                    <div className="space-y-1.5">
+                        {entries.map((e) => (
+                            <div key={e.id} className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-gray-50">
+                                <div className="text-sm text-gray-500">{formatDateShort(e.date)}</div>
+                                <div className="flex items-center gap-3">
+                                    <span className="text-xs text-gray-500">{e.goodEggs} good</span>
+                                    {e.crackedEggs > 0 && (
+                                        <span className="text-xs text-amber-600">{e.crackedEggs} cracked</span>
+                                    )}
+                                    <span className="text-sm font-semibold text-gray-900">{e.totalEggs} total</span>
+                                </div>
                             </div>
-                        </div>
-                    ))}
-                </div>
+                        ))}
+                    </div>
+                    {showViewAllLink && totalCount > (limit ?? 0) && (
+                        <Link
+                            to={`/flocks/${flockId}/egg-history`}
+                            className="mt-4 flex items-center justify-center gap-1 text-sm font-medium text-amber-700 hover:text-amber-800 hover:underline"
+                        >
+                            View all {totalCount} records <ChevronRight size={14} />
+                        </Link>
+                    )}
+                </>
             )}
         </div>
     );

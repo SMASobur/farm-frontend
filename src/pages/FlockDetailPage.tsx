@@ -151,12 +151,17 @@ export function FlockDetailPage() {
 
             {flock.status === 'ACTIVE' ? (
                 <>
-                    <FlockProductionHistory flockId={flock.id} limit={20} />
+                    <FlockProductionHistory
+                        flockId={flock.id}
+                        limit={5}
+                        showViewAllLink
+                    />
                     <FlockEventList
                         flockId={flock.id}
                         flockCode={flock.flockCode}
                         birdCount={flock.birdCount}
-                        limit={20}
+                        limit={5}
+                        showViewAllLink
                     />
                 </>
             ) : (

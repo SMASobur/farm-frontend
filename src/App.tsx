@@ -45,6 +45,8 @@ import { CustomerTypeSettingsPage } from '@/pages/settings/CustomerTypeSettingsP
 import {CategorySettingsPage} from "@/pages/settings/CategorySettingsPage.tsx";
 import { AnimalMilkHistoryPage } from '@/pages/AnimalMilkHistoryPage';
 import { AnimalEventHistoryPage } from '@/pages/AnimalEventHistoryPage';
+import { FlockEggHistoryPage } from '@/pages/FlockEggHistoryPage';
+import { FlockEventHistoryPage } from '@/pages/FlockEventHistoryPage';
 
 
 
@@ -130,6 +132,8 @@ export default function App() {
                                 <Route path="/flocks/new" element={<NewFlockPage />} />
                                 <Route path="/flocks/:id" element={<FlockDetailPage />} />
                                 <Route path="/flocks/:id/edit" element={<EditFlockPage />} />
+                                <Route path="/flocks/:id/egg-history" element={<FlockEggHistoryPage />} />
+                                <Route path="/flocks/:id/events" element={<FlockEventHistoryPage />} />
 
                                 <Route path="/eggs" element={<EggsPage />} />
                                 <Route path="/eggs/new" element={<NewEggPage />} />
