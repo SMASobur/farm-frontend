@@ -251,7 +251,11 @@ export function ExpenseForm({
                                         type="button"
                                         onClick={() => {
                                             setAmount(String(selectedWorker.monthlySalary));
-                                            const monthName = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+                                            // FIX: Use the form's `date` state instead of today
+                                            const monthName = new Date(date).toLocaleDateString('en-US', {
+                                                month: 'long',
+                                                year: 'numeric'
+                                            });
                                             setDescription(`${monthName} Salary`);
                                         }}
                                         className="text-xs font-medium bg-white border border-blue-200 text-blue-700 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition"
@@ -264,7 +268,12 @@ export function ExpenseForm({
                                         type="button"
                                         onClick={() => {
                                             setAmount(String(selectedWorker.dailyWage));
-                                            setDescription(`Daily Wage: ${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`);
+                                            // FIX: Use the form's `date` state instead of today
+                                            setDescription(`Daily Wage — ${new Date(date).toLocaleDateString('en-GB', {
+                                                day: 'numeric',
+                                                month: 'short',
+                                                year: 'numeric'
+                                            })}`);
                                         }}
                                         className="text-xs font-medium bg-white border border-blue-200 text-blue-700 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition"
                                     >

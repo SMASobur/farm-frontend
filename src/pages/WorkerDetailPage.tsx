@@ -183,6 +183,8 @@ export function WorkerDetailPage() {
                 workerId={worker.id}
                 workerName={worker.name}
                 monthlySalary={worker.monthlySalary}
+                limit={5}
+                showViewAllLink
             />
         </div>
     );

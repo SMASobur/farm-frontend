@@ -57,6 +57,8 @@ import {ProfileSettingsPage} from "@/pages/settings/ProfilePage.tsx";
 import {FarmSettingsPage} from "@/pages/settings/FarmSettingsPage.tsx";
 import {SecuritySettingsPage} from "@/pages/settings/SecurityPage.tsx";
 import {AnimalEggHistoryPage} from "@/pages/AnimalEggHistoryPage.tsx";
+import {WorkerPaymentHistoryPage} from '@/pages/WorkerPaymentsHistoryPage';
+
 
 const queryClient = new QueryClient({
     defaultOptions: {
@@ -118,6 +120,8 @@ export default function App() {
                                 <Route path="/workers/new" element={<NewWorkerPage />} />
                                 <Route path="/workers/:id" element={<WorkerDetailPage />} />
                                 <Route path="/workers/:id/edit" element={<EditWorkerPage />} />
+                                <Route path="/workers/:id/payments" element={<WorkerPaymentHistoryPage />} />
+
 
                                 <Route path="/milk" element={<MilkPage />} />
                                 <Route path="/milk/new" element={<NewMilkPage />} />
