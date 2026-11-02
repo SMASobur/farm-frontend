@@ -8,7 +8,7 @@ import type { Expense, ExpenseRequest, Worker } from '@/types';
 import { Field } from '@/components/forms/Field';
 import { Input } from '@/components/forms/Input';
 import { Select } from '@/components/forms/Select';
-import {ExpenseCategorySelect} from "@/components/forms/ExpenseCategorySelect.tsx";
+import { ExpenseCategorySelect } from '@/components/forms/ExpenseCategorySelect';
 
 function todayISO(): string {
     return new Date().toISOString().split('T')[0];
@@ -70,10 +70,6 @@ export function ExpenseForm({
     const categories = categoriesQuery.data?.data ?? [];
     const workers: Worker[] = workersQuery.data?.data ?? [];
 
-    /**
-     * Effective category = user's explicit choice, OR
-     * an auto-prefilled SALARY when arriving from a worker's "Add Payment".
-     */
     const effectiveCategoryId = useMemo<number | null>(() => {
         if (userCategoryId !== undefined) return userCategoryId;
         if (mode === 'create' && prefilledWorkerId && categories.length > 0) {
@@ -85,6 +81,7 @@ export function ExpenseForm({
 
     const selectedCategory = categories.find((c) => c.id === effectiveCategoryId);
     const isSalaryCategory = selectedCategory?.code === 'SALARY';
+    const selectedWorker = workers.find((w) => w.id === workerId);
 
     const clearError = (field: string) => {
         setErrors((prev) => {
@@ -95,7 +92,6 @@ export function ExpenseForm({
     };
 
     const isOtherCategory = selectedCategory?.code === 'OTHER';
-
 
     const validate = (): boolean => {
         const next: Record<string, string> = {};
@@ -110,7 +106,6 @@ export function ExpenseForm({
         return Object.keys(next).length === 0;
     };
 
-
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
         setSubmitError('');
@@ -118,8 +113,6 @@ export function ExpenseForm({
 
         setSaving(true);
         try {
-            const isOtherCategory = selectedCategory?.code === 'OTHER';
-
             const payload: ExpenseRequest = {
                 date,
                 categoryId: effectiveCategoryId!,
@@ -214,25 +207,74 @@ export function ExpenseForm({
 
             {/* Worker link — only shown for SALARY category */}
             {isSalaryCategory && (
-                <Field
-                    label="Worker"
-                    htmlFor="workerId"
-                    help="Optional — link this salary to a specific worker"
-                >
-                    <Select
-                        id="workerId"
-                        value={workerId ?? ''}
-                        onChange={(e) => setWorkerId(e.target.value ? Number(e.target.value) : null)}
+                <>
+                    <Field
+                        label="Worker"
+                        htmlFor="workerId"
+                        help="Optional — link this salary to a specific worker"
                     >
-                        <option value="">— Not linked —</option>
-                        {workers.map((w) => (
-                            <option key={w.id} value={w.id}>
-                                {w.name}
-                                {w.role ? ` · ${w.role}` : ''}
-                            </option>
-                        ))}
-                    </Select>
-                </Field>
+                        <Select
+                            id="workerId"
+                            value={workerId ?? ''}
+                            onChange={(e) => setWorkerId(e.target.value ? Number(e.target.value) : null)}
+                        >
+                            <option value="">— Not linked —</option>
+                            {workers.map((w) => (
+                                <option key={w.id} value={w.id}>
+                                    {w.name}
+                                    {w.role ? ` · ${w.role}` : ''}
+                                </option>
+                            ))}
+                        </Select>
+                    </Field>
+
+                    {/* NEW: Salary helper card */}
+                    {selectedWorker && (selectedWorker.monthlySalary || selectedWorker.dailyWage) && (
+                        <div className="bg-blue-50 border border-blue-100 rounded-xl p-3 flex items-center justify-between gap-3">
+                            <div className="text-sm text-blue-900">
+                                <div className="font-medium">
+                                    {selectedWorker.name}
+                                    {selectedWorker.role && <span className="text-blue-700 font-normal"> · {selectedWorker.role}</span>}
+                                </div>
+                                <div className="text-xs text-blue-700 mt-0.5 flex flex-wrap gap-3">
+                                    {selectedWorker.monthlySalary != null && (
+                                        <span>Monthly: <b>৳{selectedWorker.monthlySalary.toLocaleString('en-IN')}</b></span>
+                                    )}
+                                    {selectedWorker.dailyWage != null && (
+                                        <span>Daily: <b>৳{selectedWorker.dailyWage.toLocaleString('en-IN')}</b></span>
+                                    )}
+                                </div>
+                            </div>
+                            <div className="flex gap-2 shrink-0">
+                                {selectedWorker.monthlySalary != null && (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setAmount(String(selectedWorker.monthlySalary));
+                                            const monthName = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+                                            setDescription(`${monthName} Salary`);
+                                        }}
+                                        className="text-xs font-medium bg-white border border-blue-200 text-blue-700 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition"
+                                    >
+                                        Fill Monthly
+                                    </button>
+                                )}
+                                {selectedWorker.dailyWage != null && (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setAmount(String(selectedWorker.dailyWage));
+                                            setDescription(`Daily Wage: ${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`);
+                                        }}
+                                        className="text-xs font-medium bg-white border border-blue-200 text-blue-700 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition"
+                                    >
+                                        Fill Daily
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                </>
             )}
 
             <Field label="Description" htmlFor="description" required error={errors.description}>
@@ -240,7 +282,7 @@ export function ExpenseForm({
                     id="description"
                     value={description}
                     onChange={(e) => { setDescription(e.target.value); clearError('description'); }}
-                    placeholder="e.g., Cow feed - 50kg"
+                    placeholder="Description"
                     hasError={!!errors.description}
                     autoComplete="off"
                 />
